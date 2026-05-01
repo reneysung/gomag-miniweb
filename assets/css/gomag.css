@@ -525,6 +525,192 @@
 }
 
 /* ════════════════════════════════════════════════
+ * Store Hero（單店家頁的 Hero — 對齊 mockup）
+ * ════════════════════════════════════════════════ */
+.g-store-hero {
+  background: var(--g-bg-alt);
+  border-bottom: 1px solid var(--g-border);
+  padding: 56px 0;
+  font-family: var(--g-font);
+}
+.g-store-hero-inner {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 32px;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 56px;
+  align-items: start;
+}
+.g-store-hero-cat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: white;
+  color: var(--g-ink);
+  border: 1px solid var(--g-border);
+  border-radius: 100px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  margin-bottom: 14px;
+  transition: all 0.2s;
+}
+.g-store-hero-cat-pill:hover { border-color: var(--g-ink); }
+.g-store-hero-title {
+  font-weight: 900;
+  font-size: clamp(28px, 4vw, 44px);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin: 0 0 12px;
+  color: var(--g-ink);
+}
+.g-store-hero-tagline {
+  font-size: 17px;
+  color: var(--g-ink-soft);
+  margin: 0 0 20px;
+  line-height: 1.55;
+}
+.g-store-hero-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  font-family: var(--g-font-num);
+}
+.g-store-hero-rating-stars {
+  color: var(--g-accent);
+  font-size: 16px;
+  letter-spacing: 1px;
+}
+.g-store-hero-rating-text {
+  font-size: 14px;
+  color: var(--g-ink-soft);
+  font-weight: 500;
+}
+.g-store-hero-ph-banner {
+  display: inline-block;
+  padding: 8px 16px;
+  background: rgba(234,179,8,.15);
+  border: 1px solid rgba(234,179,8,.4);
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #92400e;
+  margin-bottom: 16px;
+}
+.g-store-hero-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+.g-store-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 24px;
+  border-radius: 100px;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1.5px solid transparent;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.g-store-btn-primary {
+  background: var(--g-accent);
+  color: white;
+}
+.g-store-btn-primary:hover { background: var(--g-accent-hover); }
+.g-store-btn-secondary {
+  background: var(--g-ink);
+  color: white;
+}
+.g-store-btn-secondary:hover { background: #000; }
+.g-store-btn-outline {
+  background: white;
+  color: var(--g-ink);
+  border-color: var(--g-border);
+}
+.g-store-btn-outline:hover { border-color: var(--g-ink); }
+
+.g-store-hero-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 0;
+  padding: 18px 0;
+  margin-bottom: 24px;
+  border-top: 1px solid var(--g-border);
+  border-bottom: 1px solid var(--g-border);
+}
+.g-store-hero-stat {
+  text-align: center;
+  border-right: 1px solid var(--g-border);
+  padding: 4px 8px;
+}
+.g-store-hero-stat:last-child { border-right: 0; }
+.g-store-hero-stat-value {
+  font-family: var(--g-font-num);
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--g-ink);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+.g-store-hero-stat-label {
+  font-size: 12px;
+  color: var(--g-ink-muted);
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.g-store-hero-info {
+  display: grid;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--g-ink-soft);
+  line-height: 1.6;
+}
+.g-store-hero-info a { color: var(--g-ink); border-bottom: 1px dashed var(--g-border); }
+.g-store-hero-info a:hover { color: var(--g-accent); border-color: var(--g-accent); }
+
+.g-store-hero-image {
+  position: relative;
+  aspect-ratio: 4/3;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--g-bg-alt) center/cover no-repeat;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.08);
+}
+.g-store-hero-image img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.g-store-hero-image-fallback {
+  width: 100%; height: 100%;
+  display: grid;
+  place-items: center;
+  font-size: 96px;
+  background: linear-gradient(135deg, var(--g-bg-alt), #ECECE7);
+  color: var(--g-ink-light);
+}
+
+@media (max-width: 1024px) {
+  .g-store-hero { padding: 40px 0; }
+  .g-store-hero-inner { grid-template-columns: 1fr; gap: 32px; padding: 0 24px; }
+  .g-store-hero-image { aspect-ratio: 16/10; max-width: 600px; }
+}
+@media (max-width: 640px) {
+  .g-store-hero-title { font-size: 28px; }
+  .g-store-hero-stats { grid-template-columns: repeat(2, 1fr); }
+  .g-store-hero-stat:nth-child(2) { border-right: 0; }
+  .g-store-btn { flex: 1; justify-content: center; }
+}
+
+/* ════════════════════════════════════════════════
  * Modular Blocks（5 種 type 共用 + 個別樣式）
  * 對應 blocks/*.php
  * ════════════════════════════════════════════════ */

@@ -208,7 +208,83 @@ if (!empty($client['address']) && preg_match('/^(臺?[北中南東]市|新北市
   </div>
 </div>
 
-<!-- ═══════ Store Hero ═══════ -->
+<?php $heroStats = !empty($client['hero_stats']) ? json_decode($client['hero_stats'], true) : []; ?>
+
+<?php if ($useBlocks): ?>
+<!-- ═══════ Store Hero（gomag 新樣式 — 僅 blocks 啟用客戶）═══════ -->
+<section class="g-store-hero">
+  <div class="g-store-hero-inner">
+    <div>
+      <?php if ($client['cat_name']): ?>
+      <a href="<?= BASE_URL ?>/category.php?slug=<?= h($client['cat_slug']) ?>" class="g-store-hero-cat-pill">
+        <?= h($client['cat_icon']) ?> <?= h($client['cat_name']) ?>
+      </a>
+      <?php endif; ?>
+
+      <h1 class="g-store-hero-title"><?= h($client['brand_name']) ?></h1>
+
+      <?php if ($isPlaceholder): ?>
+      <div class="g-store-hero-ph-banner">📋 資料整理中　・　完整介紹即將上線</div>
+      <?php endif; ?>
+
+      <?php if ($client['tagline']): ?>
+      <p class="g-store-hero-tagline"><?= h($client['tagline']) ?></p>
+      <?php endif; ?>
+
+      <?php if ($rating['cnt'] > 0): ?>
+      <div class="g-store-hero-rating">
+        <span class="g-store-hero-rating-stars">
+          <?= str_repeat('★', round($rating['avg'])) ?><?= str_repeat('☆', 5 - round($rating['avg'])) ?>
+        </span>
+        <span class="g-store-hero-rating-text">
+          <?= number_format($rating['avg'], 1) ?> · <?= $rating['cnt'] ?> 則評價
+        </span>
+      </div>
+      <?php endif; ?>
+
+      <div class="g-store-hero-ctas">
+        <?php if ($client['phone']): ?>
+        <a href="tel:<?= h($client['phone']) ?>" class="g-store-btn g-store-btn-primary">📞 撥打電話</a>
+        <?php endif; ?>
+        <?php if ($miniSiteUrl): ?>
+        <a href="<?= h($miniSiteUrl) ?>" class="g-store-btn g-store-btn-secondary" target="_blank">🌐 查看完整官網</a>
+        <?php endif; ?>
+        <?php if ($client['external_website_url']): ?>
+        <a href="<?= h($client['external_website_url']) ?>" class="g-store-btn g-store-btn-outline" target="_blank" rel="noopener">🔗 官方網站</a>
+        <?php endif; ?>
+      </div>
+
+      <?php if ($heroStats && is_array($heroStats)): ?>
+      <div class="g-store-hero-stats">
+        <?php foreach ($heroStats as $st): ?>
+        <div class="g-store-hero-stat">
+          <div class="g-store-hero-stat-value"><?= h($st['value'] ?? '') ?></div>
+          <div class="g-store-hero-stat-label"><?= h($st['label'] ?? '') ?></div>
+        </div>
+        <?php endforeach; ?>
+      </div>
+      <?php endif; ?>
+
+      <div class="g-store-hero-info">
+        <?php if ($client['address']): ?><div>📍 <?= h($client['address']) ?></div><?php endif; ?>
+        <?php if ($client['phone']): ?><div>📞 <?= h($client['phone']) ?></div><?php endif; ?>
+        <?php if ($client['email']): ?><div>✉️ <a href="mailto:<?= h($client['email']) ?>"><?= h($client['email']) ?></a></div><?php endif; ?>
+        <?php if ($client['business_hours']): ?><div>🕐 <?= nl2br(h($client['business_hours'])) ?></div><?php endif; ?>
+      </div>
+    </div>
+
+    <div class="g-store-hero-image">
+      <?php if ($client['hero_image_path']): ?>
+      <img src="<?= BASE_URL ?>/<?= h($client['hero_image_path']) ?>" alt="<?= h($client['brand_name']) ?>">
+      <?php else: ?>
+      <div class="g-store-hero-image-fallback"><?= h($client['cat_icon'] ?? '🏪') ?></div>
+      <?php endif; ?>
+    </div>
+  </div>
+</section>
+
+<?php else: ?>
+<!-- ═══════ Store Hero（舊樣式 — 未啟用 blocks 的客戶）═══════ -->
 <section style="background:var(--m-bg-alt); border-top:1px solid var(--m-border); padding:40px 0;">
   <div class="m-container">
     <div style="display:grid; grid-template-columns: 1.4fr 1fr; gap:40px; align-items:start;">
@@ -271,10 +347,7 @@ if (!empty($client['address']) && preg_match('/^(臺?[北中南東]市|新北市
         </div>
 
         <!-- Hero 統計數字 -->
-        <?php
-        $heroStats = !empty($client['hero_stats']) ? json_decode($client['hero_stats'], true) : [];
-        if ($heroStats && is_array($heroStats)):
-        ?>
+        <?php if ($heroStats && is_array($heroStats)): ?>
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(110px, 1fr)); gap:14px; margin-bottom:24px; padding:18px; background:var(--m-bg); border-radius:var(--m-radius); border:1px solid var(--m-border);">
           <?php foreach ($heroStats as $st): ?>
           <div style="text-align:center;">
@@ -318,6 +391,7 @@ if (!empty($client['address']) && preg_match('/^(臺?[北中南東]市|新北市
     </div>
   </div>
 </section>
+<?php endif; /* end if useBlocks / else (new vs old hero) */ ?>
 
 <!-- ═══════ 關於我們 ═══════ -->
 <?php

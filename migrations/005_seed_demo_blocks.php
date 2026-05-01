@@ -104,6 +104,38 @@ saveStoreBlock(18, 'pricing', [
     ],
 ], 30);
 
+saveStoreBlock(18, 'portfolio', [
+    'title' => '施工現場',
+    'layout' => 'grid',
+    'items' => [
+        [
+            'image' => 'uploads/brand/img_69f3072142bc82.04289871.jpg', // 用既有 brand 圖示範
+            'title' => '白色 Tesla Model 3 全車包膜',
+            'desc'  => '工時 3 天，使用 XPEL Ultimate Plus 漆面保護膜',
+            'tags'  => ['XPEL', 'Tesla', '全車'],
+            'is_large' => true,
+        ],
+        [
+            'image' => 'uploads/brand/img_69f3072142bc82.04289871.jpg',
+            'title' => '寶藍色 BMW M3 鏡面鍍膜',
+            'desc'  => 'Soft99 5 年型陶瓷鍍膜',
+            'tags'  => ['鍍膜', 'BMW'],
+        ],
+        [
+            'image' => 'uploads/brand/img_69f3072142bc82.04289871.jpg',
+            'title' => '銀色 Toyota RAV4 隔熱紙施工',
+            'desc'  => '3M 進口隔熱紙全車施工',
+            'tags'  => ['隔熱紙', 'Toyota'],
+        ],
+        [
+            'image' => 'uploads/brand/img_69f3072142bc82.04289871.jpg',
+            'title' => '深度漆面美容完工',
+            'desc'  => '太陽紋拋光 + 引擎室細清',
+            'tags'  => ['美容'],
+        ],
+    ],
+], 20);
+
 saveStoreBlock(18, 'faq', [
     'title' => '常見問題',
     'items' => [
@@ -114,7 +146,7 @@ saveStoreBlock(18, 'faq', [
         ['q' => '有提供到府服務嗎？', 'a' => '台南市 + 嘉義市區免費到府牽車。其他縣市請洽 0905-xxx-xxx 詢問。'],
     ],
 ], 50);
-out("  ✅ 建立 service (4 服務) + pricing (3 方案，中型推薦) + faq (5 題)\n");
+out("  ✅ 建立 service (4 服務) + portfolio (4 案例) + pricing (3 方案，中型推薦) + faq (5 題)\n");
 
 // ════════════════════════════════════════════════════════════
 //   3. 綝綝美甲美睫紋繡學院 (id=3) — 美容
@@ -158,6 +190,14 @@ saveStoreBlock(3, 'faq', [
     ],
 ], 50);
 out("  ✅ 建立 service (4 服務) + pricing (3 方案，進階推薦) + faq (4 題)\n");
+
+// ════════════════════════════════════════════════════════════
+//   清空 4 示範客戶的 landing_extra_content（讓 blocks 唯一發聲）
+// ════════════════════════════════════════════════════════════
+out("\n─ 清空 4 示範客戶的 landing_extra_content（避免視覺重複）─");
+$cleared = $db->prepare("UPDATE clients SET landing_extra_content = NULL WHERE id IN (1, 3, 10, 18)");
+$cleared->execute();
+out("  ✅ 已清空 " . $cleared->rowCount() . " 筆（備份在 _backups/landing_extra_demo_clients_*.sql）\n");
 
 // Summary
 $total = $db->query("SELECT COUNT(*) FROM store_blocks")->fetchColumn();
