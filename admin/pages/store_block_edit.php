@@ -33,6 +33,18 @@ if ($blockId) {
     redirect(BASE_URL . '/admin/pages/store_blocks.php');
 }
 
+// ─── 檔案上傳 helper（用於 POST handler）─────────────────
+/**
+ * 處理 image_xxx_N 形式的上傳。失敗回 fallback path。
+ */
+function handleBlockImageUpload(string $fieldKey, string $fallbackPath, string $subdir = 'blocks'): string {
+    if (empty($_FILES[$fieldKey]['name']) || $_FILES[$fieldKey]['error'] !== UPLOAD_ERR_OK) {
+        return $fallbackPath;
+    }
+    $newPath = uploadImage($_FILES[$fieldKey], $subdir);
+    return $newPath ?: $fallbackPath;
+}
+
 // ─── POST: 儲存 ─────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrf();
@@ -46,15 +58,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     switch ($type) {
         case 'service':
             $items = [];
-            foreach (($_POST['items'] ?? []) as $row) {
+            foreach (($_POST['items'] ?? []) as $idx => $row) {
                 $name = trim($row['name'] ?? '');
                 if (!$name) continue;
+                // 處理上傳：input name = image_items_{idx}
+                $imagePath = handleBlockImageUpload("image_items_$idx", trim($row['image'] ?? ''), 'services');
                 $items[] = [
                     'icon'       => trim($row['icon'] ?? ''),
                     'name'       => $name,
                     'short_desc' => trim($row['short_desc'] ?? ''),
                     'price_text' => trim($row['price_text'] ?? ''),
-                    'image'      => trim($row['image'] ?? ''),
+                    'image'      => $imagePath,
                 ];
             }
             $data['items'] = $items;
@@ -62,18 +76,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         case 'menu':
             $groups = [];
-            foreach (($_POST['groups'] ?? []) as $g) {
+            foreach (($_POST['groups'] ?? []) as $gi => $g) {
                 $gName = trim($g['name'] ?? '');
                 if (!$gName) continue;
                 $items = [];
-                foreach (($g['items'] ?? []) as $it) {
+                foreach (($g['items'] ?? []) as $ii => $it) {
                     $iName = trim($it['name'] ?? '');
                     if (!$iName) continue;
+                    // input name = image_groups_{gi}_items_{ii}
+                    $imagePath = handleBlockImageUpload("image_groups_{$gi}_items_{$ii}", trim($it['image'] ?? ''), 'menu');
                     $items[] = [
                         'name'  => $iName,
                         'price' => $it['price'] !== '' ? (int)$it['price'] : null,
                         'desc'  => trim($it['desc'] ?? ''),
                         'tag'   => trim($it['tag'] ?? ''),
+                        'image' => $imagePath,
                     ];
                 }
                 if ($items) $groups[] = ['name' => $gName, 'items' => $items];
@@ -84,8 +101,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'portfolio':
             $data['layout'] = trim($_POST['layout'] ?? 'grid');
             $items = [];
-            foreach (($_POST['items'] ?? []) as $row) {
-                $img = trim($row['image'] ?? '');
+            foreach (($_POST['items'] ?? []) as $idx => $row) {
+                $img = handleBlockImageUpload("image_items_$idx", trim($row['image'] ?? ''), 'cases');
                 if (!$img) continue;
                 $tagsText = trim($row['tags_text'] ?? '');
                 $tags = $tagsText ? array_map('trim', explode(',', $tagsText)) : [];

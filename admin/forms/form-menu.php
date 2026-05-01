@@ -37,6 +37,14 @@ $groups = $blockData['groups'] ?? [];
           <input type="text" name="groups[<?= $gi ?>][items][<?= $ii ?>][tag]" value="<?= h($item['tag'] ?? '') ?>" placeholder="標籤（招牌）" class="form-control">
         </div>
         <input type="text" name="groups[<?= $gi ?>][items][<?= $ii ?>][desc]" value="<?= h($item['desc'] ?? '') ?>" placeholder="說明（可選）" class="form-control" style="margin-top:8px;">
+        <div style="margin-top:8px; display:flex; gap:10px; align-items:center; font-size:.78rem;">
+          <input type="hidden" name="groups[<?= $gi ?>][items][<?= $ii ?>][image]" value="<?= h($item['image'] ?? '') ?>">
+          <?php if (!empty($item['image'])): ?>
+          <img src="<?= h(BASE_URL . '/' . ltrim($item['image'], '/')) ?>" style="width:50px; height:50px; object-fit:cover; border-radius:4px; border:1px solid var(--border);">
+          <?php endif; ?>
+          <label style="color:var(--muted);">圖片 (可選)：</label>
+          <input type="file" name="image_groups_<?= $gi ?>_items_<?= $ii ?>" accept="image/*" style="font-size:.75rem;">
+        </div>
       </div>
       <?php endforeach; ?>
     </div>
@@ -70,6 +78,11 @@ $groups = $blockData['groups'] ?? [];
       <input type="text" name="groups[__GI__][items][__II__][tag]" value="" placeholder="標籤" class="form-control">
     </div>
     <input type="text" name="groups[__GI__][items][__II__][desc]" value="" placeholder="說明（可選）" class="form-control" style="margin-top:8px;">
+    <div style="margin-top:8px; display:flex; gap:10px; align-items:center; font-size:.78rem;">
+      <input type="hidden" name="groups[__GI__][items][__II__][image]" value="">
+      <label style="color:var(--muted);">圖片 (可選)：</label>
+      <input type="file" name="image_groups___GI___items___II__" accept="image/*" style="font-size:.75rem;">
+    </div>
   </div>
 </template>
 

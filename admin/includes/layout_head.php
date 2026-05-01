@@ -439,6 +439,13 @@ textarea.form-control { resize: vertical; min-height: 90px; }
       <span class="icon">📦</span> 區塊管理
       <span style="margin-left:auto; background:#FF5A36; color:#fff; font-size:.6rem; font-weight:800; padding:1px 6px; border-radius:20px;">NEW</span>
     </a>
+    <?php if (($admin['role'] ?? '') === 'super'): ?>
+    <a class="nav-item <?= $currentPage === 'cities' ? 'active' : '' ?>"
+       href="<?= BASE_URL ?>/admin/pages/cities.php">
+      <span class="icon">🌏</span> 城市管理
+      <span style="margin-left:auto; background:#FF5A36; color:#fff; font-size:.6rem; font-weight:800; padding:1px 6px; border-radius:20px;">NEW</span>
+    </a>
+    <?php endif; ?>
     <a class="nav-item <?= in_array($currentPage, ['services', 'service_edit']) ? 'active' : '' ?>"
        href="<?= BASE_URL ?>/admin/pages/services.php">
       <span class="icon">🛠️</span> 服務項目（舊）

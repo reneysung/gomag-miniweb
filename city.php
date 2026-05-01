@@ -23,37 +23,24 @@ $cityMap = [
 ];
 $cityNameToSlug = array_flip($cityMap);
 
-// ─── 縣市專屬內文（避免 doorway pages 懲罰）────────────────────
-$cityIntros = [
-    '台南市' => [
-        'tagline'   => '在地老店、隱藏巷弄、世代家業 — 台南口碑商家集合',
-        'intro'     => '從中西區的老牌牛肉湯，到永康區的家庭式美甲，再到安平區的工廠直營汽車美容 — 台南店家最迷人的不是裝潢豪華，而是「做了一輩子」那份穩定。店家好口碑收錄了 150+ 家台南在地推薦，分類清楚、評價真實，讓你找店不踩雷。',
-        'highlights' => ['在地老店比例高', '深夜營業選擇多', '價格親民', '家族經營口碑穩定'],
-        'areas'      => ['中西區', '東區', '北區', '南區', '安平區', '安南區', '永康區', '仁德區', '歸仁區'],
-        'hero_image' => 'https://images.unsplash.com/photo-1504609813442-a8924e83f76e?w=1800&q=80',
-    ],
-    '高雄市' => [
-        'tagline'   => '從楠梓到鳳山、左營到三民 — 高雄優質商家口碑指南',
-        'intro'     => '高雄店家的特色是「敢做敢當」— 食材分量大、服務直率、價格透明。從鼓山的海鮮到三民的鍋物、左營的居家清潔到鳳山的車體美容，店家好口碑為高雄消費者整理了真實在地推薦清單。',
-        'highlights' => ['用料實在', '服務熱情', '消費直率', '海港特色食材'],
-        'areas'      => ['鼓山區', '三民區', '左營區', '鳳山區', '前金區', '苓雅區', '楠梓區', '小港區'],
-        'hero_image' => 'https://images.unsplash.com/photo-1545569310-a1f5dabc8a36?w=1800&q=80',
-    ],
-    '嘉義市' => [
-        'tagline'   => '雞肉飯不是只有那兩家 — 嘉義在地店家精選',
-        'intro'     => '嘉義人挑店認真，老店一開三十年是常態。從東區的醫療診所，到西區的傳統餐廳、近郊的木地板師傅，店家好口碑為嘉義朋友整理了真正口碑相傳的推薦商家。',
-        'highlights' => ['老店密度高', '在地師傅多', '物價合理', '步調慢但用心'],
-        'areas'      => ['東區', '西區'],
-        'hero_image' => 'https://images.unsplash.com/photo-1555992336-fb0d29498b13?w=1800&q=80',
-    ],
-    '台中市' => [
-        'tagline'   => '從南屯到東區、北屯到西屯 — 台中精選商家清單',
-        'intro'     => '台中是台灣店家風格最多元的城市 — 文心路有平價吃到飽連鎖、復興路大魯閣有國際美食、南屯有設計風潮店、北屯有生活用品專賣。店家好口碑整理出台中各區口碑商家，從大眾消費到精緻服務都有。',
-        'highlights' => ['風格多元', '連鎖品牌密度高', '商圈分布廣', '消費水準中段'],
-        'areas'      => ['中區', '東區', '南區', '西區', '北區', '南屯區', '西屯區', '北屯區'],
-        'hero_image' => 'https://images.unsplash.com/photo-1542358935821-e4e9f3f3c15d?w=1800&q=80',
-    ],
-];
+// ─── 縣市專屬內文 — 從 cities 表讀取（取代寫死 PHP array）──
+//    Migration 006 建表，後台 admin/pages/cities.php 可編輯
+$cityIntros = [];
+try {
+    $rows = $db->query("SELECT slug, full_name, tagline, intro, highlights, areas, hero_image FROM cities WHERE is_active=1")->fetchAll();
+    foreach ($rows as $r) {
+        $cityIntros[$r['full_name']] = [
+            'tagline'    => $r['tagline'] ?? '',
+            'intro'      => $r['intro']   ?? '',
+            'highlights' => json_decode($r['highlights'] ?? '[]', true) ?: [],
+            'areas'      => json_decode($r['areas']      ?? '[]', true) ?: [],
+            'hero_image' => $r['hero_image'] ?? '',
+        ];
+    }
+} catch (\Throwable $e) {
+    // cities 表還不存在時的 fallback（避免 city.php 直接爆）— 給最小可用版本
+    $cityIntros = [];
+}
 
 // 共用：載入 gomag 設計系統
 $extraCss = [BASE_URL . '/assets/css/gomag.css'];

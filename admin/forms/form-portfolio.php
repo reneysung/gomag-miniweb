@@ -24,8 +24,21 @@ $layout = $blockData['layout'] ?? 'grid';
       <button type="button" class="btn btn-sm btn-danger" onclick="removeItem(this)">刪除</button>
     </div>
     <div class="form-group" style="margin:0;">
-      <label style="font-size:.8rem;">圖片路徑 *</label>
-      <input type="text" name="items[<?= $i ?>][image]" value="<?= h($item['image'] ?? '') ?>" class="form-control" placeholder="uploads/cases/xxx.jpg" required>
+      <label style="font-size:.8rem;">圖片 *</label>
+      <?php if (!empty($item['image'])): ?>
+      <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:6px;">
+        <img src="<?= h(BASE_URL . '/' . ltrim($item['image'], '/')) ?>"
+          style="width:120px; height:80px; object-fit:cover; border-radius:6px; border:1px solid var(--border);">
+        <div style="flex:1;">
+          <input type="text" name="items[<?= $i ?>][image]" value="<?= h($item['image']) ?>" class="form-control" style="font-size:.8rem;" required>
+          <small style="color:var(--muted);">既有路徑</small>
+        </div>
+      </div>
+      <?php else: ?>
+      <input type="text" name="items[<?= $i ?>][image]" value="" class="form-control" placeholder="或貼上路徑" style="margin-bottom:6px;">
+      <?php endif; ?>
+      <input type="file" name="image_items_<?= $i ?>" accept="image/*" style="font-size:.8rem;">
+      <small style="color:var(--muted);">上傳新圖取代</small>
     </div>
     <div class="form-group" style="margin:12px 0 0;">
       <label style="font-size:.8rem;">標題</label>
@@ -58,8 +71,9 @@ $layout = $blockData['layout'] ?? 'grid';
       <button type="button" class="btn btn-sm btn-danger" onclick="removeItem(this)">刪除</button>
     </div>
     <div class="form-group" style="margin:0;">
-      <label style="font-size:.8rem;">圖片路徑 *</label>
-      <input type="text" name="items[__I__][image]" value="" class="form-control" placeholder="uploads/cases/xxx.jpg" required>
+      <label style="font-size:.8rem;">圖片 *</label>
+      <input type="text" name="items[__I__][image]" value="" class="form-control" placeholder="路徑或上傳新圖" style="margin-bottom:6px;">
+      <input type="file" name="image_items___I__" accept="image/*" style="font-size:.8rem;">
     </div>
     <div class="form-group" style="margin:12px 0 0;">
       <label style="font-size:.8rem;">標題</label>

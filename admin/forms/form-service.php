@@ -41,9 +41,23 @@ $items = $blockData['items'] ?? [];
       <textarea name="items[<?= $i ?>][short_desc]" class="form-control" rows="2"><?= h($item['short_desc'] ?? '') ?></textarea>
     </div>
     <div class="form-group" style="margin:12px 0 0;">
-      <label style="font-size:.8rem;">圖片路徑（可選）</label>
-      <input type="text" name="items[<?= $i ?>][image]" value="<?= h($item['image'] ?? '') ?>"
-        class="form-control" placeholder="uploads/services/xxx.jpg">
+      <label style="font-size:.8rem;">圖片</label>
+      <?php if (!empty($item['image'])): ?>
+      <div style="display:flex; gap:12px; align-items:flex-start; margin-bottom:6px;">
+        <img src="<?= h(BASE_URL . '/' . ltrim($item['image'], '/')) ?>"
+          style="width:80px; height:80px; object-fit:cover; border-radius:6px; border:1px solid var(--border);">
+        <div style="flex:1;">
+          <input type="text" name="items[<?= $i ?>][image]" value="<?= h($item['image'] ?? '') ?>"
+            class="form-control" placeholder="uploads/services/xxx.jpg" style="font-size:.8rem;">
+          <small style="color:var(--muted);">既有路徑（手動編輯或下方上傳新圖取代）</small>
+        </div>
+      </div>
+      <?php else: ?>
+      <input type="hidden" name="items[<?= $i ?>][image]" value="">
+      <?php endif; ?>
+      <input type="file" name="image_items_<?= $i ?>" accept="image/*"
+        style="font-size:.8rem;">
+      <small style="color:var(--muted);">上傳新圖（jpg/png/webp，最大 5MB）— 留空保持原圖</small>
     </div>
   </div>
   <?php endforeach; ?>
@@ -76,8 +90,10 @@ $items = $blockData['items'] ?? [];
       <textarea name="items[__I__][short_desc]" class="form-control" rows="2"></textarea>
     </div>
     <div class="form-group" style="margin:12px 0 0;">
-      <label style="font-size:.8rem;">圖片路徑（可選）</label>
-      <input type="text" name="items[__I__][image]" value="" class="form-control" placeholder="uploads/services/xxx.jpg">
+      <label style="font-size:.8rem;">圖片</label>
+      <input type="hidden" name="items[__I__][image]" value="">
+      <input type="file" name="image_items___I__" accept="image/*" style="font-size:.8rem;">
+      <small style="color:var(--muted);">上傳新圖（jpg/png/webp，最大 5MB）</small>
     </div>
   </div>
 </template>
