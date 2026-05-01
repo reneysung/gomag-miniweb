@@ -1,0 +1,380 @@
+<?php
+// city.php  ─  縣市落地頁 /city/taichung
+require_once __DIR__ . '/includes/config.php';
+require_once __DIR__ . '/includes/helpers.php';
+
+$db = getDB();
+$slug = strtolower(trim($_GET['slug'] ?? ''));
+
+// ─── slug → 縣市中文名 對映 ─────────────────────────────────
+$cityMap = [
+    'tainan'    => '台南市',
+    'kaohsiung' => '高雄市',
+    'chiayi'    => '嘉義市',
+    'taichung'  => '台中市',
+    'taipei'    => '台北市',
+    'newtaipei' => '新北市',
+    'taoyuan'   => '桃園市',
+    'taitung'   => '台東縣',
+    'pingtung'  => '屏東縣',
+    'hsinchu'   => '新竹市',
+    'yilan'     => '宜蘭縣',
+    'hualien'   => '花蓮縣',
+];
+$cityNameToSlug = array_flip($cityMap);
+
+// ─── 縣市專屬內文（避免 doorway pages 懲罰）────────────────────
+$cityIntros = [
+    '台南市' => [
+        'tagline'   => '在地老店、隱藏巷弄、世代家業 — 台南口碑商家集合',
+        'intro'     => '從中西區的老牌牛肉湯，到永康區的家庭式美甲，再到安平區的工廠直營汽車美容 — 台南店家最迷人的不是裝潢豪華，而是「做了一輩子」那份穩定。店家好口碑收錄了 150+ 家台南在地推薦，分類清楚、評價真實，讓你找店不踩雷。',
+        'highlights' => ['在地老店比例高', '深夜營業選擇多', '價格親民', '家族經營口碑穩定'],
+        'areas'      => ['中西區', '東區', '北區', '南區', '安平區', '安南區', '永康區', '仁德區', '歸仁區'],
+        'hero_image' => 'https://images.unsplash.com/photo-1504609813442-a8924e83f76e?w=1800&q=80',
+    ],
+    '高雄市' => [
+        'tagline'   => '從楠梓到鳳山、左營到三民 — 高雄優質商家口碑指南',
+        'intro'     => '高雄店家的特色是「敢做敢當」— 食材分量大、服務直率、價格透明。從鼓山的海鮮到三民的鍋物、左營的居家清潔到鳳山的車體美容，店家好口碑為高雄消費者整理了真實在地推薦清單。',
+        'highlights' => ['用料實在', '服務熱情', '消費直率', '海港特色食材'],
+        'areas'      => ['鼓山區', '三民區', '左營區', '鳳山區', '前金區', '苓雅區', '楠梓區', '小港區'],
+        'hero_image' => 'https://images.unsplash.com/photo-1545569310-a1f5dabc8a36?w=1800&q=80',
+    ],
+    '嘉義市' => [
+        'tagline'   => '雞肉飯不是只有那兩家 — 嘉義在地店家精選',
+        'intro'     => '嘉義人挑店認真，老店一開三十年是常態。從東區的醫療診所，到西區的傳統餐廳、近郊的木地板師傅，店家好口碑為嘉義朋友整理了真正口碑相傳的推薦商家。',
+        'highlights' => ['老店密度高', '在地師傅多', '物價合理', '步調慢但用心'],
+        'areas'      => ['東區', '西區'],
+        'hero_image' => 'https://images.unsplash.com/photo-1555992336-fb0d29498b13?w=1800&q=80',
+    ],
+    '台中市' => [
+        'tagline'   => '從南屯到東區、北屯到西屯 — 台中精選商家清單',
+        'intro'     => '台中是台灣店家風格最多元的城市 — 文心路有平價吃到飽連鎖、復興路大魯閣有國際美食、南屯有設計風潮店、北屯有生活用品專賣。店家好口碑整理出台中各區口碑商家，從大眾消費到精緻服務都有。',
+        'highlights' => ['風格多元', '連鎖品牌密度高', '商圈分布廣', '消費水準中段'],
+        'areas'      => ['中區', '東區', '南區', '西區', '北區', '南屯區', '西屯區', '北屯區'],
+        'hero_image' => 'https://images.unsplash.com/photo-1542358935821-e4e9f3f3c15d?w=1800&q=80',
+    ],
+];
+
+// 共用：載入 gomag 設計系統
+$extraCss = [BASE_URL . '/assets/css/gomag.css'];
+
+// ═══════════════════════════════════════════════════════════
+//   模式 A：未指定縣市 → 顯示所有縣市入口
+// ═══════════════════════════════════════════════════════════
+if (!$slug) {
+    $cityList = '臺北市|台北市|新北市|桃園市|臺中市|台中市|臺南市|台南市|高雄市|基隆市|新竹市|新竹縣|苗栗縣|彰化縣|南投縣|雲林縣|嘉義市|嘉義縣|屏東縣|宜蘭縣|花蓮縣|臺東縣|台東縣|澎湖縣|金門縣|連江縣';
+    $rows = $db->query("SELECT address FROM clients WHERE is_active=1 AND address IS NOT NULL AND address != ''")->fetchAll();
+    $stats = [];
+    foreach ($rows as $r) {
+        if (preg_match('/^(' . $cityList . ')/u', $r['address'], $m)) {
+            $c = str_replace('臺', '台', $m[1]);
+            $stats[$c] = ($stats[$c] ?? 0) + 1;
+        }
+    }
+    arsort($stats);
+
+    $pageTitle = '依縣市瀏覽店家｜店家好口碑';
+    $metaDesc  = '依縣市快速找店：' . implode('、', array_slice(array_keys($stats), 0, 5)) . '等地區店家。';
+    $canonical = IS_LOCAL ? BASE_URL . '/city.php' : 'https://www.gomag.com.tw/city';
+    require_once __DIR__ . '/main/layout_head.php';
+    ?>
+
+    <div class="g-breadcrumb-wrap">
+      <nav class="g-breadcrumb" aria-label="breadcrumb">
+        <a href="<?= BASE_URL ?>/">首頁</a>
+        <span class="g-breadcrumb-sep">›</span>
+        <span class="current">📍 縣市瀏覽</span>
+      </nav>
+    </div>
+
+    <section class="g-section">
+      <div class="g-section-head">
+        <div>
+          <h1 class="g-section-title">📍 依縣市瀏覽店家</h1>
+          <p class="g-section-sub">點擊縣市查看該地區所有口碑商家</p>
+        </div>
+      </div>
+
+      <div class="g-store-grid" style="grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));">
+        <?php foreach ($stats as $cityName => $cnt):
+            if (!isset($cityNameToSlug[$cityName])) continue;
+            if ($cnt < 3) continue;
+            $citySlug = $cityNameToSlug[$cityName];
+        ?>
+        <a class="g-store-card" href="<?= BASE_URL ?>/city.php?slug=<?= h($citySlug) ?>" style="text-align:center;">
+          <div class="g-store-img" style="aspect-ratio:1.4; background:var(--g-bg-alt); display:grid; place-items:center; font-size:48px;">📍</div>
+          <div class="g-store-meta-top" style="justify-content:center;">
+            <div class="g-store-name" style="font-size:18px;"><?= h($cityName) ?></div>
+          </div>
+          <div class="g-store-loc" style="font-family:var(--g-font-num); font-weight:600; color:var(--g-accent);"><?= $cnt ?> 家店家</div>
+        </a>
+        <?php endforeach; ?>
+      </div>
+    </section>
+
+    <?php
+    require_once __DIR__ . '/main/layout_foot.php';
+    exit;
+}
+
+// ═══════════════════════════════════════════════════════════
+//   模式 B：指定縣市 → 顯示該縣市店家
+// ═══════════════════════════════════════════════════════════
+if (!isset($cityMap[$slug])) {
+    http_response_code(404);
+    die('縣市不存在或尚未開放');
+}
+$cityName = $cityMap[$slug];
+$intro = $cityIntros[$cityName] ?? null;
+
+// 抓該縣市所有店家（按分類分組）
+$clients = $db->prepare("
+    SELECT cl.id, cl.subdomain, cl.slug, cl.brand_name, cl.tagline,
+           cl.has_minisite, cl.external_website_url, cl.hero_image_path,
+           cl.address, cl.phone, cl.is_placeholder,
+           c.id AS cat_id, c.name AS cat_name, c.icon AS cat_icon, c.slug AS cat_slug
+    FROM clients cl
+    LEFT JOIN categories c ON cl.category_id = c.id
+    WHERE cl.is_active = 1 AND cl.address LIKE ?
+    ORDER BY cl.is_placeholder ASC, c.sort_order, c.name, cl.id DESC
+");
+$clients->execute([$cityName . '%']);
+$clients = $clients->fetchAll();
+
+if (empty($clients)) {
+    http_response_code(404);
+    die("「{$cityName}」目前尚未收錄店家");
+}
+
+// 按分類分組
+$byCat = [];
+$catCounts = [];
+foreach ($clients as $cl) {
+    $cName = $cl['cat_name'] ?? '其他';
+    $byCat[$cName][] = $cl;
+    $catCounts[$cName] = ($catCounts[$cName] ?? 0) + 1;
+}
+
+// 統計
+$totalStores      = count($clients);
+$totalPlaceholder = count(array_filter($clients, fn($c) => !empty($c['is_placeholder'])));
+$totalReal        = $totalStores - $totalPlaceholder;
+$totalCategories  = count($catCounts);
+
+// SEO
+$pageTitle  = "{$cityName}店家推薦｜共 {$totalStores} 家口碑商家整理";
+$metaDesc   = ($intro['tagline'] ?? '') . '。';
+$metaDesc  .= "{$cityName} {$totalStores} 家店家精選：" . implode('、', array_keys($catCounts)) . "。";
+$canonical  = IS_LOCAL ? BASE_URL . '/city.php?slug=' . urlencode($slug) : 'https://www.gomag.com.tw/city/' . urlencode($slug);
+
+require_once __DIR__ . '/main/layout_head.php';
+
+// ─── JSON-LD: CollectionPage + ItemList ───────────────────
+$itemList = [];
+$idx = 1;
+foreach ($clients as $cl) {
+    $sub = $cl['subdomain'] ?: $cl['slug'];
+    $itemList[] = [
+        '@type' => 'ListItem',
+        'position' => $idx++,
+        'item' => [
+            '@type' => 'LocalBusiness',
+            'name' => $cl['brand_name'],
+            'address' => $cl['address'],
+            'url' => (IS_LOCAL ? BASE_URL . '/store.php?sub=' . $sub : 'https://www.gomag.com.tw/store/' . $sub),
+        ],
+    ];
+}
+$jsonLd = [
+    '@context' => 'https://schema.org',
+    '@type' => 'CollectionPage',
+    'name' => $pageTitle,
+    'description' => $metaDesc,
+    'url' => $canonical,
+    'about' => [
+        '@type' => 'Place',
+        'name' => $cityName,
+        'address' => ['@type' => 'PostalAddress', 'addressLocality' => $cityName, 'addressCountry' => 'TW'],
+    ],
+    'mainEntity' => ['@type' => 'ItemList', 'numberOfItems' => $totalStores, 'itemListElement' => $itemList],
+];
+$breadcrumbLd = [
+    '@context' => 'https://schema.org',
+    '@type' => 'BreadcrumbList',
+    'itemListElement' => [
+        ['@type' => 'ListItem', 'position' => 1, 'name' => '首頁', 'item' => (IS_LOCAL ? BASE_URL . '/' : 'https://www.gomag.com.tw/')],
+        ['@type' => 'ListItem', 'position' => 2, 'name' => '縣市瀏覽', 'item' => (IS_LOCAL ? BASE_URL . '/city.php' : 'https://www.gomag.com.tw/city')],
+        ['@type' => 'ListItem', 'position' => 3, 'name' => $cityName],
+    ],
+];
+?>
+<script type="application/ld+json"><?= json_encode($jsonLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
+<script type="application/ld+json"><?= json_encode($breadcrumbLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
+
+<!-- ═══ Hero ═══ -->
+<section class="g-hero">
+  <?php if (!empty($intro['hero_image'])): ?>
+  <div class="g-hero-bg" style="background-image:url('<?= h($intro['hero_image']) ?>');"></div>
+  <?php else: ?>
+  <div class="g-hero-bg" style="background:linear-gradient(135deg, #2a2a2a, #0f0f0f);"></div>
+  <?php endif; ?>
+  <div class="g-hero-overlay"></div>
+  <div class="g-hero-content">
+    <div class="g-hero-tag">
+      <span class="g-hero-tag-dot"></span>
+      <span>📍 <?= h($cityName) ?>・在地口碑名單</span>
+    </div>
+    <h1 class="g-hero-title">
+      在<?= h(str_replace(['市', '縣'], '', $cityName)) ?>，<br>找一家<span>對的店</span>。
+    </h1>
+    <?php if ($intro): ?>
+    <p class="g-hero-desc"><?= h($intro['tagline']) ?></p>
+    <?php endif; ?>
+  </div>
+</section>
+
+<!-- ═══ 麵包屑 ═══ -->
+<div class="g-breadcrumb-wrap">
+  <nav class="g-breadcrumb" aria-label="breadcrumb">
+    <a href="<?= BASE_URL ?>/">首頁</a>
+    <span class="g-breadcrumb-sep">›</span>
+    <a href="<?= BASE_URL ?>/city.php">縣市瀏覽</a>
+    <span class="g-breadcrumb-sep">›</span>
+    <span class="current">📍 <?= h($cityName) ?></span>
+  </nav>
+</div>
+
+<!-- ═══ 城市介紹 + 快速資訊 ═══ -->
+<?php if ($intro): ?>
+<section class="g-city-intro">
+  <div class="g-city-intro-text-block">
+    <div class="g-city-intro-eyebrow">Explore <?= h($cityName) ?></div>
+    <h2 class="g-city-intro-title">探索<?= h($cityName) ?><br>在地優質店家</h2>
+    <p class="g-city-intro-text"><?= h($intro['intro']) ?></p>
+    <?php if (!empty($intro['highlights'])): ?>
+    <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:18px;">
+      <?php foreach ($intro['highlights'] as $hl): ?>
+      <span class="g-city-meta-tag" style="background:var(--g-accent-light); color:var(--g-accent); border-color:var(--g-accent-light);">✨ <?= h($hl) ?></span>
+      <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
+  </div>
+
+  <aside class="g-city-meta-card">
+    <h3><?= h($cityName) ?>站快速資訊</h3>
+    <div class="g-city-meta-row">
+      <span class="g-city-meta-label">收錄店家</span>
+      <span class="g-city-meta-value g-city-meta-value-accent"><?= $totalStores ?> 家</span>
+    </div>
+    <div class="g-city-meta-row">
+      <span class="g-city-meta-label">分類數</span>
+      <span class="g-city-meta-value"><?= $totalCategories ?></span>
+    </div>
+    <?php if ($totalReal > 0): ?>
+    <div class="g-city-meta-row">
+      <span class="g-city-meta-label">已上線</span>
+      <span class="g-city-meta-value"><?= $totalReal ?></span>
+    </div>
+    <?php endif; ?>
+    <?php if ($totalPlaceholder > 0): ?>
+    <div class="g-city-meta-row">
+      <span class="g-city-meta-label">資料整理中</span>
+      <span class="g-city-meta-value" style="color:var(--g-ink-muted);"><?= $totalPlaceholder ?></span>
+    </div>
+    <?php endif; ?>
+    <?php if (!empty($intro['areas'])): ?>
+    <div class="g-city-meta-tags">
+      <div class="g-city-meta-tags-label">主要服務區域</div>
+      <div class="g-city-meta-tag-list">
+        <?php foreach ($intro['areas'] as $a): ?>
+        <span class="g-city-meta-tag"><?= h($a) ?></span>
+        <?php endforeach; ?>
+      </div>
+    </div>
+    <?php endif; ?>
+  </aside>
+</section>
+<?php endif; ?>
+
+<!-- ═══ 各分類店家清單（保留現有 SEO 結構，套新樣式）═══ -->
+<?php foreach ($byCat as $catName => $catClients):
+    $first = $catClients[0];
+    $catSlug = $first['cat_slug'] ?? '';
+    $catIcon = $first['cat_icon'] ?? '🏪';
+?>
+<section class="g-section">
+  <div class="g-section-head">
+    <div>
+      <h2 class="g-section-title">
+        <?= h($catIcon) ?> <?= h($catName) ?>
+        <span class="g-section-title-meta">（<?= count($catClients) ?> 家）</span>
+      </h2>
+    </div>
+    <?php if ($catSlug): ?>
+    <a href="<?= BASE_URL ?>/category.php?slug=<?= h($catSlug) ?>" class="g-section-link">看全台<?= h($catName) ?></a>
+    <?php endif; ?>
+  </div>
+
+  <div class="g-store-grid">
+    <?php foreach ($catClients as $cl):
+        $sub = $cl['subdomain'] ?? $cl['slug'];
+        $heroImg = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
+        $linkUrl = BASE_URL . '/store.php?sub=' . urlencode($sub);
+        $isPH = !empty($cl['is_placeholder']);
+        $cardClass = 'g-store-card' . ($isPH ? ' g-store-card-ph' : '');
+    ?>
+    <a class="<?= $cardClass ?>" href="<?= $linkUrl ?>">
+      <div class="g-store-img" <?= $heroImg ? 'style="background-image:url(\''.$heroImg.'\')"' : '' ?>>
+        <?php if (!$heroImg): ?>
+        <div class="g-store-img-fallback">
+          <span class="icon"><?= h($catIcon) ?></span>
+          <span class="label"><?= h($catName) ?></span>
+        </div>
+        <?php endif; ?>
+        <?php if ($isPH): ?>
+        <span class="g-store-badge g-store-badge-ph">📋 資料整理中</span>
+        <?php endif; ?>
+      </div>
+      <div class="g-store-meta-top">
+        <div class="g-store-name"><?= h($cl['brand_name']) ?></div>
+      </div>
+      <?php if ($cl['tagline']): ?>
+      <div class="g-store-loc"><?= h(mb_strimwidth($cl['tagline'], 0, 36, '…', 'UTF-8')) ?></div>
+      <?php endif; ?>
+      <div class="g-store-cat-label">
+        <?php if ($cl['address']): ?>📍 <?= h(mb_strimwidth(str_replace($cityName, '', $cl['address']), 0, 24, '…', 'UTF-8')) ?><?php endif; ?>
+        <?php if ($cl['phone'] && !$isPH): ?> · 📞 <?= h($cl['phone']) ?><?php endif; ?>
+      </div>
+    </a>
+    <?php endforeach; ?>
+  </div>
+</section>
+<?php endforeach; ?>
+
+<!-- ═══ B 端業務 banner ═══ -->
+<div class="g-banner-wrap">
+  <div class="g-banner">
+    <div class="g-banner-bg"></div>
+    <div class="g-banner-text">
+      <div class="g-banner-eyebrow">B2B Partnership</div>
+      <h3 class="g-banner-title">想加入店家好口碑？</h3>
+      <p class="g-banner-desc">我們專業業務團隊到店服務，零學習成本上架。</p>
+    </div>
+    <a href="<?= BASE_URL ?>/" class="g-banner-btn">立即聯絡</a>
+  </div>
+</div>
+
+<!-- ═══ 大 CTA ═══ -->
+<section class="g-cta">
+  <div class="g-cta-inner">
+    <div class="g-cta-eyebrow">Make it Yours</div>
+    <h2 class="g-cta-title">讓<?= h(str_replace(['市', '縣'], '', $cityName)) ?>的客人，<br>找到對的你。</h2>
+    <p class="g-cta-desc">店家好口碑專注在地口碑曝光 — 月費 NT$300 起，業務團隊到店服務，幫你把生意做大。</p>
+    <div class="g-cta-btns">
+      <a href="<?= BASE_URL ?>/" class="g-cta-btn g-cta-btn-primary">立即聯絡</a>
+      <a href="<?= BASE_URL ?>/category.php" class="g-cta-btn g-cta-btn-secondary">了解合作</a>
+    </div>
+  </div>
+</section>
+
+<?php require_once __DIR__ . '/main/layout_foot.php'; ?>

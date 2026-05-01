@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>原佃燒烤居酒屋 — 店家好口碑</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --white: #FFFFFF;
+    --bg: #FFFFFF;
+    --bg-alt: #F7F7F5;
+    --bg-warm: #FFF8F4;
+    --ink: #191919;
+    --ink-soft: #4A4A4A;
+    --ink-muted: #6B6B6B;
+    --ink-light: #B0B0B0;
+    --accent: #FF5A36;
+    --accent-hover: #E0421F;
+    --accent-light: #FFE8DF;
+    --green: #048A50;
+    --green-light: #E8F5EE;
+    --line: #06C755;
+    --border: #E8E5E0;
+    --font: 'Noto Sans TC', 'PingFang TC', sans-serif;
+    --font-num: 'Manrope', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--ink);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  img { max-width: 100%; display: block; }
+  button { font-family: inherit; cursor: pointer; }
+
+  /* Header */
+  .header {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .header-inner {
+    max-width: 1320px; margin: 0 auto;
+    padding: 16px 32px;
+    display: flex; align-items: center; justify-content: space-between; gap: 32px;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .logo-dot {
+    width: 28px; height: 28px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: grid; place-items: center;
+    color: white; font-weight: 800; font-size: 16px;
+  }
+  .logo-text { font-weight: 800; font-size: 18px; letter-spacing: -0.02em; }
+  .header-search {
+    flex: 1; max-width: 480px;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 100px;
+    padding: 4px 4px 4px 24px;
+    display: flex; align-items: center; gap: 12px;
+    transition: all 0.2s;
+  }
+  .header-search:hover { border-color: var(--ink); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+  .header-search input {
+    flex: 1; border: 0; outline: 0; background: transparent;
+    font-family: inherit; font-size: 14px; padding: 10px 0; color: var(--ink);
+  }
+  .header-search input::placeholder { color: var(--ink-muted); }
+  .header-search-btn {
+    background: var(--accent); color: white; border: 0;
+    width: 38px; height: 38px; border-radius: 50%;
+    display: grid; place-items: center;
+  }
+  .header-search-btn svg { width: 16px; height: 16px; stroke: white; fill: none; stroke-width: 2.5; }
+  .nav { display: flex; align-items: center; gap: 8px; }
+  .nav-link {
+    font-size: 14px; font-weight: 500; color: var(--ink);
+    padding: 10px 16px; border-radius: 100px;
+    transition: background 0.2s;
+  }
+  .nav-link:hover { background: var(--bg-alt); }
+  .btn-primary {
+    font-size: 14px; font-weight: 700;
+    padding: 12px 22px; border: 0;
+    border-radius: 100px;
+    background: var(--ink); color: white;
+    transition: background 0.2s;
+  }
+  .btn-primary:hover { background: var(--accent); }
+
+  /* Page */
+  .page { max-width: 1320px; margin: 0 auto; padding: 0 32px; }
+  .breadcrumb {
+    padding: 20px 0 12px;
+    font-size: 13px;
+    color: var(--ink-muted);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .breadcrumb a:hover { color: var(--ink); text-decoration: underline; }
+  .breadcrumb-sep { color: var(--ink-light); }
+  .breadcrumb .current { color: var(--ink); font-weight: 500; }
+
+  /* Title bar */
+  .title-bar {
+    padding: 12px 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+  }
+  .title-block { flex: 1; }
+  .store-title {
+    font-size: 32px; font-weight: 900;
+    letter-spacing: -0.02em; line-height: 1.2;
+    margin-bottom: 10px;
+  }
+  .title-meta {
+    display: flex; align-items: center; gap: 14px;
+    flex-wrap: wrap; font-size: 14px;
+    color: var(--ink-soft);
+  }
+  .meta-rating {
+    display: flex; align-items: center; gap: 4px;
+    font-weight: 700; color: var(--ink);
+  }
+  .meta-rating::before { content: '★'; }
+  .meta-link {
+    text-decoration: underline;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .meta-dot { color: var(--ink-light); }
+  .meta-verified {
+    background: var(--green-light);
+    color: var(--green);
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 12px; font-weight: 700;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .meta-pill {
+    background: var(--bg-alt);
+    color: var(--ink);
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .title-actions { display: flex; gap: 8px; align-items: center; }
+  .btn-icon {
+    background: transparent; border: 0;
+    padding: 8px 14px; border-radius: 8px;
+    font-size: 14px; font-weight: 500; color: var(--ink);
+    display: flex; align-items: center; gap: 6px;
+    transition: background 0.2s;
+  }
+  .btn-icon:hover { background: var(--bg-alt); }
+  .btn-icon svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
+
+  /* Gallery */
+  .gallery {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-rows: 200px 200px;
+    gap: 8px;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 32px;
+    position: relative;
+  }
+  .gallery-tile {
+    overflow: hidden;
+    background: var(--bg-alt);
+    cursor: pointer;
+    position: relative;
+  }
+  .gallery-tile img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: filter 0.3s;
+  }
+  .gallery-tile:hover img { filter: brightness(0.92); }
+  .gallery-tile-1 { grid-column: 1; grid-row: 1 / 3; }
+  .show-all-btn {
+    position: absolute;
+    bottom: 16px; right: 16px;
+    background: white;
+    border: 1.5px solid var(--ink);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 13px; font-weight: 700;
+    color: var(--ink);
+    display: flex; align-items: center; gap: 6px;
+    transition: all 0.2s;
+  }
+  .show-all-btn:hover { background: var(--ink); color: white; }
+  .show-all-btn svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.5; }
+
+  /* Two column */
+  .content-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 80px;
+    padding-bottom: 64px;
+    position: relative;
+  }
+  .main { min-width: 0; }
+
+  .section-block {
+    padding: 36px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-block:first-child { padding-top: 0; }
+  .section-block:last-child { border-bottom: 0; }
+  .section-block h2 {
+    font-size: 22px; font-weight: 800;
+    letter-spacing: -0.01em;
+    margin-bottom: 18px;
+  }
+  .section-block p {
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--ink-soft);
+    margin-bottom: 14px;
+  }
+  .section-block p:last-child { margin-bottom: 0; }
+  .section-block strong { color: var(--ink); font-weight: 700; }
+
+  .owner-block {
+    display: flex; align-items: center; gap: 16px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 32px;
+  }
+  .owner-avatar {
+    width: 56px; height: 56px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    border-radius: 50%;
+    display: grid; place-items: center;
+    color: white; font-weight: 800; font-size: 22px;
+    flex-shrink: 0;
+  }
+  .owner-name { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+  .owner-detail { font-size: 13px; color: var(--ink-muted); }
+
+  /* Highlights */
+  .highlights {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    margin-top: 8px;
+  }
+  .highlight {
+    display: flex; gap: 14px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    transition: all 0.2s;
+  }
+  .highlight:hover {
+    border-color: var(--ink);
+    transform: translateY(-2px);
+  }
+  .highlight-icon {
+    width: 40px; height: 40px;
+    background: var(--accent-light);
+    border-radius: 10px;
+    color: var(--accent);
+    display: grid; place-items: center;
+    flex-shrink: 0;
+  }
+  .highlight-icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; }
+  .highlight-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; line-height: 1.3; }
+  .highlight-desc { font-size: 13px; color: var(--ink-muted); line-height: 1.5; }
+
+  /* Menu */
+  .menu-section-intro {
+    background: var(--bg-warm);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .menu-intro-text { font-size: 14px; color: var(--ink-soft); }
+  .menu-intro-text strong { color: var(--accent); }
+  .menu-intro-link {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    text-decoration: underline;
+  }
+  .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  .menu-item {
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: white;
+  }
+  .menu-item:hover {
+    border-color: var(--ink);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+  }
+  .menu-item-img {
+    width: 110px; height: 110px;
+    border-radius: 10px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: var(--bg-alt);
+    position: relative;
+  }
+  .menu-item-img img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+  .menu-item:hover .menu-item-img img { transform: scale(1.05); }
+  .menu-item-tag-img {
+    position: absolute;
+    top: 6px; left: 6px;
+    background: var(--accent);
+    color: white;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-weight: 700;
+  }
+  .menu-item-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; }
+  .menu-item-name {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    line-height: 1.3;
+  }
+  .menu-item-desc {
+    font-size: 12px;
+    color: var(--ink-muted);
+    line-height: 1.5;
+    margin-bottom: 8px;
+  }
+  .menu-item-price {
+    font-family: var(--font-num);
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--accent);
+  }
+  .menu-item-price-unit {
+    font-size: 11px;
+    color: var(--ink-muted);
+    font-weight: 500;
+    margin-left: 4px;
+  }
+
+  /* Portfolio (ambience) */
+  .portfolio-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: 280px 280px;
+    gap: 12px;
+    margin-top: 8px;
+  }
+  .portfolio-item {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    background: var(--bg-alt);
+  }
+  .portfolio-item img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+  .portfolio-item:hover img { transform: scale(1.04); }
+  .portfolio-large { grid-column: span 2; grid-row: span 2; }
+  .portfolio-caption {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 18px 20px;
+    background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0) 100%);
+    color: white;
+  }
+  .portfolio-large .portfolio-caption { padding: 24px 28px; }
+  .portfolio-tag {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: 0.05em;
+  }
+  .portfolio-title {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  .portfolio-large .portfolio-title { font-size: 19px; }
+
+  /* Sidebar */
+  .sidebar { position: relative; }
+  .info-card {
+    position: sticky;
+    top: 100px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  }
+  .info-card-title { font-size: 18px; font-weight: 800; margin-bottom: 4px; letter-spacing: -0.01em; }
+  .info-card-sub { font-size: 13px; color: var(--ink-muted); margin-bottom: 22px; }
+
+  .info-highlight-box {
+    background: var(--accent-light);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .info-highlight-label {
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .info-highlight-value {
+    font-family: var(--font-num);
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  .info-row {
+    padding: 14px 0;
+    border-top: 1px solid var(--border);
+    display: flex; gap: 14px;
+    align-items: flex-start;
+  }
+  .info-row:first-of-type { border-top: 0; padding-top: 0; }
+  .info-icon {
+    width: 36px; height: 36px;
+    background: var(--bg-alt);
+    border-radius: 10px;
+    display: grid; place-items: center;
+    color: var(--ink);
+    flex-shrink: 0;
+  }
+  .info-icon svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; }
+  .info-label {
+    font-size: 11px;
+    color: var(--ink-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 2px;
+  }
+  .info-value {
+    font-size: 14px;
+    color: var(--ink);
+    font-weight: 500;
+    line-height: 1.5;
+  }
+  .info-value a { color: var(--ink); }
+  .info-value a:hover { color: var(--accent); }
+
+  .info-cta {
+    margin-top: 22px;
+    display: flex; flex-direction: column;
+    gap: 10px;
+  }
+  .cta-call {
+    background: var(--accent);
+    color: white; border: 0;
+    padding: 16px;
+    border-radius: 100px;
+    font-size: 15px; font-weight: 700;
+    transition: background 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .cta-call:hover { background: var(--accent-hover); }
+  .cta-call svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.5; }
+  .cta-line {
+    background: var(--line);
+    color: white; border: 0;
+    padding: 16px;
+    border-radius: 100px;
+    font-size: 15px; font-weight: 700;
+    transition: background 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .cta-line:hover { background: #04A648; }
+  .cta-line svg { width: 18px; height: 18px; fill: currentColor; }
+  .cta-website {
+    background: white;
+    color: var(--ink);
+    border: 1.5px solid var(--ink);
+    padding: 14px;
+    border-radius: 100px;
+    font-size: 14px; font-weight: 700;
+    transition: all 0.2s;
+  }
+  .cta-website:hover { background: var(--ink); color: white; }
+
+  .info-foot {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    font-size: 12px;
+    color: var(--ink-muted);
+  }
+  .info-foot strong { color: var(--ink); font-weight: 700; }
+
+  /* Reviews */
+  .reviews-block { padding: 56px 0; border-top: 1px solid var(--border); }
+  .reviews-summary {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 64px;
+    margin-bottom: 40px;
+    padding-bottom: 36px;
+    border-bottom: 1px solid var(--border);
+  }
+  .summary-num {
+    font-family: var(--font-num);
+    font-size: 64px; font-weight: 800;
+    letter-spacing: -0.04em; line-height: 1;
+    margin-bottom: 8px;
+  }
+  .summary-stars {
+    color: var(--accent);
+    font-size: 16px;
+    letter-spacing: 4px;
+    margin-bottom: 10px;
+  }
+  .summary-count { font-size: 13px; color: var(--ink-muted); }
+  .rating-bars { display: flex; flex-direction: column; gap: 8px; }
+  .rating-bar {
+    display: grid;
+    grid-template-columns: 60px 1fr 40px;
+    align-items: center; gap: 12px;
+    font-size: 13px;
+  }
+  .rating-bar-label { color: var(--ink-soft); }
+  .rating-bar-track {
+    height: 8px;
+    background: var(--bg-alt);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+  .rating-bar-fill {
+    height: 100%;
+    background: var(--ink);
+    border-radius: 100px;
+  }
+  .rating-bar-num {
+    font-family: var(--font-num);
+    font-weight: 600;
+    color: var(--ink-muted);
+    text-align: right;
+    font-size: 12px;
+  }
+  .reviews-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+  .review-item {
+    padding: 24px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+  }
+  .review-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .review-avatar-img {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--accent-light);
+    color: var(--accent);
+    display: grid; place-items: center;
+    font-weight: 700; font-size: 15px;
+    flex-shrink: 0;
+  }
+  .review-name { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+  .review-date { font-size: 12px; color: var(--ink-muted); }
+  .review-stars-small {
+    color: var(--accent);
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    margin-bottom: 10px;
+  }
+  .review-text-full {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+  }
+  .reviews-more { margin-top: 32px; text-align: center; }
+  .btn-outline {
+    background: white;
+    color: var(--ink);
+    border: 1.5px solid var(--ink);
+    padding: 12px 28px;
+    border-radius: 100px;
+    font-size: 14px; font-weight: 700;
+    transition: all 0.2s;
+  }
+  .btn-outline:hover { background: var(--ink); color: white; }
+
+  /* Map */
+  .map-block { padding: 56px 0; border-top: 1px solid var(--border); }
+  .map-block h2 { font-size: 22px; font-weight: 800; margin-bottom: 18px; }
+  .map-frame {
+    height: 360px;
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--bg-alt);
+    position: relative;
+    border: 1px solid var(--border);
+  }
+  .map-placeholder {
+    position: absolute; inset: 0;
+    background-image: url('https://images.unsplash.com/photo-1577086664693-894d8405334a?w=1400&q=80');
+    background-size: cover;
+    background-position: center;
+    opacity: 0.6;
+  }
+  .map-pin {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -100%);
+    background: var(--accent);
+    color: white;
+    padding: 12px 18px;
+    border-radius: 12px;
+    font-size: 14px; font-weight: 700;
+    box-shadow: 0 8px 24px rgba(255, 90, 54, 0.4);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .map-pin::after {
+    content: '';
+    position: absolute;
+    bottom: -6px; left: 50%;
+    transform: translateX(-50%) rotate(45deg);
+    width: 12px; height: 12px;
+    background: var(--accent);
+  }
+  .map-address {
+    margin-top: 16px;
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+
+  /* Similar */
+  .similar { padding: 64px 0 80px; border-top: 1px solid var(--border); }
+  .similar-head { margin-bottom: 32px; }
+  .similar-title { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 6px; }
+  .similar-sub { font-size: 14px; color: var(--ink-muted); }
+  .similar-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+  .store-card { cursor: pointer; }
+  .store-card .store-img-mini {
+    aspect-ratio: 1;
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--bg-alt);
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .store-card .store-img-mini img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+  .store-card:hover .store-img-mini img { transform: scale(1.05); }
+  .store-card-name { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+  .store-card-meta { font-size: 12px; color: var(--ink-muted); }
+  .store-card-rating {
+    font-family: var(--font-num);
+    font-weight: 700;
+    color: var(--ink);
+    font-size: 13px;
+  }
+  .store-card-rating::before { content: '★ '; }
+
+  /* Footer */
+  .footer { background: var(--bg-alt); padding: 64px 32px 28px; }
+  .footer-inner {
+    max-width: 1320px; margin: 0 auto;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 48px;
+    margin-bottom: 48px;
+  }
+  .footer-brand p {
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--ink-muted);
+    line-height: 1.7;
+    max-width: 320px;
+  }
+  .footer-col h4 { font-weight: 700; font-size: 14px; color: var(--ink); margin-bottom: 16px; }
+  .footer-col ul { list-style: none; }
+  .footer-col li { margin-bottom: 10px; }
+  .footer-col a { font-size: 13px; color: var(--ink-muted); transition: color 0.2s; }
+  .footer-col a:hover { color: var(--ink); }
+  .footer-bottom {
+    max-width: 1320px; margin: 0 auto;
+    padding-top: 28px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between;
+    font-size: 12px; color: var(--ink-muted);
+  }
+
+  @media (max-width: 1024px) {
+    .content-grid { grid-template-columns: 1fr; gap: 32px; }
+    .info-card { position: static; }
+    .reviews-list { grid-template-columns: 1fr; }
+    .similar-grid { grid-template-columns: repeat(2, 1fr); }
+    .reviews-summary { grid-template-columns: 1fr; gap: 24px; }
+    .header-search { display: none; }
+    .footer-inner { grid-template-columns: 1fr 1fr; }
+    .menu-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .gallery { grid-template-columns: 1fr; grid-template-rows: 240px; }
+    .gallery-tile:not(.gallery-tile-1) { display: none; }
+    .gallery-tile-1 { grid-column: 1; grid-row: 1; }
+    .similar-grid { grid-template-columns: 1fr; }
+    .highlights { grid-template-columns: 1fr; }
+    .portfolio-grid { grid-template-columns: 1fr 1fr; grid-template-rows: 200px 200px 200px; }
+    .portfolio-large { grid-column: span 2; grid-row: span 1; }
+    .title-bar { flex-direction: column; align-items: stretch; }
+    .store-title { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-inner">
+    <a href="/" class="logo">
+      <span class="logo-dot">口</span>
+      <span class="logo-text">店家好口碑</span>
+    </a>
+    <div class="header-search">
+      <input type="text" placeholder="搜尋店家、服務、地區...">
+      <button class="header-search-btn">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      </button>
+    </div>
+    <nav class="nav">
+      <a href="#" class="nav-link">分類</a>
+      <a href="#" class="nav-link">熱門</a>
+      <button class="btn-primary">店家上架</button>
+    </nav>
+  </div>
+</header>
+
+<div class="page">
+
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb">
+    <a href="/">首頁</a>
+    <span class="breadcrumb-sep">/</span>
+    <a href="#">餐飲美食</a>
+    <span class="breadcrumb-sep">/</span>
+    <a href="#">居酒屋</a>
+    <span class="breadcrumb-sep">/</span>
+    <span class="current">原佃燒烤居酒屋</span>
+  </nav>
+
+  <!-- Title -->
+  <div class="title-bar">
+    <div class="title-block">
+      <h1 class="store-title">原佃燒烤居酒屋</h1>
+      <div class="title-meta">
+        <span class="meta-rating">4.8</span>
+        <a href="#reviews" class="meta-link">128 則評價</a>
+        <span class="meta-dot">·</span>
+        <span>台南東區</span>
+        <span class="meta-dot">·</span>
+        <span class="meta-pill">日式燒烤</span>
+        <span class="meta-pill">居酒屋</span>
+        <span class="meta-pill">深夜營業</span>
+        <span class="meta-verified">✓ 在地驗證</span>
+      </div>
+    </div>
+    <div class="title-actions">
+      <button class="btn-icon">
+        <svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+        分享
+      </button>
+      <button class="btn-icon">
+        <svg viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/></svg>
+        收藏
+      </button>
+    </div>
+  </div>
+
+  <!-- Gallery -->
+  <div class="gallery">
+    <div class="gallery-tile gallery-tile-1">
+      <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200&q=80">
+    </div>
+    <div class="gallery-tile">
+      <img src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=600&q=80">
+    </div>
+    <div class="gallery-tile">
+      <img src="https://images.unsplash.com/photo-1535473895227-bdecb20fb157?w=600&q=80" onerror="this.src='https://images.unsplash.com/photo-1551892374-ecf8754cf8b0?w=600&q=80'">
+    </div>
+    <div class="gallery-tile">
+      <img src="https://images.unsplash.com/photo-1559339352-11d035aa65de?w=600&q=80" onerror="this.src='https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&q=80'">
+    </div>
+    <div class="gallery-tile">
+      <img src="https://images.unsplash.com/photo-1543353071-873f17a7a088?w=600&q=80" onerror="this.src='https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&q=80'">
+    </div>
+    <button class="show-all-btn">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      看全部 24 張照片
+    </button>
+  </div>
+
+  <!-- Two col -->
+  <div class="content-grid">
+    <main class="main">
+
+      <!-- Owner -->
+      <div class="owner-block">
+        <div class="owner-avatar">原</div>
+        <div>
+          <div class="owner-name">主廚經營 · 原佃燒烤</div>
+          <div class="owner-detail">日本學藝歸國 · 台南老饕私房名單 · 開業 8 年</div>
+        </div>
+      </div>
+
+      <!-- About -->
+      <section class="section-block">
+        <h2>關於這家店</h2>
+        <p>主廚阿原年輕時遠赴日本學藝，在大阪居酒屋深耕 6 年，從備料、串籤到火候掌握全程紮實磨練。回到台南後，把 <strong>「日本職人精神」</strong> 帶進這條裕農路的小巷裡，從 2017 年開業至今，成為東區夜貓子的私房名單。</p>
+        <p>這裡沒有花俏的擺盤，只有對食材的認真。每天清晨從中央市場挑魚貨，雞肉嚴選台灣土雞放山雞，醬汁全部自家熬製，<strong>連備長炭都是從日本進口的紀州備長炭</strong>。一串一串慢火細烤，不為了快，只為了好吃。</p>
+        <p>傍晚 6 點開門到凌晨 1 點，是台南少數深夜還亮著的好店。</p>
+      </section>
+
+      <!-- Highlights -->
+      <section class="section-block">
+        <h2>店家特色</h2>
+        <div class="highlights">
+          <div class="highlight">
+            <div class="highlight-icon">
+              <svg viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M3 10h18M5 6h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/></svg>
+            </div>
+            <div>
+              <div class="highlight-title">日本紀州備長炭</div>
+              <div class="highlight-desc">遠紅外線直火慢烤，鎖住食材原味</div>
+            </div>
+          </div>
+          <div class="highlight">
+            <div class="highlight-icon">
+              <svg viewBox="0 0 24 24"><path d="M3 12c0-5 4-9 9-9s9 4 9 9-4 9-9 9-9-4-9-9z"/><path d="M9 12l2 2 4-4"/></svg>
+            </div>
+            <div>
+              <div class="highlight-title">嚴選新鮮食材</div>
+              <div class="highlight-desc">每日中央市場挑魚貨，台灣土雞</div>
+            </div>
+          </div>
+          <div class="highlight">
+            <div class="highlight-icon">
+              <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            </div>
+            <div>
+              <div class="highlight-title">職人手切手串</div>
+              <div class="highlight-desc">每串都由主廚親手切串調味</div>
+            </div>
+          </div>
+          <div class="highlight">
+            <div class="highlight-icon">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div>
+              <div class="highlight-title">深夜食堂</div>
+              <div class="highlight-desc">營業至凌晨 1 點，下班宵夜首選</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Signature menu -->
+      <section class="section-block">
+        <h2>招牌菜單</h2>
+        <div class="menu-section-intro">
+          <div class="menu-intro-text">老饕推薦 <strong>必點 6 道</strong> · 平均消費 NT$600–800 / 人</div>
+          <a href="#" class="menu-intro-link">看完整菜單 →</a>
+        </div>
+        <div class="menu-grid">
+          <div class="menu-item">
+            <div class="menu-item-img">
+              <img src="https://images.unsplash.com/photo-1535473895227-bdecb20fb157?w=400&q=80" onerror="this.src='https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&q=80'">
+              <span class="menu-item-tag-img">招牌</span>
+            </div>
+            <div class="menu-item-info">
+              <div>
+                <div class="menu-item-name">招牌雞肉串（鹽 / 醬）</div>
+                <div class="menu-item-desc">台灣土雞肉，醬汁自家熬製，不柴不乾</div>
+              </div>
+              <div><span class="menu-item-price">$70</span><span class="menu-item-price-unit">/ 3 串</span></div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-img">
+              <img src="https://images.unsplash.com/photo-1559339352-11d035aa65de?w=400&q=80" onerror="this.src='https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=400&q=80'">
+              <span class="menu-item-tag-img">熱門</span>
+            </div>
+            <div class="menu-item-info">
+              <div>
+                <div class="menu-item-name">厚切牛舌</div>
+                <div class="menu-item-desc">5mm 厚切，保留咬感與甘甜</div>
+              </div>
+              <div><span class="menu-item-price">$280</span></div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-img">
+              <img src="https://images.unsplash.com/photo-1551892374-ecf8754cf8b0?w=400&q=80" onerror="this.src='https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&q=80'">
+              <span class="menu-item-tag-img">主廚推薦</span>
+            </div>
+            <div class="menu-item-info">
+              <div>
+                <div class="menu-item-name">烤明太子飯糰</div>
+                <div class="menu-item-desc">炭火微焦的飯糰，配北海道明太子</div>
+              </div>
+              <div><span class="menu-item-price">$120</span></div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-img">
+              <img src="https://images.unsplash.com/photo-1543353071-873f17a7a088?w=400&q=80" onerror="this.src='https://images.unsplash.com/photo-1559339352-11d035aa65de?w=400&q=80'">
+              <span class="menu-item-tag-img">限量</span>
+            </div>
+            <div class="menu-item-info">
+              <div>
+                <div class="menu-item-name">鹽烤秋刀魚</div>
+                <div class="menu-item-desc">每日進貨 10 尾，售完為止</div>
+              </div>
+              <div><span class="menu-item-price">$280</span></div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-img">
+              <img src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=400&q=80">
+              <span class="menu-item-tag-img">招牌</span>
+            </div>
+            <div class="menu-item-info">
+              <div>
+                <div class="menu-item-name">燒鳥盛合 8 串</div>
+                <div class="menu-item-desc">主廚精選 8 種雞肉部位</div>
+              </div>
+              <div><span class="menu-item-price">$580</span></div>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-img">
+              <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&q=80">
+              <span class="menu-item-tag-img">熱門</span>
+            </div>
+            <div class="menu-item-info">
+              <div>
+                <div class="menu-item-name">鹽蔥豬五花</div>
+                <div class="menu-item-desc">三層豬五花配香蔥，鹹香解膩</div>
+              </div>
+              <div><span class="menu-item-price">$95</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Ambience portfolio -->
+      <section class="section-block">
+        <h2>用餐氛圍</h2>
+        <p style="margin-bottom: 22px; color: var(--ink-soft); font-size: 14px;">深夜食堂的氛圍 · 老闆親自燒烤 · 深巷小店的暖意</p>
+        <div class="portfolio-grid">
+          <div class="portfolio-item portfolio-large">
+            <img src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1200&q=80">
+            <div class="portfolio-caption">
+              <div class="portfolio-tag">店內氛圍</div>
+              <div class="portfolio-title">深巷裡的居酒屋暖光</div>
+            </div>
+          </div>
+          <div class="portfolio-item">
+            <img src="https://images.unsplash.com/photo-1535473895227-bdecb20fb157?w=600&q=80" onerror="this.src='https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&q=80'">
+            <div class="portfolio-caption">
+              <div class="portfolio-tag">職人手藝</div>
+              <div class="portfolio-title">炭火直烤</div>
+            </div>
+          </div>
+          <div class="portfolio-item">
+            <img src="https://images.unsplash.com/photo-1559339352-11d035aa65de?w=600&q=80" onerror="this.src='https://images.unsplash.com/photo-1543353071-873f17a7a088?w=600&q=80'">
+            <div class="portfolio-caption">
+              <div class="portfolio-tag">招牌</div>
+              <div class="portfolio-title">綜合燒鳥盛合</div>
+            </div>
+          </div>
+          <div class="portfolio-item">
+            <img src="https://images.unsplash.com/photo-1551892374-ecf8754cf8b0?w=600&q=80" onerror="this.src='https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&q=80'">
+            <div class="portfolio-caption">
+              <div class="portfolio-tag">食材</div>
+              <div class="portfolio-title">當日新鮮</div>
+            </div>
+          </div>
+          <div class="portfolio-item">
+            <img src="https://images.unsplash.com/photo-1543353071-873f17a7a088?w=600&q=80" onerror="this.src='https://images.unsplash.com/photo-1559339352-11d035aa65de?w=600&q=80'">
+            <div class="portfolio-caption">
+              <div class="portfolio-tag">清酒搭配</div>
+              <div class="portfolio-title">日本進口清酒</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="info-card">
+        <div class="info-card-title">訂位 / 聯絡</div>
+        <div class="info-card-sub">建議假日提前 1 天預約 · 平均回覆 30 分鐘</div>
+
+        <div class="info-highlight-box">
+          <div>
+            <div class="info-highlight-label">平均消費</div>
+            <div style="font-size: 12px; color: var(--ink-muted); margin-top: 2px;">每人約</div>
+          </div>
+          <div class="info-highlight-value">$600–800</div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-icon">
+            <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </div>
+          <div>
+            <div class="info-label">電話訂位</div>
+            <div class="info-value"><a href="tel:0931550995">0931-550-995</a></div>
+          </div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-icon" style="background: #E8F8EE; color: #06C755;">
+            <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M19.365 9.863c.349 0 .63.285.631.633 0 .346-.282.629-.631.629H17.61v1.125h1.755c.349 0 .63.283.63.629 0 .344-.282.629-.63.629h-2.386c-.345 0-.627-.282-.627-.629V8.108c0-.345.282-.628.626-.628h2.386c.348 0 .63.282.63.628 0 .345-.282.628-.63.628H17.61v1.127h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.628.63-.628.345 0 .63.282.63.628v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.628.627-.628.349 0 .631.282.631.628v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.628.63-.628.348 0 .63.282.63.628v4.141h1.756c.348 0 .629.283.629.629 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
+          </div>
+          <div>
+            <div class="info-label">LINE 訂位</div>
+            <div class="info-value"><a href="https://line.me/ti/p/~yzakaya" target="_blank">@yzakaya →</a></div>
+          </div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-icon">
+            <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <div>
+            <div class="info-label">地址</div>
+            <div class="info-value">台南市東區<br>裕農路621巷62-10號</div>
+          </div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div>
+            <div class="info-label">營業時間</div>
+            <div class="info-value">週一、三–日 18:00–01:00<br><span style="color: var(--ink-muted); font-size: 13px;">週二公休</span></div>
+          </div>
+        </div>
+
+        <div class="info-cta">
+          <button class="cta-call">
+            <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            撥打電話訂位
+          </button>
+          <button class="cta-line">
+            <svg viewBox="0 0 24 24"><path d="M19.365 9.863c.349 0 .63.285.631.633 0 .346-.282.629-.631.629H17.61v1.125h1.755c.349 0 .63.283.63.629 0 .344-.282.629-.63.629h-2.386c-.345 0-.627-.282-.627-.629V8.108c0-.345.282-.628.626-.628h2.386c.348 0 .63.282.63.628 0 .345-.282.628-.63.628H17.61v1.127h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.628.63-.628.345 0 .63.282.63.628v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.628.627-.628.349 0 .631.282.631.628v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.628.63-.628.348 0 .63.282.63.628v4.141h1.756c.348 0 .629.283.629.629 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
+            加 LINE 訂位
+          </button>
+          <button class="cta-website">線上預約 →</button>
+        </div>
+
+        <div class="info-foot">
+          <strong>★ 4.8</strong> · 128 則 Google 評價<br>
+          資料於 2026/05/01 更新
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Reviews -->
+  <section class="reviews-block" id="reviews">
+    <div class="reviews-summary">
+      <div>
+        <div class="summary-num">4.8</div>
+        <div class="summary-stars">★★★★★</div>
+        <div class="summary-count">基於 128 則 Google 評價</div>
+      </div>
+      <div class="rating-bars">
+        <div class="rating-bar">
+          <span class="rating-bar-label">5 星</span>
+          <div class="rating-bar-track"><div class="rating-bar-fill" style="width: 82%;"></div></div>
+          <span class="rating-bar-num">105</span>
+        </div>
+        <div class="rating-bar">
+          <span class="rating-bar-label">4 星</span>
+          <div class="rating-bar-track"><div class="rating-bar-fill" style="width: 13%;"></div></div>
+          <span class="rating-bar-num">17</span>
+        </div>
+        <div class="rating-bar">
+          <span class="rating-bar-label">3 星</span>
+          <div class="rating-bar-track"><div class="rating-bar-fill" style="width: 4%;"></div></div>
+          <span class="rating-bar-num">4</span>
+        </div>
+        <div class="rating-bar">
+          <span class="rating-bar-label">2 星</span>
+          <div class="rating-bar-track"><div class="rating-bar-fill" style="width: 1%;"></div></div>
+          <span class="rating-bar-num">1</span>
+        </div>
+        <div class="rating-bar">
+          <span class="rating-bar-label">1 星</span>
+          <div class="rating-bar-track"><div class="rating-bar-fill" style="width: 1%;"></div></div>
+          <span class="rating-bar-num">1</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="reviews-list">
+      <article class="review-item">
+        <div class="review-head">
+          <div class="review-avatar-img">陳</div>
+          <div>
+            <div class="review-name">陳先生</div>
+            <div class="review-date">2 週前</div>
+          </div>
+        </div>
+        <div class="review-stars-small">★★★★★</div>
+        <p class="review-text-full">炭火香氣超棒！招牌雞肉串完全沒有腥味，老闆親自烤，每串火候都控制得剛剛好。配上一支生啤超讚，下班後最棒的犒賞。</p>
+      </article>
+
+      <article class="review-item">
+        <div class="review-head">
+          <div class="review-avatar-img">林</div>
+          <div>
+            <div class="review-name">林小姐</div>
+            <div class="review-date">1 個月前</div>
+          </div>
+        </div>
+        <div class="review-stars-small">★★★★★</div>
+        <p class="review-text-full">深夜食堂氛圍滿分，台南東區深夜聚會首選。厚切牛舌真的厚，咬下去超有滿足感。明太子飯糰也很驚艷，外面焦香裡面綿密。</p>
+      </article>
+
+      <article class="review-item">
+        <div class="review-head">
+          <div class="review-avatar-img">王</div>
+          <div>
+            <div class="review-name">王大哥</div>
+            <div class="review-date">3 個月前</div>
+          </div>
+        </div>
+        <div class="review-stars-small">★★★★★</div>
+        <p class="review-text-full">在這條巷子裡找到這家店真是緣分。老闆有日本居酒屋的職人氣質，每串都用心，食材新鮮看得到。秋刀魚要早點來才吃得到。</p>
+      </article>
+
+      <article class="review-item">
+        <div class="review-head">
+          <div class="review-avatar-img">許</div>
+          <div>
+            <div class="review-name">許小姐</div>
+            <div class="review-date">5 個月前</div>
+          </div>
+        </div>
+        <div class="review-stars-small">★★★★★</div>
+        <p class="review-text-full">招牌盛合 8 串點下去就對了，每個部位都吃得到不同口感。醬汁是店家自己熬的，鹹甜剛好不會死鹹。下次想試他們的清酒搭配。</p>
+      </article>
+    </div>
+
+    <div class="reviews-more">
+      <button class="btn-outline">看全部 128 則評價 →</button>
+    </div>
+  </section>
+
+  <!-- Map -->
+  <section class="map-block">
+    <h2>店家位置</h2>
+    <div class="map-frame">
+      <div class="map-placeholder"></div>
+      <div class="map-pin">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        原佃燒烤
+      </div>
+    </div>
+    <div class="map-address">
+      📍 台南市東區裕農路621巷62-10號 · <a href="#" style="color: var(--accent); font-weight: 700;">在 Google Maps 開啟 →</a>
+    </div>
+  </section>
+
+  <!-- Similar -->
+  <section class="similar">
+    <div class="similar-head">
+      <h2 class="similar-title">類似的居酒屋</h2>
+      <p class="similar-sub">台南東區附近的深夜食堂</p>
+    </div>
+    <div class="similar-grid">
+      <article class="store-card">
+        <div class="store-img-mini">
+          <img src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=500&q=80">
+        </div>
+        <div class="store-card-name">阿吉日式串燒</div>
+        <div class="store-card-meta"><span class="store-card-rating">4.7</span> · 台南東區</div>
+      </article>
+      <article class="store-card">
+        <div class="store-img-mini">
+          <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500&q=80">
+        </div>
+        <div class="store-card-name">小巷居酒屋</div>
+        <div class="store-card-meta"><span class="store-card-rating">4.6</span> · 台南中西區</div>
+      </article>
+      <article class="store-card">
+        <div class="store-img-mini">
+          <img src="https://images.unsplash.com/photo-1559339352-11d035aa65de?w=500&q=80" onerror="this.src='https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=500&q=80'">
+        </div>
+        <div class="store-card-name">深夜燒物食堂</div>
+        <div class="store-card-meta"><span class="store-card-rating">4.8</span> · 台南東區</div>
+      </article>
+      <article class="store-card">
+        <div class="store-img-mini">
+          <img src="https://images.unsplash.com/photo-1543353071-873f17a7a088?w=500&q=80" onerror="this.src='https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=500&q=80'">
+        </div>
+        <div class="store-card-name">裕農路串燒小棧</div>
+        <div class="store-card-meta"><span class="store-card-rating">4.5</span> · 台南東區</div>
+      </article>
+    </div>
+  </section>
+
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <a href="#" class="logo">
+        <span class="logo-dot">口</span>
+        <span class="logo-text">店家好口碑</span>
+      </a>
+      <p>台南起家的在地店家平台，匯集優質商家，提供完整服務資訊與真實口碑。</p>
+    </div>
+    <div class="footer-col">
+      <h4>探索</h4>
+      <ul>
+        <li><a href="#">所有分類</a></li>
+        <li><a href="#">熱門店家</a></li>
+        <li><a href="#">最新加入</a></li>
+        <li><a href="#">搜尋店家</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>店家專區</h4>
+      <ul>
+        <li><a href="#">免費上架</a></li>
+        <li><a href="#">店家後台</a></li>
+        <li><a href="#">合作方案</a></li>
+        <li><a href="#">聯絡我們</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>關於</h4>
+      <ul>
+        <li><a href="#">關於我們</a></li>
+        <li><a href="#">隱私政策</a></li>
+        <li><a href="#">使用條款</a></li>
+        <li><a href="#">媒體聯繫</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 店家好口碑 · gomag.com.tw</span>
+    <span>Made in Tainan</span>
+  </div>
+</footer>
+
+</body>
+</html>

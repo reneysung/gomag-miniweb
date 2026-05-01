@@ -1,0 +1,18 @@
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+
+# 阻擋直接訪問維護腳本
+<FilesMatch "^(install\.php|setup_db\.php|migrate_.*\.php|seed_.*\.php|debug_.*\.php|reset_.*\.php|deploy_.*\.php|check_.*\.php)$">
+  Require all denied
+</FilesMatch>
+
+# Pretty URL
+RewriteRule ^store/([a-z0-9_-]+)/?$ store.php?sub=$1 [L,QSA]
+RewriteRule ^category/([a-z0-9-]+)/?$ category.php?slug=$1 [L,QSA]
+RewriteRule ^city/?$ city.php [L,QSA]
+RewriteRule ^city/([a-z0-9-]+)/?$ city.php?slug=$1 [L,QSA]
+RewriteRule ^sitemap\.xml$ sitemap.php [L]
+RewriteRule ^robots\.txt$ robots.php [L]
+</IfModule>
