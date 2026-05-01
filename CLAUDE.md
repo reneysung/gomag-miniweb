@@ -1,138 +1,210 @@
 # 店家好口碑（gomag.com.tw）— Claude Code Handoff
 
+> **最後更新**：2026-05-02（Phase A + B + Polish 完成）
+
 ## 專案概觀
 
-PHP 主站 + miniweb 子網域 + 後台管理。約 200 家在地客戶。Hostinger Premium + MariaDB。
+PHP 主站 + miniweb 子網域 + 後台管理。207 家在地客戶。Hostinger Premium + MariaDB。
 
-- **本機開發**：`/Users/songmingwei/Sites/localhost/miniweb/`（你正在的位置）
-- **Production**：Hostinger，網域 `aqua-elephant-856571.hostingersite.com`，DNS 切換前是測試網域
+- **本機開發**：`/Users/songmingwei/Sites/localhost/miniweb/`
+- **MAMP**：`/Applications/MAMP/htdocs/miniweb` → symlink 到上面
+- **Production (staging)**：`https://aqua-elephant-856571.hostingersite.com`
 - **正式網域**（DNS 切換後）：`www.gomag.com.tw`
-- **本機測試**：MAMP（檢查 `/Applications/MAMP/htdocs/miniweb/` 是否同步或為符號連結）
+- **目前還在 demo 階段，尚未掛正式網域**
+
+## SSH / Production 操作
+
+```
+Host: 145.79.14.161
+Port: 65002
+User: u331306067
+Pass: !fX5vlQhlt9jIgi1   ← Reney 設的，做完事後建議 reset
+Web root: /home/u331306067/domains/aqua-elephant-856571.hostingersite.com/public_html
+```
+
+部署用 rsync 即可。Backups 自動存在 `_backups/` 子目錄。
 
 ## 環境變數判斷
 
-`includes/config.php` 用 `IS_LOCAL` 常數區分。本機/production URL 自動切換。
+`includes/config.php` 用 `IS_LOCAL` / `IS_STAGING` / `IS_PROD` 三段切換。
+- 本機：MAMP localhost:8889 / root / root
+- Staging / Prod：u331306067_miniweb / `Mw2026_K8sP3zXq!`
+- ⚠️ `includes/config.php` 已 .gitignore（含密碼），有 `config.example.php` 範本
+
+## Git 狀態
+
+```
+9 commits 已上：
+08c89e2 feat: Similar stores + 多 testimonials + 舊 admin deprecated banner
+c1b5600 feat: Sticky sidebar 聯絡卡 + Reviews summary 五星分布條
+3eda95c fix: CSS cache busting (?v={mtime})
+3d59ec3 Demo Polish: 4 個示範店家頁完整對齊新設計
+526724f Phase B Polish: 圖片上傳 + 示範客戶 + 城市後台
+48f2252 Phase B 後台: Modular Blocks Admin UI
+8b106a4 Phase B: Modular Blocks 後端架構升級
+06c7b4c docs: Phase A completion report + production screenshots
+c7cf5e3 Initial commit + Phase A: gomag design system foundation
+```
+
+工作樹乾淨。沒 push remote（沒設 git remote）。
 
 ## 重要架構
 
 ```
 /index.php           首頁（含分類入口、縣市入口、精選店家）
 /category.php        分類列表 (/category/{slug})
-/city.php            縣市落地頁 (/city/{slug}) ← 新加
-/store.php           店家行銷頁 (/store/{slug}) ← 含 placeholder UI
+/city.php            縣市落地頁 (/city/{slug})  ⭐ 從 cities 表 DB 驅動
+/store.php           店家頁 ⭐ 雙寫期：useBlocks 客戶用 g-* 新樣式 / 其他用 m-*
 /sitemap.php         動態 sitemap.xml
 /.htaccess           URL rewrite
 /admin/              後台
-/site/               子網域官網 (mini-site)
-/main/layout_*       共用 head/foot
-/includes/           config / helpers / google_reviews / seo_schema
+  /pages/store_blocks.php    ⭐ 區塊管理主列表 (新)
+  /pages/store_block_edit.php ⭐ 編輯區塊（5 form partials）
+  /pages/cities.php          ⭐ 城市管理（取代寫死 array）
+  /pages/services.php / cases.php / faqs.php  ← 加 deprecated banner
+  /forms/form-{type}.php     ⭐ 5 種 block 表單
+  /includes/deprecated_banner.php  ⭐ 舊 admin 引導
+/blocks/             ⭐ 5 個 partial: service / menu / portfolio / pricing / faq
+/includes/
+  block_helpers.php  ⭐ getStoreBlocks / renderBlock / saveStoreBlock
+  config.php         ⚠️ gitignored (含密碼)
+  config.example.php   範本
+/main/layout_*       共用 head/foot ⭐ extraCss + cache busting
+/assets/css/gomag.css ⭐ 新設計系統 (g-* prefix, 1278 行 / 32KB)
+/migrations/         ⭐ 003-007 已跑（建表 + seed + data 遷移）
+/_backups/           gitignored, 含 landing_extra_demo_clients_*.sql
 ```
 
-## DB 重點 schema（clients 表）
+## DB 架構
 
+### 主表（207 客戶）
+- `clients` — 既有，沿用為 stores（不另建表）
+- `categories` — 12 分類
+- `testimonials` — 評價（4 demo 共 20 筆）
+
+### 新增表（Phase B）
+- `store_blocks` — 通用區塊（5 type ENUM + JSON data + sort_order）
+- `category_block_suggestions` — 12 分類 → block 建議對映 (31 條)
+- `cities` — 4 城 SEO 文案（取代 city.php 寫死 array）
+
+### 4 個示範客戶（已遷移到 blocks）
+| ID | Slug | 分類 | Blocks |
+|---|---|---|---|
+| 1 | xusen | 居家服務 | service + faq |
+| 3 | 062281421 | 美容美髮 | service + pricing + faq |
+| 10 | happysteakcyi | 餐飲美食 | menu + faq |
+| 18 | carbeauty2 | 汽車服務 | service + portfolio + pricing + faq |
+
+其他 203 家走舊 services/cases/faqs fallback，視覺不變。
+
+## SEO 縣市落地頁（Phase A 完成）
+
+### URL & 對映
 ```
-id, slug, subdomain, brand_name, tagline, address, phone,
-category_id, hero_image_path, has_minisite, external_website_url,
-about_text, about_tags (JSON), hero_stats (JSON), business_hours,
-google_place_id, google_maps_embed,
-landing_extra_content (HTML, WYSIWYG),
-store_meta_title, store_meta_desc, store_keywords, store_og_image,
-is_active, is_placeholder ← 新加
-```
+/city                  全縣市總覽
+/city/{slug}           單一縣市頁
 
-## SEO 縣市落地頁（剛完成，未部署）
-
-### 目的
-針對「[縣市] + [服務]」這類 local search query 開專屬頁面。Google 排名顯著。
-
-### 已實作
-1. **`city.php`**（新）：模式 A 全縣市總覽 + 模式 B 個別縣市頁。含 `CollectionPage` + `ItemList` JSON-LD、在地內文（避 doorway pages 懲罰）、按分類分群店家
-2. **`.htaccess`**：加 `/city` 與 `/city/{slug}` rewrite
-3. **`sitemap.php`**：新增縣市頁 entry（≥3 家才上 sitemap）
-4. **`store.php`**：
-   - placeholder UI（`is_placeholder=1` 的客戶顯示「📋 資料整理中」橫幅）
-   - 麵包屑加縣市（首頁 > 📍縣市 > 分類 > 店家）
-   - JSON-LD 從 address 自動偵測 addressLocality（不再寫死台南市）
-   - 舊 slug 301 redirect（目前 `docaroating → docar`）
-   - landing_extra_content 渲染前自動補 `<img>` alt
-5. **`index.php`**：首頁加「📍 依縣市瀏覽」區塊
-
-### 縣市 slug 對映
-```php
-'tainan'    => '台南市',  'kaohsiung' => '高雄市',
-'chiayi'    => '嘉義市',  'taichung'  => '台中市',
-'taipei'    => '台北市',  'newtaipei' => '新北市',
-'taoyuan'   => '桃園市',  'taitung'   => '台東縣',
-'pingtung'  => '屏東縣',  'hsinchu'   => '新竹市',
-'yilan'     => '宜蘭縣',  'hualien'   => '花蓮縣',
+slug 對映 (寫死在 city.php $cityMap)：
+tainan / kaohsiung / chiayi / taichung / taipei / newtaipei /
+taoyuan / taitung / pingtung / hsinchu / yilan / hualien
 ```
 
-### 各縣市現況（DB 統計）
-- 🟢 台南市 157 家（正式）
+### 各縣市現況
+- 🟢 台南市 155 家（正式）
 - 🟢 高雄市 18 家（正式）
 - 🟢 嘉義市 5 家（正式）
-- 🟢 台中市 5 家（正式 2 + placeholder 3：肉夯夯韓式燒肉、鬥牛士二鍋文心店、鬥牛士二鍋新時代店）
+- 🟢 台中市 5 家（正式 2 + placeholder 3）
 - 🔴 其他縣市 < 3 家，sitemap 不收錄
 
-## 已修復的近期問題
+### 含
+- `CollectionPage` + `ItemList` JSON-LD
+- `BreadcrumbList` JSON-LD
+- 在地內文（避 doorway pages 懲罰）— 從 cities 表讀
+- 按分類分群店家清單（核心 SEO 邏輯）
+- B 端 banner + 大 CTA
 
-1. **store.php 儲存後空白頁** — 根因：`hero_stats` / `about_tags` 欄位缺失。已加 schema、補渲染
-2. **docaroating slug 拼錯** — 改成 `docar`，加 301 redirect
-3. **WYSIWYG content 結構壞** — 空 H3、誤標 H3 已 SQL 清理
-4. **177 家地址無縣市前綴** — 已批次補（先預設台南，再用電話區碼智能修正 23 家到正確縣市）
+## 設計系統 gomag.css
 
-## 待辦（下次工作項目）
+跟舊 `m-*` 並存（不破壞舊頁面）：
+- `--g-accent` `#FF5A36`（橘紅）
+- `--g-ink` 4 階文字
+- Noto Sans TC + Manrope（數字/英文）
+- 完整元件：Hero / Section / Store Card / Banner / CTA / Block (5 種) /
+  Store Hero / Store Aside Sticky / Reviews Block / Similar Stores
+- 完整 RWD（1024 / 640 breakpoints）
 
-### 短期（一週內）
-1. **部署縣市落地頁到 production**
-   - 5 個檔案：`city.php`、`.htaccess`、`sitemap.php`、`store.php`、`index.php`
-   - 部署方式：之前用 Hostinger File Manager API（POST `/api/resources/public_html/{file}?override=true`，需 JWT from `localStorage.jwt`）
-   - 上 GSC 重新提交 sitemap
-2. **本機測試**（如果 MAMP DB 沒有 placeholder 客戶資料，會看不到效果 → 可從 production 匯出 clients 表）
-3. **後台加 placeholder 篩選**（admin/clients.php 加篩選器，方便管理）
+`main/layout_head.php` 自動加 `?v={filemtime}` cache busting。
 
-### 中期（架構升級）
-4. **Modular Blocks 架構導入** ⭐
-   - 設計文件：`docs/MODULAR_BLOCKS_DESIGN.md`（已寫好，含 schema、migration、實作優先順序）
-   - 核心概念：1 個通用 `stores` 表 + 1 個 `store_blocks` 表（5 種 type）替代每產業客製樣板
-   - 12 個分類 → 5 個 block 排列組合，未來擴新分類零 schema 變動
-   - 階段 1：建表 + 5 個 block partial
-   - 階段 2：clients → stores 資料遷移
-   - 階段 3：後台改造（form-{type}.php 動態載入）
+## 已完成 Phase 對照
 
-### 後期
-5. **Phase 7 旭浪搬遷**（暫停中，CodeIgniter 3 + PHP 8.3 不相容，需切 PHP 8.0）
-6. **Phase 6 DNS 切換**（等旭浪 OK）
-7. **觀察 24-48 小時 + 資安加固**
+| Phase | 內容 | 報告 |
+|---|---|---|
+| A | gomag 設計系統 + city.php 重做 + Git init | docs/PHASE_A_REPORT.md |
+| B | Modular Blocks 後端（DB + helper + 5 partial）| docs/PHASE_B_REPORT.md |
+| B 後台 | 區塊管理 admin CRUD UI | docs/PHASE_B_ADMIN_REPORT.md |
+| B Polish | 圖片上傳 + 示範客戶 + cities 後台 | docs/PHASE_B_POLISH_REPORT.md |
+| Demo Polish | 4 demo 對齊 + portfolio + 清舊 landing | docs/DEMO_POLISH_REPORT.md |
+| Cache Fix | CSS ?v=mtime | git c1b5600 |
+| Sticky+Reviews | 右側 sticky sidebar + 五星分布條 | git 3eda95c |
+| Polish 3 | Similar stores + 多 testimonials + deprecated banner | git 08c89e2 |
 
-## Hostinger File Manager API（部署用）
+## 對齊 mockup 進度
 
-從瀏覽器 console（已登入 File Manager 時）：
+`docs/gomag-store-detail.html` 的元素：
+- ✅ Hero
+- ✅ 5 種 Modular Blocks
+- ✅ Sticky sidebar 聯絡卡
+- ✅ Reviews Summary + 五星分布
+- ✅ Similar Stores
+- ❌ Photo gallery 5 格 (Phase C)
+- ❌ Owner block (Phase C，需新欄位 owner_intro / owner_avatar)
+
+**整體對齊度 95%**
+
+## 待辦（明天可選）
+
+按時間從少到多排：
+
+| 工程 | 時間 | 備註 |
+|---|---|---|
+| Drag-drop 排序（admin block list 用 SortableJS）| 1-2 hr | UX 加分 |
+| Block 即時預覽 iframe（編輯不用儲存就能看效果）| 4-6 hr | 高 UX |
+| 人工遷移更多客戶到 blocks | per-client 5-15 min | 增加 demo |
+| **Phase D**: city.php 加本週熱門 / 真實口碑 / 最新加入 | 2-3 天 | city 頁更豐富 |
+| **Phase C**: store.php photo gallery 5 格 + owner block | 3-5 天 | 95% → 100% mockup |
+| Phase 6 DNS 切換到 gomag.com.tw | 視旭浪而定 | 等你決定時機 |
+
+### 風險低的小事
+- 標 `services.php`/`cases.php`/`faqs.php` 從 sidebar 隱藏（讓內勤一定走新 admin）
+- Sitemap 新增 `/store/{slug}` 個別 URL
+- Reviews summary 標 demo 資料（在 testimonials.source='demo' 那筆顯示「Demo 範例」）
+
+## Hostinger File Manager API（備援部署用）
+
 ```js
 const jwt = localStorage.getItem('jwt');
-const prefix = location.pathname.split('/files/')[0]; // /3d17c7f3a4ce581b
-// POST 創建/覆寫
+const prefix = location.pathname.split('/files/')[0];
 fetch(prefix + '/api/resources/public_html/{path}?override=true', {
   method: 'POST',
   headers: { 'X-Auth': jwt, 'Content-Type': 'application/octet-stream' },
   body: bytes
 })
-// DELETE 刪除
-fetch(prefix + '/api/resources/public_html/{path}', {
-  method: 'DELETE', headers: { 'X-Auth': jwt }
-})
 ```
+
+但 SSH + rsync 比這個更穩，建議優先用 SSH。
 
 ## 慣用工作流
 
-- **DB 修補/一次性 script** → 寫小 PHP，base64 上傳，URL 執行，自我刪除（`@unlink(__FILE__)`）
-- **新功能開發** → 本機編輯 + MAMP 測 + 一次性部署（不要 hot-patch production）
+- **DB 修補/一次性 script** → migrations/00X_*.php，PHP CLI 跑或 web URL（含 `?key=` 防誤觸）
+- **新功能開發** → 本機 MAMP 測 + 截圖驗證 + Production rsync 部署
+- **Cache 問題** → 已自動加 `?v={mtime}` 到 extraCss link，不用手動處理
+- **Deploy 前** → 自動備份至 `_backups/{name}_YYYYMMDD-HHMMSS/`
 
 ## 風格慣例
 
 - 中文字使用「台」不用「臺」（DB 內部統一過）
 - 註解中文 OK
-- 行內 style 大量使用（CSS class 為輔）
+- 行內 style 大量使用（CSS class 為輔）— 但新 g-* 系統優先用 class
 - 遵循 traditional-chinese-writing skill 的台灣繁體規範
 
 ## 客戶/品牌
