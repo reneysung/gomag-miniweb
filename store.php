@@ -2,6 +2,7 @@
 // store.php  ─  主站店家行銷頁 /store?sub=xusen
 require_once __DIR__ . '/includes/config.php';
 require_once __DIR__ . '/includes/helpers.php';
+require_once __DIR__ . '/includes/block_helpers.php';
 
 $db = getDB();
 $sub = strtolower(trim($_GET['sub'] ?? $_GET['store'] ?? ''));
@@ -41,11 +42,33 @@ if (!$client) {
 $cid = (int)$client['id'];
 $isPlaceholder = !empty($client['is_placeholder']);
 
+// ─── Modular Blocks 雙寫期判斷 ─────────────────────────
+//  - 該 client 已有 store_blocks → 用新系統 render，舊 services/cases 變數清空
+//  - 沒有 store_blocks → 走舊邏輯（向後相容）
+$useBlocks = !$isPlaceholder && clientHasBlocks($cid);
+
 // Placeholder 客戶不抓 services/cases/testimonials/Google 評價
 if ($isPlaceholder) {
     $services = $cases = $testimonials = [];
     $rating = ['avg' => 0, 'cnt' => 0];
     $googleReviews = null;
+} elseif ($useBlocks) {
+    // 新系統：清空舊變數（block 區塊由 renderStoreBlocks() 負責），僅保留 testimonials/評價
+    $services = $cases = [];
+
+    $testimonials = $db->prepare("SELECT * FROM testimonials WHERE client_id=? AND is_active=1 ORDER BY sort_order, id LIMIT 3");
+    $testimonials->execute([$cid]);
+    $testimonials = $testimonials->fetchAll();
+
+    $avgRating = $db->prepare("SELECT AVG(rating) AS avg, COUNT(*) AS cnt FROM testimonials WHERE client_id=? AND is_active=1");
+    $avgRating->execute([$cid]);
+    $rating = $avgRating->fetch();
+
+    $googleReviews = null;
+    if (!empty($client['google_place_id'])) {
+        require_once __DIR__ . '/includes/google_reviews.php';
+        try { $googleReviews = getGoogleReviews($client['google_place_id']); } catch (\Throwable $e) { $googleReviews = null; }
+    }
 } else {
     $services = $db->prepare("SELECT * FROM services WHERE client_id=? AND is_active=1 ORDER BY sort_order, id LIMIT 6");
     $services->execute([$cid]);
@@ -96,6 +119,11 @@ $ogImage = !empty($client['store_og_image'])
 $canonical = IS_LOCAL
     ? BASE_URL . '/store.php?sub=' . urlencode($sub)
     : 'https://www.gomag.com.tw/store/' . urlencode($sub);
+
+// 如果用新 blocks 系統，載 gomag.css 樣式
+if ($useBlocks) {
+    $extraCss = [BASE_URL . '/assets/css/gomag.css'];
+}
 
 require_once __DIR__ . '/main/layout_head.php';
 
@@ -369,8 +397,13 @@ if ($client['about_text'] || ($aboutTags && is_array($aboutTags))):
 </style>
 <?php endif; ?>
 
-<!-- ═══════ 服務項目 ═══════ -->
-<?php if ($services): ?>
+<!-- ═══════ Modular Blocks（新系統 — 優先渲染）═══════ -->
+<?php if ($useBlocks): ?>
+<?php renderStoreBlocks($cid); ?>
+<?php endif; ?>
+
+<!-- ═══════ 服務項目（舊 fallback — 沒 blocks 才用）═══════ -->
+<?php if (!$useBlocks && $services): ?>
 <section class="m-section" style="background:var(--m-bg);">
   <div class="m-container">
     <h2 class="m-section-title">服務項目</h2>
@@ -401,8 +434,8 @@ if ($client['about_text'] || ($aboutTags && is_array($aboutTags))):
 </section>
 <?php endif; ?>
 
-<!-- ═══════ 案例 ═══════ -->
-<?php if ($cases): ?>
+<!-- ═══════ 案例（舊 fallback — 沒 blocks 才用）═══════ -->
+<?php if (!$useBlocks && $cases): ?>
 <section class="m-section">
   <div class="m-container">
     <h2 class="m-section-title">精選案例</h2>
