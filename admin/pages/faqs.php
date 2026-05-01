@@ -88,6 +88,7 @@ $listStmt->execute($params);
 $list = $listStmt->fetchAll();
 
 require_once __DIR__ . '/../includes/layout_head.php';
+require_once __DIR__ . '/../includes/deprecated_banner.php';
 ?>
 
 <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">

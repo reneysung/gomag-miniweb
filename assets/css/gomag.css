@@ -957,6 +957,96 @@
 }
 
 /* ════════════════════════════════════════════════
+ * Similar Stores（類似店家 — 同分類隨機 4 卡）
+ * ════════════════════════════════════════════════ */
+.g-similar-block {
+  background: var(--g-bg-alt);
+  border-top: 1px solid var(--g-border);
+  padding: 56px 32px;
+  font-family: var(--g-font);
+}
+.g-similar-inner {
+  max-width: 1320px;
+  margin: 0 auto;
+}
+.g-similar-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.g-similar-title {
+  font-weight: 900;
+  font-size: clamp(22px, 2.5vw, 28px);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--g-ink);
+  margin: 0;
+}
+.g-similar-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+.g-similar-card {
+  background: white;
+  border: 1px solid var(--g-border);
+  border-radius: 14px;
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+.g-similar-card:hover {
+  border-color: var(--g-ink);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+}
+.g-similar-img {
+  aspect-ratio: 4/3;
+  background: var(--g-bg-alt) center/cover no-repeat;
+  position: relative;
+}
+.g-similar-img-fallback {
+  width: 100%; height: 100%;
+  display: grid;
+  place-items: center;
+  font-size: 48px;
+  color: var(--g-ink-light);
+  background: linear-gradient(135deg, var(--g-bg-alt), #ECECE7);
+}
+.g-similar-body {
+  padding: 14px 16px 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.g-similar-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--g-ink);
+  line-height: 1.4;
+  margin: 0;
+}
+.g-similar-loc {
+  font-size: 12px;
+  color: var(--g-ink-muted);
+}
+
+@media (max-width: 1024px) {
+  .g-similar-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .g-similar-grid { grid-template-columns: 1fr; }
+  .g-similar-block { padding: 40px 16px; }
+}
+
+/* ════════════════════════════════════════════════
  * Modular Blocks（5 種 type 共用 + 個別樣式）
  * 對應 blocks/*.php
  * ════════════════════════════════════════════════ */

@@ -47,6 +47,25 @@ $isPlaceholder = !empty($client['is_placeholder']);
 //  - 沒有 store_blocks → 走舊邏輯（向後相容）
 $useBlocks = !$isPlaceholder && clientHasBlocks($cid);
 
+// 類似店家（同分類，隨機 4 家，排除自己）
+$similarStores = [];
+if ($client['category_id']) {
+    $sim = $db->prepare("
+        SELECT cl.id, cl.slug, cl.subdomain, cl.brand_name, cl.tagline,
+               cl.hero_image_path, cl.address, c.icon AS cat_icon
+        FROM clients cl
+        LEFT JOIN categories c ON cl.category_id = c.id
+        WHERE cl.is_active = 1
+          AND COALESCE(cl.is_placeholder, 0) = 0
+          AND cl.category_id = ?
+          AND cl.id != ?
+        ORDER BY RAND()
+        LIMIT 4
+    ");
+    $sim->execute([$client['category_id'], $cid]);
+    $similarStores = $sim->fetchAll();
+}
+
 // Placeholder 客戶不抓 services/cases/testimonials/Google 評價
 if ($isPlaceholder) {
     $services = $cases = $testimonials = [];
@@ -780,6 +799,43 @@ if ($useBlocks && $testimonials) {
       <iframe src="<?= h($_mapsSrc) ?>"
               width="100%" height="380" style="border:0; display:block;"
               allowfullscreen loading="lazy"></iframe>
+    </div>
+  </div>
+</section>
+<?php endif; ?>
+
+<?php if ($useBlocks && $similarStores): ?>
+<!-- ═══════ Similar Stores（同分類隨機 4 卡）═══════ -->
+<section class="g-similar-block">
+  <div class="g-similar-inner">
+    <div class="g-similar-head">
+      <h2 class="g-similar-title">類似的<?= h($client['cat_name'] ?? '') ?>店家</h2>
+      <?php if ($client['cat_slug']): ?>
+      <a href="<?= BASE_URL ?>/category.php?slug=<?= h($client['cat_slug']) ?>" class="g-section-link">看全部 <?= h($client['cat_name']) ?></a>
+      <?php endif; ?>
+    </div>
+    <div class="g-similar-grid">
+      <?php foreach ($similarStores as $s):
+        $simSub = $s['subdomain'] ?: $s['slug'];
+        $simHero = $s['hero_image_path'] ? BASE_URL . '/' . h($s['hero_image_path']) : '';
+        $simLoc  = $s['address'] ? mb_substr($s['address'], 0, 8, 'UTF-8') : '';
+      ?>
+      <a class="g-similar-card" href="<?= BASE_URL ?>/store.php?sub=<?= urlencode($simSub) ?>">
+        <div class="g-similar-img" <?= $simHero ? 'style="background-image:url(\''.$simHero.'\')"' : '' ?>>
+          <?php if (!$simHero): ?>
+          <div class="g-similar-img-fallback"><?= h($s['cat_icon'] ?? '🏪') ?></div>
+          <?php endif; ?>
+        </div>
+        <div class="g-similar-body">
+          <div class="g-similar-name"><?= h($s['brand_name']) ?></div>
+          <?php if ($s['tagline']): ?>
+          <div class="g-similar-loc"><?= h(mb_strimwidth($s['tagline'], 0, 30, '…', 'UTF-8')) ?></div>
+          <?php elseif ($simLoc): ?>
+          <div class="g-similar-loc">📍 <?= h($simLoc) ?></div>
+          <?php endif; ?>
+        </div>
+      </a>
+      <?php endforeach; ?>
     </div>
   </div>
 </section>

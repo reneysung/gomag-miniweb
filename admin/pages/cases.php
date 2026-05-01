@@ -118,6 +118,7 @@ $list->execute([$clientId]);
 $list = $list->fetchAll();
 
 require_once __DIR__ . '/../includes/layout_head.php';
+require_once __DIR__ . '/../includes/deprecated_banner.php';
 
 if ($action === 'add' || ($action === 'edit' && $editId)):
     $d = $editData ?? [];
