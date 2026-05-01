@@ -1,0 +1,4 @@
+# admin/forms/.htaccess
+# 此目錄只放 partial 檔，不應被瀏覽器直接訪問
+Order deny,allow
+Deny from all

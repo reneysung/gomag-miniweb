@@ -434,9 +434,14 @@ textarea.form-control { resize: vertical; min-height: 90px; }
     </a>
 
     <div class="nav-section">內容管理</div>
+    <a class="nav-item <?= in_array($currentPage, ['store_blocks', 'store_block_edit']) ? 'active' : '' ?>"
+       href="<?= BASE_URL ?>/admin/pages/store_blocks.php">
+      <span class="icon">📦</span> 區塊管理
+      <span style="margin-left:auto; background:#FF5A36; color:#fff; font-size:.6rem; font-weight:800; padding:1px 6px; border-radius:20px;">NEW</span>
+    </a>
     <a class="nav-item <?= in_array($currentPage, ['services', 'service_edit']) ? 'active' : '' ?>"
        href="<?= BASE_URL ?>/admin/pages/services.php">
-      <span class="icon">🛠️</span> 服務項目
+      <span class="icon">🛠️</span> 服務項目（舊）
     </a>
     <a class="nav-item <?= $currentPage === 'faqs' ? 'active' : '' ?>"
        href="<?= BASE_URL ?>/admin/pages/faqs.php">
