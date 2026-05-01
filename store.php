@@ -393,6 +393,12 @@ if (!empty($client['address']) && preg_match('/^(臺?[北中南東]市|新北市
 </section>
 <?php endif; /* end if useBlocks / else (new vs old hero) */ ?>
 
+<?php if ($useBlocks): ?>
+<!-- ═══════ Body 開始：左 main / 右 sticky sidebar ═══════ -->
+<div class="g-store-body">
+  <div class="g-store-main">
+<?php endif; ?>
+
 <!-- ═══════ 關於我們 ═══════ -->
 <?php
 $aboutTags = !empty($client['about_tags']) ? json_decode($client['about_tags'], true) : [];
@@ -474,6 +480,75 @@ if ($client['about_text'] || ($aboutTags && is_array($aboutTags))):
 <!-- ═══════ Modular Blocks（新系統 — 優先渲染）═══════ -->
 <?php if ($useBlocks): ?>
 <?php renderStoreBlocks($cid); ?>
+
+  </div><!-- /.g-store-main -->
+
+  <aside class="g-store-aside">
+    <div class="g-store-aside-card">
+      <h3 class="g-store-aside-title">立即聯絡</h3>
+      <p class="g-store-aside-sub">透過下方資訊洽詢服務或訂位</p>
+
+      <?php if ($client['phone']): ?>
+      <div class="g-info-row">
+        <div class="g-info-icon">📞</div>
+        <div class="g-info-text">
+          <div class="g-info-label">電話</div>
+          <div class="g-info-value"><a href="tel:<?= h($client['phone']) ?>"><?= h($client['phone']) ?></a></div>
+        </div>
+      </div>
+      <?php endif; ?>
+
+      <?php if ($client['address']): ?>
+      <div class="g-info-row">
+        <div class="g-info-icon">📍</div>
+        <div class="g-info-text">
+          <div class="g-info-label">地址</div>
+          <div class="g-info-value"><?= h($client['address']) ?></div>
+        </div>
+      </div>
+      <?php endif; ?>
+
+      <?php if ($client['business_hours']): ?>
+      <div class="g-info-row">
+        <div class="g-info-icon">🕐</div>
+        <div class="g-info-text">
+          <div class="g-info-label">營業時間</div>
+          <div class="g-info-value"><?= nl2br(h($client['business_hours'])) ?></div>
+        </div>
+      </div>
+      <?php endif; ?>
+
+      <?php if ($client['email']): ?>
+      <div class="g-info-row">
+        <div class="g-info-icon">✉️</div>
+        <div class="g-info-text">
+          <div class="g-info-label">信箱</div>
+          <div class="g-info-value"><a href="mailto:<?= h($client['email']) ?>"><?= h($client['email']) ?></a></div>
+        </div>
+      </div>
+      <?php endif; ?>
+
+      <div class="g-aside-ctas">
+        <?php if ($client['phone']): ?>
+        <a href="tel:<?= h($client['phone']) ?>" class="g-aside-btn g-aside-btn-primary">📞 撥打電話</a>
+        <?php endif; ?>
+        <?php if ($miniSiteUrl): ?>
+        <a href="<?= h($miniSiteUrl) ?>" target="_blank" rel="noopener" class="g-aside-btn g-aside-btn-outline">🌐 完整官網</a>
+        <?php endif; ?>
+        <?php if ($client['external_website_url']): ?>
+        <a href="<?= h($client['external_website_url']) ?>" target="_blank" rel="noopener" class="g-aside-btn g-aside-btn-outline">🔗 官方網站</a>
+        <?php endif; ?>
+      </div>
+
+      <?php if ($rating['cnt'] > 0 || ($googleReviews && $googleReviews['rating'] > 0)): ?>
+      <div class="g-aside-foot">
+        ⭐ <strong><?= number_format($googleReviews['rating'] ?? $rating['avg'], 1) ?></strong> 顆星
+        ・ <?= ($googleReviews['userRatingCount'] ?? $rating['cnt']) ?> 則評價
+      </div>
+      <?php endif; ?>
+    </div>
+  </aside>
+</div><!-- /.g-store-body -->
 <?php endif; ?>
 
 <!-- ═══════ 服務項目（舊 fallback — 沒 blocks 才用）═══════ -->
@@ -597,8 +672,67 @@ if ($client['about_text'] || ($aboutTags && is_array($aboutTags))):
 </section>
 <?php endif; ?>
 
-<!-- ═══════ 老闆精選評價（testimonials）═══════ -->
-<?php if ($testimonials): ?>
+<?php
+// ─── Reviews summary 計算（測試 useBlocks 客戶五星分布）─────────
+if ($useBlocks && $testimonials) {
+    $ratingCounts = [5 => 0, 4 => 0, 3 => 0, 2 => 0, 1 => 0];
+    foreach ($testimonials as $t) {
+        $r = max(1, min(5, (int)$t['rating']));
+        $ratingCounts[$r]++;
+    }
+    $maxCount = max($ratingCounts) ?: 1;
+}
+?>
+
+<?php if ($useBlocks && $testimonials): ?>
+<!-- ═══════ Reviews Summary（新版 — 含五星分布）═══════ -->
+<section class="g-reviews-block">
+  <div class="g-reviews-block-inner">
+    <div class="g-reviews-summary">
+      <div class="g-summary-score">
+        <div class="g-summary-num"><?= number_format($rating['avg'], 1) ?></div>
+        <div class="g-summary-stars">
+          <?= str_repeat('★', round($rating['avg'])) ?><?= str_repeat('☆', 5 - round($rating['avg'])) ?>
+        </div>
+        <div class="g-summary-count"><?= (int)$rating['cnt'] ?> 則精選評價</div>
+      </div>
+      <div class="g-rating-bars">
+        <?php for ($i = 5; $i >= 1; $i--):
+          $cnt = $ratingCounts[$i];
+          $pct = $cnt > 0 ? round($cnt / $maxCount * 100) : 0;
+        ?>
+        <div class="g-rating-bar">
+          <span class="g-rating-bar-label"><?= $i ?> 星</span>
+          <div class="g-rating-bar-track">
+            <div class="g-rating-bar-fill" style="width: <?= $pct ?>%"></div>
+          </div>
+          <span class="g-rating-bar-num"><?= $cnt ?></span>
+        </div>
+        <?php endfor; ?>
+      </div>
+    </div>
+
+    <div class="g-reviews-list">
+      <?php foreach ($testimonials as $t):
+        $initial = mb_substr($t['reviewer_name'], 0, 1);
+      ?>
+      <div class="g-review-item">
+        <div class="g-review-head">
+          <div class="g-review-avatar"><?= h($initial) ?></div>
+          <div>
+            <div class="g-review-name"><?= h($t['reviewer_name']) ?></div>
+            <div class="g-review-stars-small"><?= str_repeat('★', $t['rating']) ?><?= str_repeat('☆', 5 - $t['rating']) ?></div>
+          </div>
+        </div>
+        <p class="g-review-text"><?= h(mb_strimwidth($t['content'], 0, 200, '…', 'UTF-8')) ?></p>
+      </div>
+      <?php endforeach; ?>
+    </div>
+  </div>
+</section>
+
+<?php elseif ($testimonials): ?>
+<!-- ═══════ 老闆精選評價（舊版 — 未啟用 blocks 客戶）═══════ -->
 <section class="m-section"<?= $googleReviews ? '' : ' style="background:var(--m-bg-alt); border-top:1px solid var(--m-border); border-bottom:1px solid var(--m-border);"' ?>>
   <div class="m-container">
     <h2 class="m-section-title"><?= $googleReviews ? '老闆精選評價' : '客戶評價' ?></h2>

@@ -711,6 +711,252 @@
 }
 
 /* ════════════════════════════════════════════════
+ * Store Body Layout — main content + sticky sidebar
+ * （把 hero 之後到 reviews 之前的內容包在 2 欄 grid）
+ * ════════════════════════════════════════════════ */
+.g-store-body {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 32px 32px 64px;
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 56px;
+  align-items: start;
+  font-family: var(--g-font);
+}
+.g-store-main { min-width: 0; }   /* 防止 grid item overflow */
+.g-store-aside { position: relative; }
+
+.g-store-aside-card {
+  position: sticky;
+  top: 90px;
+  background: white;
+  border: 1px solid var(--g-border);
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+}
+.g-store-aside-title {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin: 0 0 4px;
+  color: var(--g-ink);
+}
+.g-store-aside-sub {
+  font-size: 13px;
+  color: var(--g-ink-muted);
+  margin: 0 0 22px;
+}
+
+.g-info-row {
+  padding: 14px 0;
+  border-top: 1px solid var(--g-border);
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.g-info-row:first-of-type { border-top: 0; padding-top: 4px; }
+.g-info-icon {
+  width: 36px; height: 36px;
+  background: var(--g-bg-alt);
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  font-size: 16px;
+}
+.g-info-text { min-width: 0; flex: 1; }
+.g-info-label {
+  font-size: 11px;
+  color: var(--g-ink-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 2px;
+}
+.g-info-value {
+  font-size: 14px;
+  color: var(--g-ink);
+  font-weight: 500;
+  line-height: 1.5;
+  word-break: break-word;
+}
+.g-info-value a { color: var(--g-ink); border-bottom: 1px dashed var(--g-border); }
+.g-info-value a:hover { color: var(--g-accent); border-color: var(--g-accent); }
+
+.g-aside-ctas {
+  margin-top: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.g-aside-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 18px;
+  border-radius: 100px;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1.5px solid transparent;
+  transition: all 0.2s;
+  cursor: pointer;
+  text-align: center;
+}
+.g-aside-btn-primary { background: var(--g-accent); color: white; }
+.g-aside-btn-primary:hover { background: var(--g-accent-hover); }
+.g-aside-btn-line { background: var(--g-line); color: white; }
+.g-aside-btn-line:hover { background: var(--g-line-hover); }
+.g-aside-btn-outline {
+  background: white;
+  color: var(--g-ink);
+  border-color: var(--g-ink);
+}
+.g-aside-btn-outline:hover { background: var(--g-ink); color: white; }
+
+.g-aside-foot {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--g-border);
+  text-align: center;
+  font-size: 12px;
+  color: var(--g-ink-muted);
+}
+.g-aside-foot strong { color: var(--g-ink); font-weight: 700; }
+
+/* ════════════════════════════════════════════════
+ * Reviews Summary（評分 + 五星分布條）
+ * ════════════════════════════════════════════════ */
+.g-reviews-block {
+  border-top: 1px solid var(--g-border);
+  padding: 56px 32px;
+  font-family: var(--g-font);
+}
+.g-reviews-block-inner {
+  max-width: 1320px;
+  margin: 0 auto;
+}
+.g-reviews-summary {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 64px;
+  margin-bottom: 36px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--g-border);
+}
+.g-summary-num {
+  font-family: var(--g-font-num);
+  font-size: 64px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin-bottom: 8px;
+  color: var(--g-ink);
+}
+.g-summary-stars {
+  color: var(--g-accent);
+  font-size: 16px;
+  letter-spacing: 4px;
+  margin-bottom: 10px;
+}
+.g-summary-count {
+  font-size: 13px;
+  color: var(--g-ink-muted);
+}
+.g-rating-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.g-rating-bar {
+  display: grid;
+  grid-template-columns: 60px 1fr 40px;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+}
+.g-rating-bar-label { color: var(--g-ink-soft); }
+.g-rating-bar-track {
+  height: 8px;
+  background: var(--g-bg-alt);
+  border-radius: 100px;
+  overflow: hidden;
+}
+.g-rating-bar-fill {
+  height: 100%;
+  background: var(--g-ink);
+  border-radius: 100px;
+  transition: width 0.5s ease;
+}
+.g-rating-bar-num {
+  font-family: var(--g-font-num);
+  font-weight: 600;
+  color: var(--g-ink-muted);
+  text-align: right;
+  font-size: 12px;
+}
+
+.g-reviews-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+.g-review-item {
+  padding: 22px 24px;
+  border: 1px solid var(--g-border);
+  border-radius: 16px;
+  background: var(--g-white);
+}
+.g-review-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.g-review-avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--g-accent-light);
+  color: var(--g-accent);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+.g-review-name {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0 0 2px;
+  color: var(--g-ink);
+}
+.g-review-stars-small {
+  color: var(--g-accent);
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+.g-review-text {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--g-ink-soft);
+  margin: 0;
+}
+
+@media (max-width: 1024px) {
+  .g-store-body {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    padding: 24px 24px 48px;
+  }
+  .g-store-aside-card { position: relative; top: 0; }
+  .g-reviews-summary { grid-template-columns: 1fr; gap: 24px; }
+  .g-reviews-list { grid-template-columns: 1fr; }
+}
+
+/* ════════════════════════════════════════════════
  * Modular Blocks（5 種 type 共用 + 個別樣式）
  * 對應 blocks/*.php
  * ════════════════════════════════════════════════ */
