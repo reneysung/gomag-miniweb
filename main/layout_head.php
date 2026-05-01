@@ -60,11 +60,25 @@ gtag('config', '<?= h($gaTrackingId) ?>');
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-<?php /* 讓個別頁面可在 require 此檔前設 $extraCss = ['/path.css',...] 載入額外樣式 */ ?>
-<?php if (!empty($extraCss)): foreach ((array)$extraCss as $cssUrl): ?>
-<link rel="stylesheet" href="<?= h($cssUrl) ?>">
-<?php endforeach; endif; ?>
-<?php if (!empty($extraHead)): echo $extraHead; endif; ?>
+<?php
+/* 讓個別頁面可在 require 此檔前設 $extraCss = ['/path.css',...] 載入額外樣式
+ * 自動加 ?v={mtime} cache-busting，避免 CDN 卡住舊版 CSS
+ */
+if (!empty($extraCss)):
+    foreach ((array)$extraCss as $cssUrl):
+        // 嘗試解析本機路徑取 mtime 做 cache key
+        $cssVer = '';
+        // 把 BASE_URL prefix 移除，剩下的就是相對於專案 root 的路徑
+        $relativePath = str_replace(BASE_URL, '', $cssUrl);
+        $localPath = __DIR__ . '/..' . $relativePath;
+        if (is_file($localPath)) $cssVer = '?v=' . filemtime($localPath);
+        ?>
+<link rel="stylesheet" href="<?= h($cssUrl . $cssVer) ?>">
+<?php
+    endforeach;
+endif;
+if (!empty($extraHead)): echo $extraHead; endif;
+?>
 
 <style>
 /* ══ MAIN SITE — 主站樣式（獨立於客戶 mini-site）═════════ */
