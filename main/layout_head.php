@@ -7,8 +7,8 @@
 
 // 從 platform_settings 撈預設值，個別頁面可覆蓋
 $platformName    = getPlatformSetting('platform_name', '店家好口碑');
-$defaultMetaTitle = getPlatformSetting('main_meta_title', $platformName . '｜台南店家平台');
-$defaultMetaDesc  = getPlatformSetting('main_meta_desc', '匯集台南優質店家。');
+$defaultMetaTitle = getPlatformSetting('main_meta_title', $platformName . '｜全台在地店家平台');
+$defaultMetaDesc  = getPlatformSetting('main_meta_desc', '匯集全台優質店家。');
 $defaultOgImage   = getPlatformSetting('main_og_image', '');
 $gaTrackingId     = getPlatformSetting('ga_tracking_id', '');
 $gtmId            = getPlatformSetting('gtm_id', '');

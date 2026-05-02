@@ -89,8 +89,8 @@ try {
     $banners = [];
 }
 
-$pageTitle = '店家好口碑｜台南店家平台';
-$metaDesc  = "匯集 {$totalClients}+ 家台南優質店家：餐飲美食、居家服務、美容美髮、專業服務 — 一站式店家平台。";
+$pageTitle = getPlatformSetting('main_meta_title', '店家好口碑｜全台在地店家平台');
+$metaDesc  = "匯集 {$totalClients}+ 家全台優質店家：餐飲美食、居家服務、美容美髮、專業服務 — 一站式店家平台。";
 
 require_once __DIR__ . '/main/layout_head.php';
 ?>
@@ -293,7 +293,7 @@ require_once __DIR__ . '/main/layout_head.php';
 <!-- ──── 沒有 Banner：預設漸層模式 ──── -->
 <section class="m-hero">
   <div class="m-hero-inner">
-    <h1>找台南好店家<br><span class="accent">就上店家好口碑</span></h1>
+    <h1>找在地好店家<br><span class="accent">就上店家好口碑</span></h1>
     <p>匯集在地 <?= $totalClients ?>+ 家優質商家，從餐飲到專業服務，找對店家從這裡開始。</p>
     <form class="m-hero-search" method="GET" action="<?= BASE_URL ?>/search.php">
       <input type="text" name="q" placeholder="搜尋店家、服務、地點..." autocomplete="off">
@@ -452,7 +452,7 @@ require_once __DIR__ . '/main/layout_head.php';
 <section class="m-section" style="text-align:center;">
   <div class="m-container">
     <h2 class="m-section-title">想讓店家曝光？</h2>
-    <p class="m-section-sub">加入店家好口碑平台，免費獲得專屬行銷頁與小官網</p>
+    <p class="m-section-sub">加入店家好口碑平台，獲得專屬行銷頁與小官網・月費 NT$300 起</p>
     <a href="mailto:contact@gomag.com.tw" class="m-btn m-btn-primary" style="padding:14px 32px; font-size:1rem;">
       聯絡我們申請加入 →
     </a>

@@ -15,7 +15,7 @@
           <span style="width:32px;height:32px;background:var(--m-accent);color:var(--m-primary);border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:900">🏪</span>
           <span style="font-weight:900; color:#fff; font-size:1.1rem;">店家好口碑</span>
         </div>
-        <p style="font-size:.85rem; line-height:1.6;">台南店家平台，匯集在地優質商家，提供完整服務資訊與真實口碑。</p>
+        <p style="font-size:.85rem; line-height:1.6;">全台在地店家平台，匯集優質商家，提供完整服務資訊與真實口碑。</p>
       </div>
 
       <div>
@@ -37,7 +37,7 @@
     </div>
 
     <div style="text-align:center; padding-top:20px; font-size:.8rem;">
-      © <?= date('Y') ?> 店家好口碑 · 台南店家平台 · gomag.com.tw
+      © <?= date('Y') ?> 店家好口碑 · 全台在地店家平台 · gomag.com.tw
     </div>
   </div>
 </footer>
