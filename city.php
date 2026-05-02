@@ -114,8 +114,12 @@ if (!isset($cityMap[$slug])) {
 $cityName = $cityMap[$slug];
 $intro = $cityIntros[$cityName] ?? null;
 
-// 抓該縣市所有店家（按分類分組）
-$clients = $db->prepare("
+// Phase D Day 3：城市內 brand_name / tagline 關鍵字搜尋
+$qRaw = trim($_GET['q'] ?? '');
+$q    = mb_substr($qRaw, 0, 50);   // cap 長度防 abuse
+
+// 抓該縣市所有店家（按分類分組）— 套用關鍵字過濾
+$sql = "
     SELECT cl.id, cl.subdomain, cl.slug, cl.brand_name, cl.tagline,
            cl.has_minisite, cl.external_website_url, cl.hero_image_path,
            cl.address, cl.phone, cl.is_placeholder,
@@ -123,14 +127,26 @@ $clients = $db->prepare("
     FROM clients cl
     LEFT JOIN categories c ON cl.category_id = c.id
     WHERE cl.is_active = 1 AND cl.address LIKE ?
-    ORDER BY cl.is_placeholder ASC, c.sort_order, c.name, cl.id DESC
-");
-$clients->execute([$cityName . '%']);
-$clients = $clients->fetchAll();
+";
+$params = [$cityName . '%'];
+if ($q !== '') {
+    $sql .= " AND (cl.brand_name LIKE ? OR cl.tagline LIKE ? OR c.name LIKE ?)";
+    $kw = '%' . $q . '%';
+    array_push($params, $kw, $kw, $kw);
+}
+$sql .= " ORDER BY cl.is_placeholder ASC, c.sort_order, c.name, cl.id DESC";
+$clientsStmt = $db->prepare($sql);
+$clientsStmt->execute($params);
+$clients = $clientsStmt->fetchAll();
 
 if (empty($clients)) {
-    http_response_code(404);
-    die("「{$cityName}」目前尚未收錄店家");
+    if ($q !== '') {
+        // 搜尋無結果不要 404，讓使用者看到搜尋 banner + 清空連結
+        // fallthrough：下方靠 if (!$clients) 的判斷退出主要 SECTION，但 hero/intro/banner 仍會渲染
+    } else {
+        http_response_code(404);
+        die("「{$cityName}」目前尚未收錄店家");
+    }
 }
 
 // 按分類分組
@@ -234,8 +250,42 @@ $breadcrumbLd = [
     <?php if ($intro): ?>
     <p class="g-hero-desc"><?= h($intro['tagline']) ?></p>
     <?php endif; ?>
+    <form class="g-hero-search" action="<?= BASE_URL ?>/city.php" method="get" role="search">
+      <input type="hidden" name="slug" value="<?= h($slug) ?>">
+      <input type="text" class="g-hero-search-input" name="q" value="<?= h($q) ?>"
+             placeholder="搜尋<?= h($cityName) ?>店家：例如 燒肉、剪髮、清潔" maxlength="50" autocomplete="off">
+      <button type="submit" class="g-hero-search-btn" aria-label="搜尋">🔍</button>
+    </form>
   </div>
 </section>
+
+<?php if ($q !== ''): ?>
+<div class="g-search-banner">
+  <span>「<strong><?= h($q) ?></strong>」搜尋結果：<strong><?= count($clients) ?></strong> 家<?= h($cityName) ?>店家</span>
+  <a href="<?= BASE_URL ?>/city.php?slug=<?= h($slug) ?>">✕ 清除搜尋</a>
+</div>
+<?php endif; ?>
+
+<?php if ($byCat ?? null): ?>
+<!-- ═══ Sticky 分類 pill nav ═══ -->
+<div class="g-cat-nav-wrap" id="g-cat-nav-wrap">
+  <nav class="g-cat-nav" aria-label="<?= h($cityName) ?>分類導覽">
+    <a class="g-cat-pill is-active" href="#" data-cat-pill="__all">
+      全部 <span class="g-cat-pill-count"><?= $totalStores ?></span>
+    </a>
+    <?php foreach ($byCat as $catName => $catClients):
+        $first = $catClients[0];
+        $catSlug = $first['cat_slug'] ?? '';
+        $catIcon = $first['cat_icon'] ?? '';
+    ?>
+    <a class="g-cat-pill" href="#cat-<?= h($catSlug) ?>" data-cat-pill="<?= h($catSlug) ?>">
+      <?= h($catIcon) ?> <?= h($catName) ?>
+      <span class="g-cat-pill-count"><?= count($catClients) ?></span>
+    </a>
+    <?php endforeach; ?>
+  </nav>
+</div>
+<?php endif; ?>
 
 <!-- ═══ 麵包屑 ═══ -->
 <div class="g-breadcrumb-wrap">
@@ -346,7 +396,7 @@ function renderCityStoreCard(array $cl): void {
 }
 ?>
 
-<?php if (count($byCat) >= 2): ?>
+<?php if ($q === '' && count($byCat) >= 2): ?>
 <!-- ═══ 依分類探索（Phase D Day 2） ═══ -->
 <section class="g-section">
   <div class="g-section-head">
@@ -381,7 +431,7 @@ function renderCityStoreCard(array $cl): void {
 </section>
 <?php endif; ?>
 
-<?php if ($hotStores): ?>
+<?php if ($q === '' && $hotStores): ?>
 <!-- ═══ 本週熱門 ═══ -->
 <section class="g-section">
   <div class="g-section-head">
@@ -448,7 +498,7 @@ function renderCityStoreCard(array $cl): void {
 </section>
 <?php endforeach; ?>
 
-<?php if ($latestStores && count($latestStores) >= 2): ?>
+<?php if ($q === '' && $latestStores && count($latestStores) >= 2): ?>
 <!-- ═══ 最新加入 ═══ -->
 <section class="g-section">
   <div class="g-section-head">
@@ -460,7 +510,7 @@ function renderCityStoreCard(array $cl): void {
 </section>
 <?php endif; ?>
 
-<?php if ($cityReviews): ?>
+<?php if ($q === '' && $cityReviews): ?>
 <!-- ═══ 真實口碑 ═══ -->
 <section class="g-section" style="background:var(--g-bg-alt); max-width:none; padding-left:0; padding-right:0;">
   <div style="max-width:1320px; margin:0 auto; padding:0 32px;">
@@ -516,5 +566,61 @@ function renderCityStoreCard(array $cl): void {
     </div>
   </div>
 </section>
+
+<?php if (!empty($byCat)): ?>
+<script>
+(function() {
+  // Phase D Day 3：scroll → highlight active cat pill
+  var pills = document.querySelectorAll('.g-cat-pill[data-cat-pill]');
+  if (!pills.length) return;
+  var sections = Array.from(document.querySelectorAll('.g-cat-anchor[id^="cat-"]'));
+  if (!sections.length) return;
+
+  function setActive(slug) {
+    pills.forEach(function(p) {
+      var on = p.getAttribute('data-cat-pill') === slug;
+      p.classList.toggle('is-active', on);
+      if (on) {
+        var nav = p.parentElement;
+        var off = p.offsetLeft - nav.offsetWidth / 2 + p.offsetWidth / 2;
+        nav.scrollTo({ left: off, behavior: 'smooth' });
+      }
+    });
+  }
+
+  // top of page → 全部 active
+  setActive('__all');
+
+  function pickActive() {
+    if (window.scrollY < 400) { setActive('__all'); return; }
+    // 找出當前覆蓋 y=140（sticky header+nav 下方 10px）的 section
+    var line = 140;
+    var found = null;
+    for (var i = 0; i < sections.length; i++) {
+      var r = sections[i].getBoundingClientRect();
+      if (r.top <= line && r.bottom > line) { found = sections[i]; break; }
+    }
+    if (found) setActive(found.id.replace(/^cat-/, ''));
+  }
+
+  var ticking = false;
+  window.addEventListener('scroll', function() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function() { pickActive(); ticking = false; });
+  }, { passive: true });
+  pickActive();
+
+  // 點 "全部" → 回頂端
+  var allPill = document.querySelector('.g-cat-pill[data-cat-pill="__all"]');
+  if (allPill) {
+    allPill.addEventListener('click', function(e) {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+})();
+</script>
+<?php endif; ?>
 
 <?php require_once __DIR__ . '/main/layout_foot.php'; ?>
