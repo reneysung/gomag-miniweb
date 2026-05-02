@@ -412,10 +412,66 @@ if (!empty($client['address']) && preg_match('/^(臺?[北中南東]市|新北市
 </section>
 <?php endif; /* end if useBlocks / else (new vs old hero) */ ?>
 
+<?php
+// 解析 photos JSON（gallery 用）
+$photos = [];
+if ($useBlocks && !empty($client['photos'])) {
+    $decoded = json_decode($client['photos'], true);
+    if (is_array($decoded)) $photos = array_values(array_filter($decoded));
+}
+?>
+
+<?php if ($useBlocks && count($photos) >= 1): ?>
+<!-- ═══════ Photo Gallery（5 格 Airbnb 樣式）═══════ -->
+<section class="g-photo-gallery">
+  <div class="g-photo-gallery-grid">
+    <?php $idx = 0; foreach (array_slice($photos, 0, 5) as $photo):
+      $idx++;
+      $url = BASE_URL . '/' . ltrim($photo, '/');
+    ?>
+    <div class="g-gallery-tile g-gallery-tile-<?= $idx ?>">
+      <img src="<?= h($url) ?>" alt="<?= h($client['brand_name']) ?> 照片 <?= $idx ?>" loading="lazy">
+    </div>
+    <?php endforeach; ?>
+    <?php
+    // 補空格（少於 5 張時用 fallback 填滿）
+    for ($i = $idx + 1; $i <= 5; $i++): ?>
+    <div class="g-gallery-tile g-gallery-tile-<?= $i ?>">
+      <div class="g-gallery-fallback"><?= h($client['cat_icon'] ?? '🏪') ?></div>
+    </div>
+    <?php endfor; ?>
+    <?php if (count($photos) > 5): ?>
+    <a href="#" class="g-gallery-show-all">📷 查看全部 <?= count($photos) ?> 張</a>
+    <?php endif; ?>
+  </div>
+</section>
+<?php endif; ?>
+
 <?php if ($useBlocks): ?>
 <!-- ═══════ Body 開始：左 main / 右 sticky sidebar ═══════ -->
 <div class="g-store-body">
   <div class="g-store-main">
+
+    <?php if (!empty($client['owner_name']) || !empty($client['owner_intro'])): ?>
+    <!-- ═══ Owner Block ═══ -->
+    <div class="g-owner-block">
+      <div class="g-owner-avatar">
+        <?php if (!empty($client['owner_avatar'])): ?>
+        <img src="<?= BASE_URL ?>/<?= h($client['owner_avatar']) ?>" alt="<?= h($client['owner_name']) ?>">
+        <?php else: ?>
+        <?= h(mb_substr($client['owner_name'] ?? $client['brand_name'], 0, 1)) ?>
+        <?php endif; ?>
+      </div>
+      <div class="g-owner-info">
+        <?php if (!empty($client['owner_name'])): ?>
+        <div class="g-owner-name"><?= h($client['owner_name']) ?></div>
+        <?php endif; ?>
+        <?php if (!empty($client['owner_intro'])): ?>
+        <div class="g-owner-intro"><?= h($client['owner_intro']) ?></div>
+        <?php endif; ?>
+      </div>
+    </div>
+    <?php endif; ?>
 <?php endif; ?>
 
 <!-- ═══════ 關於我們 ═══════ -->
