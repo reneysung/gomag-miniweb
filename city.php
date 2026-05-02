@@ -136,10 +136,27 @@ if (empty($clients)) {
 // 按分類分組
 $byCat = [];
 $catCounts = [];
+$catCovers = [];   // 分類 → 第一張可用 hero_image_path（給 explore card 用）
 foreach ($clients as $cl) {
     $cName = $cl['cat_name'] ?? '其他';
     $byCat[$cName][] = $cl;
     $catCounts[$cName] = ($catCounts[$cName] ?? 0) + 1;
+    if (empty($catCovers[$cName]) && !empty($cl['hero_image_path']) && empty($cl['is_placeholder'])) {
+        $catCovers[$cName] = $cl['hero_image_path'];
+    }
+}
+
+// 城市 hero 圖 fallback：cities.hero_image 沒設時，挑該城市第一張可用的店家 hero 圖
+$cityHeroImg = '';
+if (!empty($intro['hero_image'])) {
+    $cityHeroImg = $intro['hero_image'];
+} else {
+    foreach ($clients as $cl) {
+        if (!empty($cl['hero_image_path']) && empty($cl['is_placeholder'])) {
+            $cityHeroImg = BASE_URL . '/' . $cl['hero_image_path'];
+            break;
+        }
+    }
 }
 
 // 統計
@@ -200,10 +217,10 @@ $breadcrumbLd = [
 
 <!-- ═══ Hero ═══ -->
 <section class="g-hero">
-  <?php if (!empty($intro['hero_image'])): ?>
-  <div class="g-hero-bg" style="background-image:url('<?= h($intro['hero_image']) ?>');"></div>
+  <?php if ($cityHeroImg): ?>
+  <div class="g-hero-bg" style="background-image:url('<?= h($cityHeroImg) ?>');"></div>
   <?php else: ?>
-  <div class="g-hero-bg" style="background:linear-gradient(135deg, #2a2a2a, #0f0f0f);"></div>
+  <div class="g-hero-bg" style="background:linear-gradient(135deg, #2a2a2a, #0f0f0f); animation:none; transform:none;"></div>
   <?php endif; ?>
   <div class="g-hero-overlay"></div>
   <div class="g-hero-content">
@@ -329,6 +346,41 @@ function renderCityStoreCard(array $cl): void {
 }
 ?>
 
+<?php if (count($byCat) >= 2): ?>
+<!-- ═══ 依分類探索（Phase D Day 2） ═══ -->
+<section class="g-section">
+  <div class="g-section-head">
+    <div>
+      <h2 class="g-section-title">依分類探索<?= h($cityName) ?></h2>
+      <p class="g-section-sub"><?= count($byCat) ?> 個分類，找到你需要的<?= h(str_replace(['市','縣'], '', $cityName)) ?>服務</p>
+    </div>
+  </div>
+  <div class="g-explore-grid">
+    <?php foreach ($byCat as $catName => $catClients):
+        $first = $catClients[0];
+        $catSlug = $first['cat_slug'] ?? '';
+        $catIcon = $first['cat_icon'] ?? '🏪';
+        $cover = $catCovers[$catName] ?? '';
+        $coverUrl = $cover ? BASE_URL . '/' . $cover : '';
+        $anchor = $catSlug ? '#cat-' . $catSlug : '#';
+    ?>
+    <a class="g-explore-card" href="<?= h($anchor) ?>">
+      <?php if ($coverUrl): ?>
+      <div class="g-explore-card-img" style="background-image:url('<?= h($coverUrl) ?>');"></div>
+      <?php else: ?>
+      <div class="g-explore-card-fallback"><?= h($catIcon) ?></div>
+      <?php endif; ?>
+      <div class="g-explore-card-overlay">
+        <div class="g-explore-card-name"><?= h(str_replace(['市','縣'], '', $cityName)) ?>・<?= h($catName) ?></div>
+        <div class="g-explore-card-count"><?= count($catClients) ?> 家店家</div>
+      </div>
+      <div class="g-explore-card-arrow">→</div>
+    </a>
+    <?php endforeach; ?>
+  </div>
+</section>
+<?php endif; ?>
+
 <?php if ($hotStores): ?>
 <!-- ═══ 本週熱門 ═══ -->
 <section class="g-section">
@@ -347,7 +399,7 @@ function renderCityStoreCard(array $cl): void {
     $catSlug = $first['cat_slug'] ?? '';
     $catIcon = $first['cat_icon'] ?? '🏪';
 ?>
-<section class="g-section">
+<section class="g-section g-cat-anchor"<?= $catSlug ? ' id="cat-'.h($catSlug).'"' : '' ?>>
   <div class="g-section-head">
     <div>
       <h2 class="g-section-title">
