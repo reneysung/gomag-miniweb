@@ -155,11 +155,23 @@ img{max-width:100%;display:block}
 .footer-social a:hover{background:rgba(255,255,255,.25)}
 .footer-bottom{border-top:1px solid rgba(255,255,255,.12);padding-top:20px;text-align:center;font-size:.8rem;opacity:.55}
 
-/* ══ ANIMATE IN ════════════════════════════════════════════ */
-.animate-in{opacity:0;transform:translateY(28px);transition:opacity .55s ease,transform .55s ease}
-.animate-in.visible{opacity:1;transform:none}
-.delay-1{transition-delay:.1s}.delay-2{transition-delay:.2s}
-.delay-3{transition-delay:.3s}.delay-4{transition-delay:.4s}
+/* ══ ANIMATE IN（CSS-only，不靠 IntersectionObserver）═════════ */
+@keyframes site-fade-in {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: none; }
+}
+.animate-in {
+  opacity: 0;
+  animation: site-fade-in .55s ease forwards;
+}
+.animate-in.visible { opacity: 1; transform: none; } /* 舊 IO 相容 */
+.delay-1 { animation-delay: .1s; }
+.delay-2 { animation-delay: .2s; }
+.delay-3 { animation-delay: .3s; }
+.delay-4 { animation-delay: .4s; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-in { animation: none; opacity: 1; transform: none; }
+}
 </style>
 </head>
 <body>
