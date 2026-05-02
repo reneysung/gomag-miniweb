@@ -1,6 +1,6 @@
 # 店家好口碑（gomag.com.tw）— Claude Code Handoff
 
-> **最後更新**：2026-05-02（Phase A + B + C + D Day 1+2 完成）
+> **最後更新**：2026-05-02（Phase A + B + C + D Day 1+2+3+3.1 完成）
 
 ## 專案概觀
 
@@ -46,7 +46,8 @@ c1b5600 feat: Sticky sidebar 聯絡卡 + Reviews summary 五星分布條
 c7cf5e3 Initial commit + Phase A: gomag design system foundation
 ```
 
-工作樹乾淨。沒 push remote（沒設 git remote）。
+**GitHub**：`reneysung/gomag-miniweb`（private）— `git push origin {branch}`
+- main 分支可能落後當前工作分支，要看 `claude/sleepy-diffie-87db30` 才有最新
 
 ## 重要架構
 
@@ -73,7 +74,33 @@ c7cf5e3 Initial commit + Phase A: gomag design system foundation
 /assets/css/gomag.css ⭐ 新設計系統 (g-* prefix, 1278 行 / 32KB)
 /migrations/         ⭐ 003-007 已跑（建表 + seed + data 遷移）
 /_backups/           gitignored, 含 landing_extra_demo_clients_*.sql
+/_logs/              gitignored, 應用層日誌（目前只有 search.log）
+/analytics/          搜尋分析 endpoint
+  search.php         ?key={SECRET}&days=7&format=md|json — 讀 search.log 出報告
+  index.php          直接 403（防 dir listing）
 ```
+
+## 應用層日誌
+
+**為什麼自寫**：Hostinger Premium shared 沒給 access log（`~/.logs/` 是空的），用 server log grep 是條死路。改用 PHP 自寫 TSV，更乾淨。
+
+`_logs/search.log` 格式（每行 6 欄 tab 分隔）：
+```
+{ISO8601 ts}\t{城市中文名}\t{slug}\t{q 關鍵字}\t{result_count}\t{ip_hash}
+```
+- `ip_hash` 是 `sha1(ip + 當日日期)` 前 10 char — 跨日就匿名，同日同人可去重
+- city.php 的 `?q=` 觸發即 `file_put_contents(..., FILE_APPEND | LOCK_EX)`
+
+**讀取**：透過 `analytics/search.php?key=...` HTTP endpoint（secret 寫死在檔案 const 裡）。
+
+## 週分析 Routine（雲端）
+
+- Routine ID: `trig_016eD7EhaW3degQzWrRzaNgD`
+- 名稱：「gomag 週搜尋分析」
+- 週期：`0 1 * * 1`（每週一 UTC 01:00 = 台北 09:00）
+- 行為：curl analytics endpoint → 把 markdown 報告 + 行動建議貼在 routines page
+- 檢視：https://claude.ai/code/routines/trig_016eD7EhaW3degQzWrRzaNgD
+- secret key 寫在 routine prompt 裡 — rotate 時要同時改 `analytics/search.php` 的 `SEARCH_LOG_SECRET` 跟 routine prompt
 
 ## DB 架構
 
@@ -130,7 +157,8 @@ taoyuan / taitung / pingtung / hsinchu / yilan / hualien
 - `--g-ink` 4 階文字
 - Noto Sans TC + Manrope（數字/英文）
 - 完整元件：Hero / Section / Store Card / Banner / CTA / Block (5 種) /
-  Store Hero / Store Aside Sticky / Reviews Block / Similar Stores
+  Store Hero / Store Aside Sticky / Reviews Block / Similar Stores /
+  Cat Pill Nav (sticky) / Hero Search / Search Banner / Explore Cards
 - 完整 RWD（1024 / 640 breakpoints）
 
 `main/layout_head.php` 自動加 `?v={filemtime}` cache busting。
@@ -151,6 +179,8 @@ taoyuan / taitung / pingtung / hsinchu / yilan / hualien
 | C admin | settings.php 加 Owner Block + Photo Gallery 編輯 UI | git 91a2c44 |
 | D Day 1 | city.php 加 本週熱門 / 最新加入 / 真實口碑 | git 06450aa |
 | D Day 2 | city.php hero 600px + 依分類探索 cards + 分類 anchor | git da15ffb |
+| D Day 3 | sticky 分類 nav + hero 搜尋列 + ?q= 過濾 + 滾動 active pill | git d432b4a |
+| D Day 3.1 | 應用層搜尋日誌 + analytics endpoint + GitHub repo + 週分析 routine | git 076e84c |
 
 ## 對齊 mockup 進度
 
@@ -174,7 +204,10 @@ taoyuan / taitung / pingtung / hsinchu / yilan / hualien
 | Drag-drop 排序（admin block list 用 SortableJS）| 1-2 hr | UX 加分 |
 | Block 即時預覽 iframe（編輯不用儲存就能看效果）| 4-6 hr | 高 UX |
 | 人工遷移更多客戶到 blocks | per-client 5-15 min | 增加 demo |
-| **Phase D Day 3**: 城市搜尋 bar / sticky 分類 nav / 城市照片牆 | 1-2 天 | 進一步對齊 mockup |
+| 把 main 分支推進到工作分支 | 5 min | 目前 main 落後（沒走 PR review 流程，可直接 merge） |
+| 全站搜尋（跨城市）`/search.php?q=` | 1 天 | 現在只有城市內搜尋，全站搜尋是自然延伸 |
+| 熱門搜尋詞變 SEO 著陸頁 | 視 routine 報告 | 等累積數週 data 再評估 |
+| 完全沒結果關鍵字 → redirect 到分類頁 | 視 routine 報告 | 同上 |
 | Phase 6 DNS 切換到 gomag.com.tw | 視旭浪而定 | 等你決定時機 |
 
 ### 風險低的小事
