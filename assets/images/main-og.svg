@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FF6B45"/>
+      <stop offset="100%" stop-color="#E64A26"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="1050" cy="120" r="360" fill="rgba(255,255,255,0.06)"/>
+  <circle cx="180" cy="540" r="280" fill="rgba(255,255,255,0.05)"/>
+
+  <g transform="translate(96, 220)">
+    <rect width="92" height="92" rx="20" fill="white"/>
+    <text x="46" y="68" font-family="-apple-system, 'PingFang TC', 'Noto Sans TC', sans-serif" font-size="60" font-weight="900" fill="#FF5A36" text-anchor="middle" letter-spacing="-2">店</text>
+  </g>
+
+  <text x="96" y="376" font-family="-apple-system, 'PingFang TC', 'Noto Sans TC', sans-serif" font-size="96" font-weight="900" fill="white" letter-spacing="-3">店家好口碑</text>
+  <text x="96" y="448" font-family="-apple-system, 'PingFang TC', 'Noto Sans TC', sans-serif" font-size="36" font-weight="500" fill="rgba(255,255,255,0.92)">在地優質商家・口碑驗證・一站式平台</text>
+
+  <g transform="translate(96, 510)">
+    <rect width="172" height="56" rx="28" fill="white"/>
+    <text x="86" y="36" font-family="-apple-system, 'PingFang TC', 'Noto Sans TC', sans-serif" font-size="22" font-weight="700" fill="#FF5A36" text-anchor="middle">207+ 家店家</text>
+  </g>
+  <text x="96" y="600" font-family="-apple-system, 'PingFang TC', 'Noto Sans TC', sans-serif" font-size="22" font-weight="500" fill="rgba(255,255,255,0.78)">gomag.com.tw</text>
+</svg>
