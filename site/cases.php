@@ -69,16 +69,16 @@ require __DIR__ . '/layout_head.php';
 </div>
 
 <!-- 篩選 Tab -->
-<div style="background:var(--c-light);border-bottom:1px solid rgba(var(--c-primary-rgb),.08);position:sticky;top:66px;z-index:150">
+<div style="background:var(--g-bg-alt);border-bottom:1px solid rgba(var(--g-ink-rgb),.08);position:sticky;top:66px;z-index:150">
   <div class="container">
     <div style="display:flex;gap:0;overflow-x:auto;scrollbar-width:none">
       <?php $first=true; foreach($groups as $key=>$group): ?>
       <button onclick="filterCases(this,'<?= h($key) ?>')"
         data-filter="<?= h($key) ?>"
-        style="display:flex;align-items:center;gap:6px;padding:14px 20px;font-size:.88rem;font-weight:700;color:<?= $first?'var(--c-primary)':'#888' ?>;background:none;border:none;border-bottom:3px solid <?= $first?'var(--c-primary)':'transparent' ?>;cursor:pointer;white-space:nowrap;transition:all .2s"
+        style="display:flex;align-items:center;gap:6px;padding:14px 20px;font-size:.88rem;font-weight:700;color:<?= $first?'var(--g-ink)':'#888' ?>;background:none;border:none;border-bottom:3px solid <?= $first?'var(--g-ink)':'transparent' ?>;cursor:pointer;white-space:nowrap;transition:all .2s"
         class="ftab <?= $first?'ftab-active':'' ?>">
         <?= h($group['label']) ?>
-        <span style="background:<?= $first?'var(--c-primary)':'rgba(var(--c-primary-rgb),.1)' ?>;color:<?= $first?'#fff':'var(--c-primary)' ?>;font-size:.7rem;padding:1px 7px;border-radius:20px;font-weight:800"><?= count($group['cases']) ?></span>
+        <span style="background:<?= $first?'var(--g-ink)':'rgba(var(--g-ink-rgb),.1)' ?>;color:<?= $first?'#fff':'var(--g-ink)' ?>;font-size:.7rem;padding:1px 7px;border-radius:20px;font-weight:800"><?= count($group['cases']) ?></span>
       </button>
       <?php $first=false; endforeach; ?>
     </div>
@@ -100,12 +100,12 @@ require __DIR__ . '/layout_head.php';
 
       <!-- 案例標題列 -->
       <div style="padding:20px 24px 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <h3 style="font-size:1.1rem;font-weight:800;color:var(--c-text);margin:0"><?= h($c['title']) ?></h3>
+        <h3 style="font-size:1.1rem;font-weight:800;color:var(--g-ink-soft);margin:0"><?= h($c['title']) ?></h3>
         <?php if($c['svc_name']): ?>
-          <span style="background:rgba(var(--c-primary-rgb),.08);color:var(--c-primary);font-size:.72rem;font-weight:700;padding:3px 12px;border-radius:12px"><?= h($c['svc_name']) ?></span>
+          <span style="background:rgba(var(--g-ink-rgb),.08);color:var(--g-ink);font-size:.72rem;font-weight:700;padding:3px 12px;border-radius:12px"><?= h($c['svc_name']) ?></span>
         <?php endif; ?>
         <?php if($c['is_featured']): ?>
-          <span style="background:rgba(var(--c-accent-rgb),.12);color:var(--c-accent);font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:12px">⭐ 精選</span>
+          <span style="background:rgba(var(--g-accent-rgb),.12);color:var(--g-accent);font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:12px">⭐ 精選</span>
         <?php endif; ?>
       </div>
 
@@ -141,7 +141,7 @@ require __DIR__ . '/layout_head.php';
         <?php if($c['after_photos']): ?>
         <div>
           <div style="font-size:.78rem;font-weight:800;color:#999;letter-spacing:.1em;margin-bottom:10px;display:flex;align-items:center;gap:6px">
-            <span style="display:inline-block;background:var(--c-accent);color:#fff;padding:2px 10px;border-radius:4px;font-size:.7rem">AFTER</span>
+            <span style="display:inline-block;background:var(--g-accent);color:#fff;padding:2px 10px;border-radius:4px;font-size:.7rem">AFTER</span>
             施工後 · <?= count($c['after_photos']) ?> 張
           </div>
           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px">
@@ -158,7 +158,7 @@ require __DIR__ . '/layout_head.php';
       </div>
       <?php else: ?>
       <div style="padding:0 24px 24px">
-        <div style="height:100px;background:var(--c-light);display:flex;align-items:center;justify-content:center;color:#aaa;font-size:.9rem;border-radius:12px">📷 照片準備中</div>
+        <div style="height:100px;background:var(--g-bg-alt);display:flex;align-items:center;justify-content:center;color:#aaa;font-size:.9rem;border-radius:12px">📷 照片準備中</div>
       </div>
       <?php endif; ?>
 
@@ -186,7 +186,7 @@ require __DIR__ . '/layout_head.php';
   <div id="lbCaption" style="position:absolute;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,.8);font-size:.85rem;font-weight:600;background:rgba(0,0,0,.5);padding:6px 16px;border-radius:20px"></div>
 </div>
 
-<section style="background:var(--c-primary);padding:56px 0;text-align:center;color:#fff">
+<section style="background:var(--g-ink);padding:56px 0;text-align:center;color:#fff">
   <div class="container animate-in">
     <h2 style="font-size:1.8rem;font-weight:900;margin-bottom:12px"><?= $isFood ? '想品嚐主廚的暖心料理嗎？' : '想讓您的空間也煥然一新嗎？' ?></h2>
     <p style="opacity:.8;margin-bottom:28px"><?= $isFood ? '歡迎來電訂位或 LINE 預約' : '免費估價，台南到府服務' ?></p>
@@ -237,13 +237,13 @@ function renderPage() {
   let html = '';
   const btnBase = 'display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:38px;padding:0 12px;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer;border:none;transition:all .2s;';
   // Prev
-  html += '<button onclick="goPage(' + (currentPage-1) + ')" style="' + btnBase + 'background:' + (currentPage>1?'rgba(var(--c-primary-rgb),.08)':'#f0f0f0') + ';color:' + (currentPage>1?'var(--c-primary)':'#ccc') + '" ' + (currentPage<=1?'disabled':'') + '>‹</button>';
+  html += '<button onclick="goPage(' + (currentPage-1) + ')" style="' + btnBase + 'background:' + (currentPage>1?'rgba(var(--g-ink-rgb),.08)':'#f0f0f0') + ';color:' + (currentPage>1?'var(--g-ink)':'#ccc') + '" ' + (currentPage<=1?'disabled':'') + '>‹</button>';
   for (let p = 1; p <= pages; p++) {
     const active = p === currentPage;
-    html += '<button onclick="goPage(' + p + ')" style="' + btnBase + 'background:' + (active?'var(--c-primary)':'rgba(var(--c-primary-rgb),.06)') + ';color:' + (active?'#fff':'var(--c-primary)') + '">' + p + '</button>';
+    html += '<button onclick="goPage(' + p + ')" style="' + btnBase + 'background:' + (active?'var(--g-ink)':'rgba(var(--g-ink-rgb),.06)') + ';color:' + (active?'#fff':'var(--g-ink)') + '">' + p + '</button>';
   }
   // Next
-  html += '<button onclick="goPage(' + (currentPage+1) + ')" style="' + btnBase + 'background:' + (currentPage<pages?'rgba(var(--c-primary-rgb),.08)':'#f0f0f0') + ';color:' + (currentPage<pages?'var(--c-primary)':'#ccc') + '" ' + (currentPage>=pages?'disabled':'') + '>›</button>';
+  html += '<button onclick="goPage(' + (currentPage+1) + ')" style="' + btnBase + 'background:' + (currentPage<pages?'rgba(var(--g-ink-rgb),.08)':'#f0f0f0') + ';color:' + (currentPage<pages?'var(--g-ink)':'#ccc') + '" ' + (currentPage>=pages?'disabled':'') + '>›</button>';
   box.innerHTML = html;
 }
 
@@ -258,12 +258,12 @@ function goPage(p) {
 function filterCases(btn, filter) {
   document.querySelectorAll('.ftab').forEach(b => {
     b.style.color='#888'; b.style.borderBottomColor='transparent';
-    b.querySelector('span').style.background='rgba(var(--c-primary-rgb),.1)';
-    b.querySelector('span').style.color='var(--c-primary)';
+    b.querySelector('span').style.background='rgba(var(--g-ink-rgb),.1)';
+    b.querySelector('span').style.color='var(--g-ink)';
     b.classList.remove('ftab-active');
   });
-  btn.style.color='var(--c-primary)'; btn.style.borderBottomColor='var(--c-primary)';
-  btn.querySelector('span').style.background='var(--c-primary)';
+  btn.style.color='var(--g-ink)'; btn.style.borderBottomColor='var(--g-ink)';
+  btn.querySelector('span').style.background='var(--g-ink)';
   btn.querySelector('span').style.color='#fff';
   btn.classList.add('ftab-active');
 

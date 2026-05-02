@@ -122,16 +122,29 @@ function loadSiteData(string $sub): array {
  * 輸出動態 CSS 變數
  */
 function outputThemeCss(array $theme): void {
-    echo '<style>:root{';
-    echo '--c-primary:'     . $theme['color_primary'] . ';';
-    echo '--c-accent:'      . $theme['color_accent']  . ';';
-    echo '--c-bg:'          . $theme['color_bg']      . ';';
-    echo '--c-text:'        . $theme['color_text']    . ';';
-    echo '--c-light:'       . $theme['color_light']   . ';';
+    // Phase 1.2：site/* 升級到 g-* token，仍保留 per-client 客製色機制
+    // 同時輸出舊 --c-* 跟新 --g-* 供向後相容
     $p = hexToRgb($theme['color_primary']);
     $a = hexToRgb($theme['color_accent']);
-    echo '--c-primary-rgb:' . implode(',', $p) . ';';
-    echo '--c-accent-rgb:'  . implode(',', $a) . ';';
+    $pRgb = implode(',', $p);
+    $aRgb = implode(',', $a);
+    echo '<style>:root{';
+    // 舊 --c-* token（向後相容，未來可移除）
+    echo '--c-primary:' . $theme['color_primary'] . ';';
+    echo '--c-accent:'  . $theme['color_accent']  . ';';
+    echo '--c-bg:'      . $theme['color_bg']      . ';';
+    echo '--c-text:'    . $theme['color_text']    . ';';
+    echo '--c-light:'   . $theme['color_light']   . ';';
+    echo '--c-primary-rgb:' . $pRgb . ';';
+    echo '--c-accent-rgb:'  . $aRgb . ';';
+    // 新 --g-* token override gomag.css 預設（讓 g-* 元件套客戶色）
+    echo '--g-ink:'      . $theme['color_primary'] . ';';
+    echo '--g-accent:'   . $theme['color_accent']  . ';';
+    echo '--g-bg:'       . $theme['color_bg']      . ';';
+    echo '--g-bg-alt:'   . $theme['color_light']   . ';';
+    echo '--g-ink-soft:' . $theme['color_text']    . ';';
+    echo '--g-ink-rgb:'  . $pRgb . ';';
+    echo '--g-accent-rgb:' . $aRgb . ';';
     echo '}</style>';
 }
 

@@ -99,24 +99,24 @@ require __DIR__ . '/layout_head.php';
 
 <style>
 .hero{position:relative;min-height:580px;display:flex;align-items:center}
-.hero-bg{position:absolute;inset:0;background:var(--c-primary);background-size:cover;background-position:center}
-.hero-overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(var(--c-primary-rgb),.92) 0%,rgba(var(--c-primary-rgb),.75) 60%,rgba(var(--c-primary-rgb),.5) 100%)}
+.hero-bg{position:absolute;inset:0;background:var(--g-ink);background-size:cover;background-position:center}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(var(--g-ink-rgb),.92) 0%,rgba(var(--g-ink-rgb),.75) 60%,rgba(var(--g-ink-rgb),.5) 100%)}
 .hero-content{position:relative;z-index:1;color:#fff;padding:80px 20px 72px;max-width:680px}
-.hero-badge{display:inline-block;background:rgba(var(--c-accent-rgb),.25);border:1px solid rgba(var(--c-accent-rgb),.5);color:#f5d080;padding:5px 16px;border-radius:20px;font-size:.8rem;font-weight:700;letter-spacing:.08em;margin-bottom:18px}
+.hero-badge{display:inline-block;background:rgba(var(--g-accent-rgb),.25);border:1px solid rgba(var(--g-accent-rgb),.5);color:#f5d080;padding:5px 16px;border-radius:20px;font-size:.8rem;font-weight:700;letter-spacing:.08em;margin-bottom:18px}
 .hero-title{font-size:clamp(2rem,5vw,3.2rem);font-weight:900;line-height:1.2;margin-bottom:18px}
-.hero-title span{color:var(--c-accent);display:block;font-size:.7em;margin-top:6px}
+.hero-title span{color:var(--g-accent);display:block;font-size:.7em;margin-top:6px}
 .hero-sub{font-size:1rem;line-height:1.8;opacity:.85;margin-bottom:28px}
 .hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:40px}
 .hero-stats{display:flex;background:rgba(255,255,255,.1);backdrop-filter:blur(8px);border-radius:12px;padding:16px 24px;border:1px solid rgba(255,255,255,.15)}
 .stat-item{flex:1;text-align:center;padding:0 12px;border-right:1px solid rgba(255,255,255,.2)}
 .stat-item:last-child{border-right:none}
-.stat-item strong{display:block;font-size:1.4rem;font-weight:900;color:var(--c-accent)}
+.stat-item strong{display:block;font-size:1.4rem;font-weight:900;color:var(--g-accent)}
 .stat-item span{font-size:.72rem;opacity:.8}
 @media(max-width:600px){.hero-stats{padding:12px}.stat-item{padding:0 6px}.stat-item strong{font-size:1.1rem}}
 </style>
 
 <!-- ══ 2. 關於我們 ════════════════════════════════════════ -->
-<section class="section" style="background:var(--c-light)">
+<section class="section" style="background:var(--g-bg-alt)">
   <div class="container">
     <div class="about-layout">
       <div class="about-text animate-in">
@@ -127,15 +127,15 @@ require __DIR__ . '/layout_head.php';
         <p style="color:#555;line-height:1.9;margin-bottom:20px"><?= nl2br(h($client['about_text']??'')) ?></p>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px">
           <?php foreach($aboutTags as $f): ?>
-            <div style="background:rgba(var(--c-primary-rgb),.07);color:var(--c-primary);padding:6px 14px;border-radius:20px;font-size:.82rem;font-weight:700;border:1px solid rgba(var(--c-primary-rgb),.15)"><?= $f ?></div>
+            <div style="background:rgba(var(--g-ink-rgb),.07);color:var(--g-ink);padding:6px 14px;border-radius:20px;font-size:.82rem;font-weight:700;border:1px solid rgba(var(--g-ink-rgb),.15)"><?= $f ?></div>
           <?php endforeach; ?>
         </div>
         <a href="<?= siteUrl($sub,'services') ?>" class="btn btn-primary" style="margin-top:24px">查看服務項目 →</a>
       </div>
       <div class="about-visual animate-in delay-2">
         <?php foreach($aboutStats as $v): ?>
-        <div style="background:<?= $v[2]?'var(--c-primary)':'#fff' ?>;border-radius:16px;padding:28px 20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.07)">
-          <div style="font-size:2.2rem;font-weight:900;color:<?= $v[2]?'#fff':'var(--c-primary)' ?>;line-height:1"><?= $v[0] ?></div>
+        <div style="background:<?= $v[2]?'var(--g-ink)':'#fff' ?>;border-radius:16px;padding:28px 20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.07)">
+          <div style="font-size:2.2rem;font-weight:900;color:<?= $v[2]?'#fff':'var(--g-ink)' ?>;line-height:1"><?= $v[0] ?></div>
           <div style="font-size:.78rem;color:<?= $v[2]?'rgba(255,255,255,.75)':'#888' ?>;margin-top:6px;font-weight:600"><?= $v[1] ?></div>
         </div>
         <?php endforeach; ?>
@@ -161,32 +161,32 @@ require __DIR__ . '/layout_head.php';
       <?php foreach($site['services'] as $i=>$svc): ?>
       <a href="<?= siteUrl($sub,'services') ?>#svc-<?= $svc['id'] ?>"
          class="animate-in delay-<?= min($i+1,4) ?>"
-         style="background:#fff;border-radius:16px;padding:0 0 0 0;border:1.5px solid rgba(var(--c-primary-rgb),.08);transition:all .25s;display:block;color:inherit;overflow:hidden">
+         style="background:#fff;border-radius:16px;padding:0 0 0 0;border:1.5px solid rgba(var(--g-ink-rgb),.08);transition:all .25s;display:block;color:inherit;overflow:hidden">
         <?php
         $icon = $svc['icon'] ?? '';
         $imgPath = $svc['image_path'] ?? '';
         if ($imgPath): ?>
           <div style="overflow:hidden">
             <img src="<?= BASE_URL.'/'.h($imgPath) ?>" style="width:100%;aspect-ratio:4/3;object-fit:cover;display:block" alt="<?= h($svc['name']) ?>"
-                 onerror="this.parentElement.innerHTML='<div style=\'width:100%;aspect-ratio:4/3;background:linear-gradient(135deg,var(--c-primary),rgba(var(--c-primary-rgb),.6));display:flex;align-items:center;justify-content:center;font-size:3rem\'><?= $isFood ? '🍽️' : addslashes(h($icon ?: '🛠️')) ?></div>'">
+                 onerror="this.parentElement.innerHTML='<div style=\'width:100%;aspect-ratio:4/3;background:linear-gradient(135deg,var(--g-ink),rgba(var(--g-ink-rgb),.6));display:flex;align-items:center;justify-content:center;font-size:3rem\'><?= $isFood ? '🍽️' : addslashes(h($icon ?: '🛠️')) ?></div>'">
           </div>
         <?php elseif ($icon && preg_match('/\.(svg|jpg|jpeg|png|webp)$/i', $icon)): ?>
           <div style="overflow:hidden">
             <img src="<?= BASE_URL.'/'.h($icon) ?>" style="width:100%;aspect-ratio:4/3;object-fit:contain;display:block;background:#f8f9fa;padding:20px" alt="<?= h($svc['name']) ?>"
-                 onerror="this.parentElement.innerHTML='<div style=\'width:100%;aspect-ratio:4/3;background:linear-gradient(135deg,var(--c-primary),rgba(var(--c-primary-rgb),.6));display:flex;align-items:center;justify-content:center;font-size:3rem\'>🛠️</div>'">
+                 onerror="this.parentElement.innerHTML='<div style=\'width:100%;aspect-ratio:4/3;background:linear-gradient(135deg,var(--g-ink),rgba(var(--g-ink-rgb),.6));display:flex;align-items:center;justify-content:center;font-size:3rem\'>🛠️</div>'">
           </div>
         <?php else: ?>
           <div style="overflow:hidden">
-            <div style="width:100%;aspect-ratio:4/3;background:linear-gradient(135deg,var(--c-primary),rgba(var(--c-primary-rgb),.6));display:flex;align-items:center;justify-content:center;font-size:3rem"><?= $isFood ? '🍽️' : h($icon ?: '🛠️') ?></div>
+            <div style="width:100%;aspect-ratio:4/3;background:linear-gradient(135deg,var(--g-ink),rgba(var(--g-ink-rgb),.6));display:flex;align-items:center;justify-content:center;font-size:3rem"><?= $isFood ? '🍽️' : h($icon ?: '🛠️') ?></div>
           </div>
         <?php endif; ?>
         <div style="padding:20px 22px 24px">
-          <h3 style="font-size:1.05rem;font-weight:800;color:var(--c-primary);margin-bottom:8px"><?= h($svc['name']) ?></h3>
+          <h3 style="font-size:1.05rem;font-weight:800;color:var(--g-ink);margin-bottom:8px"><?= h($svc['name']) ?></h3>
           <p  style="font-size:.85rem;color:#666;line-height:1.7;margin-bottom:12px"><?= h($svc['short_desc']??'') ?></p>
           <?php if($svc['price_text']): ?>
-            <div style="display:inline-block;background:rgba(var(--c-accent-rgb),.12);color:var(--c-accent);font-weight:800;font-size:.85rem;padding:4px 12px;border-radius:20px;margin-bottom:10px"><?= h($svc['price_text']) ?></div>
+            <div style="display:inline-block;background:rgba(var(--g-accent-rgb),.12);color:var(--g-accent);font-weight:800;font-size:.85rem;padding:4px 12px;border-radius:20px;margin-bottom:10px"><?= h($svc['price_text']) ?></div>
           <?php endif; ?>
-          <div style="font-size:.8rem;color:var(--c-primary);font-weight:700">了解詳情 →</div>
+          <div style="font-size:.8rem;color:var(--g-ink);font-weight:700">了解詳情 →</div>
         </div>
       </a>
       <?php endforeach; ?>
@@ -200,7 +200,7 @@ require __DIR__ . '/layout_head.php';
 <!-- ══ 4. 精選案例 ════════════════════════════════════════ -->
 <?php $featured=array_slice(array_values(array_filter($site['cases'],fn($c)=>$c['is_featured'])),0,3);
 if($featured): ?>
-<section class="section" style="background:var(--c-light)">
+<section class="section" style="background:var(--g-bg-alt)">
   <div class="container">
     <div class="section-title animate-in">
       <div class="label"><?= $caseLabel ?></div>
@@ -220,7 +220,7 @@ if($featured): ?>
           <div style="position:absolute;left:50%;top:0;width:2px;height:100%;background:#fff;z-index:2"></div>
           <div style="position:absolute;top:8px;left:0;right:0;display:flex;justify-content:space-between;padding:0 8px;z-index:3">
             <span style="font-size:.65rem;font-weight:800;padding:2px 8px;border-radius:4px;background:rgba(0,0,0,.55);color:#fff">BEFORE</span>
-            <span style="font-size:.65rem;font-weight:800;padding:2px 8px;border-radius:4px;background:var(--c-accent);color:#fff">AFTER</span>
+            <span style="font-size:.65rem;font-weight:800;padding:2px 8px;border-radius:4px;background:var(--g-accent);color:#fff">AFTER</span>
           </div>
         </div>
         <?php elseif($aThumb): ?>
@@ -228,15 +228,15 @@ if($featured): ?>
         <?php elseif($bThumb): ?>
           <img src="<?= BASE_URL.'/'.h($bThumb) ?>" style="width:100%;height:200px;object-fit:cover">
         <?php else: ?>
-          <div style="width:100%;height:200px;background:linear-gradient(135deg,var(--c-primary),rgba(var(--c-primary-rgb),.7));display:flex;align-items:center;justify-content:center">
+          <div style="width:100%;height:200px;background:linear-gradient(135deg,var(--g-ink),rgba(var(--g-ink-rgb),.7));display:flex;align-items:center;justify-content:center">
             <span style="font-size:3rem;opacity:.3"><?= $isFood ? '🍽️' : '📸' ?></span>
           </div>
         <?php endif; ?>
         <div style="padding:16px 18px">
           <?php if($c['svc_name']): ?>
-            <span style="background:rgba(var(--c-primary-rgb),.08);color:var(--c-primary);font-size:.72rem;font-weight:700;padding:2px 10px;border-radius:12px;margin-bottom:8px;display:inline-block"><?= h($c['svc_name']) ?></span>
+            <span style="background:rgba(var(--g-ink-rgb),.08);color:var(--g-ink);font-size:.72rem;font-weight:700;padding:2px 10px;border-radius:12px;margin-bottom:8px;display:inline-block"><?= h($c['svc_name']) ?></span>
           <?php endif; ?>
-          <h3 style="font-size:.95rem;font-weight:800;color:var(--c-text);margin-bottom:6px"><?= h($c['title']) ?></h3>
+          <h3 style="font-size:.95rem;font-weight:800;color:var(--g-ink-soft);margin-bottom:6px"><?= h($c['title']) ?></h3>
           <div style="display:flex;gap:12px;font-size:.78rem;color:#888">
             <?php if($c['location']): ?><span>📍 <?= h($c['location']) ?></span><?php endif; ?>
             <?php if($c['area_sqm'] && !$isFood): ?><span>📐 <?= $c['area_sqm'] ?>坪</span><?php endif; ?>
@@ -274,10 +274,10 @@ if($featured): ?>
           <div style="color:#f4a611;font-size:1rem;margin-bottom:10px">★★★★★</div>
           <p style="font-size:.88rem;color:#555;line-height:1.8;margin-bottom:14px;font-style:italic">"<?= h(mb_strimwidth($t['content'],0,100,'…')) ?>"</p>
           <?php if($t['svc_name']): ?>
-            <span style="display:inline-block;background:rgba(var(--c-primary-rgb),.08);color:var(--c-primary);font-size:.72rem;font-weight:700;padding:2px 10px;border-radius:12px"><?= h($t['svc_name']) ?></span>
+            <span style="display:inline-block;background:rgba(var(--g-ink-rgb),.08);color:var(--g-ink);font-size:.72rem;font-weight:700;padding:2px 10px;border-radius:12px"><?= h($t['svc_name']) ?></span>
           <?php endif; ?>
           <?php if(!empty($t['source_url'])): ?>
-            <a href="<?= h($t['source_url']) ?>" target="_blank" rel="noopener" style="display:inline-block;margin-top:10px;font-size:.78rem;color:var(--c-primary);text-decoration:none;font-weight:600">📖 閱讀全文 →</a>
+            <a href="<?= h($t['source_url']) ?>" target="_blank" rel="noopener" style="display:inline-block;margin-top:10px;font-size:.78rem;color:var(--g-ink);text-decoration:none;font-weight:600">📖 閱讀全文 →</a>
           <?php endif; ?>
         </div>
       </div>
@@ -326,7 +326,7 @@ if($featured): ?>
                 <blockquote cite="<?= h($social['fb_page_url']) ?>" class="fb-xfbml-parse-ignore">
                   <a href="<?= h($social['fb_page_url']) ?>" target="_blank" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:400px;text-decoration:none;color:#666">
                     <div style="font-size:3rem;margin-bottom:12px">📘</div>
-                    <div style="font-weight:700;color:var(--c-primary);margin-bottom:8px">前往 Facebook 粉絲頁</div>
+                    <div style="font-weight:700;color:var(--g-ink);margin-bottom:8px">前往 Facebook 粉絲頁</div>
                     <div style="font-size:.85rem">查看最新動態與施工分享</div>
                   </a>
                 </blockquote>
@@ -339,9 +339,9 @@ if($featured): ?>
             <?php if($client['google_maps_embed']): ?>
               <iframe src="<?= h($client['google_maps_embed']) ?>" width="100%" height="500" style="border:0" allowfullscreen loading="lazy"></iframe>
             <?php else: ?>
-              <div style="height:400px;background:var(--c-light);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px">
+              <div style="height:400px;background:var(--g-bg-alt);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px">
                 <div style="font-size:3rem;margin-bottom:12px">🗺️</div>
-                <div style="font-weight:700;color:var(--c-primary)">📍 <?= h($client['address']??'') ?></div>
+                <div style="font-weight:700;color:var(--g-ink)">📍 <?= h($client['address']??'') ?></div>
               </div>
             <?php endif; ?>
           </div>
@@ -358,7 +358,7 @@ if($featured): ?>
           ['💬','LINE',h($social['line_id']??'')],
         ];
         foreach(array_filter($rows,fn($r)=>$r[2]) as $r): ?>
-        <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid rgba(var(--c-primary-rgb),.07)">
+        <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid rgba(var(--g-ink-rgb),.07)">
           <div style="font-size:1.4rem;flex-shrink:0;margin-top:2px"><?= $r[0] ?></div>
           <div>
             <div style="font-size:.75rem;color:#999;font-weight:600;letter-spacing:.05em;margin-bottom:2px"><?= $r[1] ?></div>
@@ -382,9 +382,9 @@ if($featured): ?>
           <?php if($client['google_maps_embed']): ?>
             <iframe src="<?= h($client['google_maps_embed']) ?>" width="100%" height="100%" style="border:0;min-height:280px" allowfullscreen loading="lazy"></iframe>
           <?php else: ?>
-            <div style="height:100%;background:var(--c-light);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px">
+            <div style="height:100%;background:var(--g-bg-alt);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px">
               <div style="font-size:3rem;margin-bottom:12px">🗺️</div>
-              <div style="font-weight:700;color:var(--c-primary)">📍 <?= h($client['address']??'') ?></div>
+              <div style="font-weight:700;color:var(--g-ink)">📍 <?= h($client['address']??'') ?></div>
               <div style="font-size:.85rem;color:#888;margin-top:6px">後台設定 Google Maps 後會顯示地圖</div>
             </div>
           <?php endif; ?>

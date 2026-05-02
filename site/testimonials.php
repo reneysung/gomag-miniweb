@@ -38,16 +38,16 @@ require __DIR__ . '/layout_head.php';
 
 <!-- 篩選 Tab -->
 <?php if (count($groups) > 1): ?>
-<div style="background:var(--c-light);border-bottom:1px solid rgba(var(--c-primary-rgb),.08);position:sticky;top:66px;z-index:150">
+<div style="background:var(--g-bg-alt);border-bottom:1px solid rgba(var(--g-ink-rgb),.08);position:sticky;top:66px;z-index:150">
   <div class="container">
     <div style="display:flex;gap:0;overflow-x:auto;scrollbar-width:none">
       <?php $first=true; foreach($groups as $key=>$group): ?>
       <button onclick="filterItems(this,'<?= h($key) ?>')"
         data-filter="<?= h($key) ?>"
-        style="display:flex;align-items:center;gap:6px;padding:14px 20px;font-size:.88rem;font-weight:700;color:<?= $first?'var(--c-primary)':'#888' ?>;background:none;border:none;border-bottom:3px solid <?= $first?'var(--c-primary)':'transparent' ?>;cursor:pointer;white-space:nowrap;transition:all .2s"
+        style="display:flex;align-items:center;gap:6px;padding:14px 20px;font-size:.88rem;font-weight:700;color:<?= $first?'var(--g-ink)':'#888' ?>;background:none;border:none;border-bottom:3px solid <?= $first?'var(--g-ink)':'transparent' ?>;cursor:pointer;white-space:nowrap;transition:all .2s"
         class="ftab <?= $first?'ftab-active':'' ?>">
         <?= h($group['label']) ?>
-        <span style="background:<?= $first?'var(--c-primary)':'rgba(var(--c-primary-rgb),.1)' ?>;color:<?= $first?'#fff':'var(--c-primary)' ?>;font-size:.7rem;padding:1px 7px;border-radius:20px;font-weight:800"><?= count($group['items']) ?></span>
+        <span style="background:<?= $first?'var(--g-ink)':'rgba(var(--g-ink-rgb),.1)' ?>;color:<?= $first?'#fff':'var(--g-ink)' ?>;font-size:.7rem;padding:1px 7px;border-radius:20px;font-weight:800"><?= count($group['items']) ?></span>
       </button>
       <?php $first=false; endforeach; ?>
     </div>
@@ -81,7 +81,7 @@ require __DIR__ . '/layout_head.php';
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
               <div style="color:#f4a611;font-size:.95rem;letter-spacing:1px"><?= str_repeat('★', (int)($t['rating'] ?? 5)) ?></div>
               <?php if($t['svc_name']): ?>
-                <span style="background:rgba(var(--c-primary-rgb),.08);color:var(--c-primary);font-size:.7rem;font-weight:700;padding:2px 10px;border-radius:12px"><?= h($t['svc_name']) ?></span>
+                <span style="background:rgba(var(--g-ink-rgb),.08);color:var(--g-ink);font-size:.7rem;font-weight:700;padding:2px 10px;border-radius:12px"><?= h($t['svc_name']) ?></span>
               <?php endif; ?>
             </div>
 
@@ -89,7 +89,7 @@ require __DIR__ . '/layout_head.php';
 
             <?php if(!empty($t['source_url'])): ?>
             <div style="padding-top:12px;border-top:1px solid #f0f0f0">
-              <a href="<?= h($t['source_url']) ?>" target="_blank" rel="noopener" style="font-size:.78rem;color:var(--c-primary);text-decoration:none;font-weight:600">📖 閱讀全文 →</a>
+              <a href="<?= h($t['source_url']) ?>" target="_blank" rel="noopener" style="font-size:.78rem;color:var(--g-ink);text-decoration:none;font-weight:600">📖 閱讀全文 →</a>
             </div>
             <?php endif; ?>
           </div>
@@ -110,7 +110,7 @@ require __DIR__ . '/layout_head.php';
   </div>
 </section>
 
-<section style="background:var(--c-primary);padding:56px 0;text-align:center;color:#fff">
+<section style="background:var(--g-ink);padding:56px 0;text-align:center;color:#fff">
   <div class="container animate-in">
     <h2 style="font-size:1.8rem;font-weight:900;margin-bottom:12px"><?= $isFood ? '想品嚐主廚的暖心料理嗎？' : '想讓您的空間也煥然一新嗎？' ?></h2>
     <p style="opacity:.8;margin-bottom:28px"><?= $isFood ? '歡迎來電訂位或 LINE 預約' : '免費估價，台南到府服務' ?></p>
@@ -157,12 +157,12 @@ function renderPage() {
   if (pages <= 1) { box.innerHTML = ''; return; }
   let html = '';
   const btnBase = 'display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:38px;padding:0 12px;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer;border:none;transition:all .2s;';
-  html += '<button onclick="goPage(' + (currentPage-1) + ')" style="' + btnBase + 'background:' + (currentPage>1?'rgba(var(--c-primary-rgb),.08)':'#f0f0f0') + ';color:' + (currentPage>1?'var(--c-primary)':'#ccc') + '" ' + (currentPage<=1?'disabled':'') + '>‹</button>';
+  html += '<button onclick="goPage(' + (currentPage-1) + ')" style="' + btnBase + 'background:' + (currentPage>1?'rgba(var(--g-ink-rgb),.08)':'#f0f0f0') + ';color:' + (currentPage>1?'var(--g-ink)':'#ccc') + '" ' + (currentPage<=1?'disabled':'') + '>‹</button>';
   for (let p = 1; p <= pages; p++) {
     const active = p === currentPage;
-    html += '<button onclick="goPage(' + p + ')" style="' + btnBase + 'background:' + (active?'var(--c-primary)':'rgba(var(--c-primary-rgb),.06)') + ';color:' + (active?'#fff':'var(--c-primary)') + '">' + p + '</button>';
+    html += '<button onclick="goPage(' + p + ')" style="' + btnBase + 'background:' + (active?'var(--g-ink)':'rgba(var(--g-ink-rgb),.06)') + ';color:' + (active?'#fff':'var(--g-ink)') + '">' + p + '</button>';
   }
-  html += '<button onclick="goPage(' + (currentPage+1) + ')" style="' + btnBase + 'background:' + (currentPage<pages?'rgba(var(--c-primary-rgb),.08)':'#f0f0f0') + ';color:' + (currentPage<pages?'var(--c-primary)':'#ccc') + '" ' + (currentPage>=pages?'disabled':'') + '>›</button>';
+  html += '<button onclick="goPage(' + (currentPage+1) + ')" style="' + btnBase + 'background:' + (currentPage<pages?'rgba(var(--g-ink-rgb),.08)':'#f0f0f0') + ';color:' + (currentPage<pages?'var(--g-ink)':'#ccc') + '" ' + (currentPage>=pages?'disabled':'') + '>›</button>';
   box.innerHTML = html;
 }
 
@@ -177,12 +177,12 @@ function goPage(p) {
 function filterItems(btn, filter) {
   document.querySelectorAll('.ftab').forEach(b => {
     b.style.color='#888'; b.style.borderBottomColor='transparent';
-    b.querySelector('span').style.background='rgba(var(--c-primary-rgb),.1)';
-    b.querySelector('span').style.color='var(--c-primary)';
+    b.querySelector('span').style.background='rgba(var(--g-ink-rgb),.1)';
+    b.querySelector('span').style.color='var(--g-ink)';
     b.classList.remove('ftab-active');
   });
-  btn.style.color='var(--c-primary)'; btn.style.borderBottomColor='var(--c-primary)';
-  btn.querySelector('span').style.background='var(--c-primary)';
+  btn.style.color='var(--g-ink)'; btn.style.borderBottomColor='var(--g-ink)';
+  btn.querySelector('span').style.background='var(--g-ink)';
   btn.querySelector('span').style.color='#fff';
   btn.classList.add('ftab-active');
 

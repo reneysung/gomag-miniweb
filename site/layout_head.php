@@ -47,12 +47,13 @@ $_logoIcon   = $_isFood ? '🍝' : '🌊';
 <?php outputJsonLd($site, $slug, $pageKey); ?>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
-<?php outputThemeCss($theme); ?>
+<link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/gomag.css?v=<?= filemtime(__DIR__ . '/../assets/css/gomag.css') ?>">
+<?php outputThemeCss($theme); /* 必須在 gomag.css 之後，讓客戶 theme 色 override 預設 */ ?>
 <style>
 /* ══ RESET & BASE ══════════════════════════════════════════ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;font-size:16px}
-body{font-family:'Noto Sans TC',sans-serif;color:var(--c-text);background:var(--c-bg);line-height:1.7;padding-bottom:56px}
+body{font-family:'Noto Sans TC',sans-serif;color:var(--g-ink-soft);background:var(--g-bg);line-height:1.7;padding-bottom:56px}
 a{color:inherit;text-decoration:none}
 img{max-width:100%;display:block}
 
@@ -63,12 +64,12 @@ img{max-width:100%;display:block}
 
 /* ══ SECTION TITLE ═════════════════════════════════════════ */
 .section-title{text-align:center;margin-bottom:48px}
-.section-title .label{display:inline-block;background:rgba(var(--c-accent-rgb),.12);color:var(--c-accent);font-size:.75rem;font-weight:700;letter-spacing:.14em;padding:4px 14px;border-radius:20px;margin-bottom:12px}
-.section-title h2{font-size:clamp(1.5rem,3vw,2rem);font-weight:900;color:var(--c-primary);line-height:1.3}
+.section-title .label{display:inline-block;background:rgba(var(--g-accent-rgb),.12);color:var(--g-accent);font-size:.75rem;font-weight:700;letter-spacing:.14em;padding:4px 14px;border-radius:20px;margin-bottom:12px}
+.section-title h2{font-size:clamp(1.5rem,3vw,2rem);font-weight:900;color:var(--g-ink);line-height:1.3}
 .section-title p{margin-top:12px;color:#666;font-size:.95rem;max-width:520px;margin-left:auto;margin-right:auto}
 
 /* ══ TOPBAR ════════════════════════════════════════════════ */
-.topbar-strip{background:var(--c-primary);color:rgba(255,255,255,.85);font-size:.8rem;padding:7px 0;display:none}
+.topbar-strip{background:var(--g-ink);color:rgba(255,255,255,.85);font-size:.8rem;padding:7px 0;display:none}
 @media(min-width:768px){.topbar-strip{display:block}}
 .topbar-strip .inner{display:flex;justify-content:space-between;align-items:center}
 .topbar-strip a{color:rgba(255,255,255,.85);transition:color .2s}
@@ -76,25 +77,25 @@ img{max-width:100%;display:block}
 .topbar-strip .links{display:flex;gap:20px}
 
 /* ══ HEADER ════════════════════════════════════════════════ */
-.site-header{position:sticky;top:0;z-index:200;background:rgba(255,255,255,.97);backdrop-filter:blur(12px);border-bottom:1px solid rgba(var(--c-primary-rgb),.08);box-shadow:0 2px 20px rgba(0,0,0,.06)}
+.site-header{position:sticky;top:0;z-index:200;background:rgba(255,255,255,.97);backdrop-filter:blur(12px);border-bottom:1px solid rgba(var(--g-ink-rgb),.08);box-shadow:0 2px 20px rgba(0,0,0,.06)}
 .header-inner{display:flex;align-items:center;justify-content:space-between;height:66px}
-.site-logo{display:flex;align-items:center;gap:10px;font-weight:900;font-size:1.15rem;color:var(--c-primary)}
+.site-logo{display:flex;align-items:center;gap:10px;font-weight:900;font-size:1.15rem;color:var(--g-ink)}
 .site-logo img{height:40px;width:auto;object-fit:contain}
 .logo-text .sub{display:block;font-size:.65rem;font-weight:400;color:#888;letter-spacing:.05em;margin-top:-2px}
 .site-nav{display:none}
 @media(min-width:768px){.site-nav{display:flex;align-items:center;gap:4px}}
-.site-nav a{padding:8px 16px;border-radius:8px;font-size:.9rem;font-weight:600;color:var(--c-text);transition:all .2s;white-space:nowrap}
-.site-nav a:hover,.site-nav a.active{background:rgba(var(--c-primary-rgb),.08);color:var(--c-primary)}
-.site-nav .btn-contact{background:var(--c-primary);color:#fff!important;padding:8px 18px;border-radius:20px;margin-left:8px}
+.site-nav a{padding:8px 16px;border-radius:8px;font-size:.9rem;font-weight:600;color:var(--g-ink-soft);transition:all .2s;white-space:nowrap}
+.site-nav a:hover,.site-nav a.active{background:rgba(var(--g-ink-rgb),.08);color:var(--g-ink)}
+.site-nav .btn-contact{background:var(--g-ink);color:#fff!important;padding:8px 18px;border-radius:20px;margin-left:8px}
 .site-nav .btn-contact:hover{filter:brightness(1.1)}
-.nav-toggle{display:flex;align-items:center;justify-content:center;width:42px;height:42px;background:none;border:1.5px solid var(--c-primary);border-radius:8px;cursor:pointer;color:var(--c-primary);font-size:1.3rem;transition:all .2s}
-.nav-toggle:hover{background:var(--c-primary);color:#fff}
+.nav-toggle{display:flex;align-items:center;justify-content:center;width:42px;height:42px;background:none;border:1.5px solid var(--g-ink);border-radius:8px;cursor:pointer;color:var(--g-ink);font-size:1.3rem;transition:all .2s}
+.nav-toggle:hover{background:var(--g-ink);color:#fff}
 @media(min-width:768px){.nav-toggle{display:none}}
-.mobile-menu{display:none;flex-direction:column;background:#fff;border-top:1px solid rgba(var(--c-primary-rgb),.08);padding:12px 20px 16px;position:absolute;top:100%;left:0;right:0;box-shadow:0 8px 24px rgba(0,0,0,.1);z-index:199}
+.mobile-menu{display:none;flex-direction:column;background:#fff;border-top:1px solid rgba(var(--g-ink-rgb),.08);padding:12px 20px 16px;position:absolute;top:100%;left:0;right:0;box-shadow:0 8px 24px rgba(0,0,0,.1);z-index:199}
 .mobile-menu.open{display:flex}
-.mobile-menu a{padding:12px 0;border-bottom:1px solid #f0f0f0;font-size:.95rem;font-weight:600;color:var(--c-text);display:flex;align-items:center;gap:8px}
+.mobile-menu a{padding:12px 0;border-bottom:1px solid #f0f0f0;font-size:.95rem;font-weight:600;color:var(--g-ink-soft);display:flex;align-items:center;gap:8px}
 .mobile-menu a:last-child{border-bottom:none}
-.mobile-menu a.highlight{color:var(--c-accent);font-weight:700;font-size:1.05rem}
+.mobile-menu a.highlight{color:var(--g-accent);font-weight:700;font-size:1.05rem}
 
 /* ══ FLOAT LINE ════════════════════════════════════════════ */
 .float-line{position:fixed;right:20px;bottom:80px;z-index:300;width:54px;height:54px;background:#06c755;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(6,199,85,.4);transition:transform .2s,box-shadow .2s;animation:float-pulse 3s ease-in-out infinite}
@@ -106,19 +107,19 @@ img{max-width:100%;display:block}
 .bottom-tabbar{position:fixed;bottom:0;left:0;right:0;height:56px;background:#fff;border-top:1px solid #e8e8e8;display:flex;z-index:300;box-shadow:0 -2px 16px rgba(0,0,0,.08)}
 @media(min-width:768px){.bottom-tabbar{display:none}}
 .tab-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:#999;font-size:.62rem;font-weight:600;cursor:pointer;transition:color .2s;text-decoration:none}
-.tab-item.active{color:var(--c-primary)}
-.tab-item:hover{color:var(--c-primary)}
-.tab-item.accent{color:var(--c-accent)!important}
+.tab-item.active{color:var(--g-ink)}
+.tab-item:hover{color:var(--g-ink)}
+.tab-item.accent{color:var(--g-accent)!important}
 .tab-item .icon{font-size:1.25rem}
 
 /* ══ BUTTONS ═══════════════════════════════════════════════ */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 28px;border-radius:50px;font-size:.9rem;font-weight:700;letter-spacing:.04em;cursor:pointer;border:2px solid transparent;transition:all .2s;white-space:nowrap}
-.btn-primary{background:var(--c-primary);color:#fff;border-color:var(--c-primary)}
-.btn-primary:hover{filter:brightness(1.1);transform:translateY(-1px);box-shadow:0 6px 20px rgba(var(--c-primary-rgb),.3)}
-.btn-accent{background:var(--c-accent);color:#fff;border-color:var(--c-accent)}
+.btn-primary{background:var(--g-ink);color:#fff;border-color:var(--g-ink)}
+.btn-primary:hover{filter:brightness(1.1);transform:translateY(-1px);box-shadow:0 6px 20px rgba(var(--g-ink-rgb),.3)}
+.btn-accent{background:var(--g-accent);color:#fff;border-color:var(--g-accent)}
 .btn-accent:hover{filter:brightness(1.1);transform:translateY(-1px)}
-.btn-outline{background:transparent;color:var(--c-primary);border-color:var(--c-primary)}
-.btn-outline:hover{background:var(--c-primary);color:#fff}
+.btn-outline{background:transparent;color:var(--g-ink);border-color:var(--g-ink)}
+.btn-outline:hover{background:var(--g-ink);color:#fff}
 
 /* ══ GRID ══════════════════════════════════════════════════ */
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
@@ -128,18 +129,18 @@ img{max-width:100%;display:block}
 @media(max-width:600px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
 
 /* ══ PAGE BANNER ═══════════════════════════════════════════ */
-.page-banner{background:linear-gradient(135deg,var(--c-primary) 0%,rgba(var(--c-primary-rgb),.8) 100%);color:#fff;padding:52px 0 44px;text-align:center;position:relative;overflow:hidden}
+.page-banner{background:linear-gradient(135deg,var(--g-ink) 0%,rgba(var(--g-ink-rgb),.8) 100%);color:#fff;padding:52px 0 44px;text-align:center;position:relative;overflow:hidden}
 .page-banner::before{content:'';position:absolute;inset:0;background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E")}
 .page-banner h1{font-size:clamp(1.6rem,4vw,2.4rem);font-weight:900;position:relative}
 .page-banner p{margin-top:10px;opacity:.8;font-size:.95rem;position:relative}
 
 /* ══ BREADCRUMB ════════════════════════════════════════════ */
 .breadcrumb{padding:12px 0;font-size:.8rem;color:#999;display:flex;align-items:center;gap:6px}
-.breadcrumb a{color:var(--c-primary)}
+.breadcrumb a{color:var(--g-ink)}
 .breadcrumb a:hover{text-decoration:underline}
 
 /* ══ FOOTER ════════════════════════════════════════════════ */
-.site-footer{background:var(--c-primary);color:rgba(255,255,255,.8);padding:48px 0 24px;font-size:.875rem}
+.site-footer{background:var(--g-ink);color:rgba(255,255,255,.8);padding:48px 0 24px;font-size:.875rem}
 .footer-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:40px;margin-bottom:40px}
 @media(max-width:768px){.footer-grid{grid-template-columns:1fr;gap:28px}}
 .footer-brand{font-size:1.1rem;font-weight:900;color:#fff;margin-bottom:10px}
@@ -194,7 +195,7 @@ img{max-width:100%;display:block}
       <?php if ($client['logo_path']): ?>
         <img src="<?= BASE_URL . '/' . h($client['logo_path']) ?>" alt="<?= h($client['brand_name']) ?>">
       <?php else: ?>
-        <div style="width:40px;height:40px;background:var(--c-primary);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#fff;flex-shrink:0;"><?= $_logoIcon ?></div>
+        <div style="width:40px;height:40px;background:var(--g-ink);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;color:#fff;flex-shrink:0;"><?= $_logoIcon ?></div>
       <?php endif; ?>
       <div class="logo-text">
         <?= h($client['brand_name']) ?>
