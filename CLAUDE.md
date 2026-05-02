@@ -1,6 +1,6 @@
 # 店家好口碑（gomag.com.tw）— Claude Code Handoff
 
-> **最後更新**：2026-05-02（Phase A + B + Polish 完成）
+> **最後更新**：2026-05-02（Phase A + B + C + D Day 1+2 完成）
 
 ## 專案概觀
 
@@ -147,6 +147,10 @@ taoyuan / taitung / pingtung / hsinchu / yilan / hualien
 | Cache Fix | CSS ?v=mtime | git c1b5600 |
 | Sticky+Reviews | 右側 sticky sidebar + 五星分布條 | git 3eda95c |
 | Polish 3 | Similar stores + 多 testimonials + deprecated banner | git 08c89e2 |
+| C | Photo Gallery 5 格 + Owner Block + SSH key auth | git 54724e8 |
+| C admin | settings.php 加 Owner Block + Photo Gallery 編輯 UI | git 91a2c44 |
+| D Day 1 | city.php 加 本週熱門 / 最新加入 / 真實口碑 | git 06450aa |
+| D Day 2 | city.php hero 600px + 依分類探索 cards + 分類 anchor | git da15ffb |
 
 ## 對齊 mockup 進度
 
@@ -156,10 +160,10 @@ taoyuan / taitung / pingtung / hsinchu / yilan / hualien
 - ✅ Sticky sidebar 聯絡卡
 - ✅ Reviews Summary + 五星分布
 - ✅ Similar Stores
-- ❌ Photo gallery 5 格 (Phase C)
-- ❌ Owner block (Phase C，需新欄位 owner_intro / owner_avatar)
+- ✅ Photo gallery 5 格 (Phase C)
+- ✅ Owner block (Phase C)
 
-**整體對齊度 95%**
+**整體對齊度 100%**（store 頁）／ city 頁約 98%（含 hero 大圖、依分類探索、本週熱門、最新加入、真實口碑）
 
 ## 待辦（明天可選）
 
@@ -170,8 +174,7 @@ taoyuan / taitung / pingtung / hsinchu / yilan / hualien
 | Drag-drop 排序（admin block list 用 SortableJS）| 1-2 hr | UX 加分 |
 | Block 即時預覽 iframe（編輯不用儲存就能看效果）| 4-6 hr | 高 UX |
 | 人工遷移更多客戶到 blocks | per-client 5-15 min | 增加 demo |
-| **Phase D**: city.php 加本週熱門 / 真實口碑 / 最新加入 | 2-3 天 | city 頁更豐富 |
-| **Phase C**: store.php photo gallery 5 格 + owner block | 3-5 天 | 95% → 100% mockup |
+| **Phase D Day 3**: 城市搜尋 bar / sticky 分類 nav / 城市照片牆 | 1-2 天 | 進一步對齊 mockup |
 | Phase 6 DNS 切換到 gomag.com.tw | 視旭浪而定 | 等你決定時機 |
 
 ### 風險低的小事
