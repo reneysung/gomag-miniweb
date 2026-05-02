@@ -139,6 +139,33 @@ $clientsStmt = $db->prepare($sql);
 $clientsStmt->execute($params);
 $clients = $clientsStmt->fetchAll();
 
+// Phase D Day 3.1：搜尋查詢應用層日誌（給 analytics 用）
+if ($q !== '') {
+    $logDir  = __DIR__ . '/_logs';
+    $logFile = $logDir . '/search.log';
+    if (!is_dir($logDir)) @mkdir($logDir, 0755, true);
+    if (is_dir($logDir)) {
+        $ip   = $_SERVER['HTTP_CF_CONNECTING_IP']
+              ?? $_SERVER['HTTP_X_FORWARDED_FOR']
+              ?? $_SERVER['REMOTE_ADDR']
+              ?? '';
+        $ip   = explode(',', $ip)[0];
+        // 每日輪替 salt：同一人同一天會 hash 成一致值，跨天就還原為匿名
+        $ipH  = $ip ? substr(sha1($ip . '|' . date('Y-m-d')), 0, 10) : '-';
+        // tab 分隔；q 內含的 tab/newline 換成空白
+        $qSafe = preg_replace('/[\t\r\n]+/', ' ', $q);
+        $line = implode("\t", [
+            date('c'),
+            $cityName,
+            $slug,
+            $qSafe,
+            count($clients),
+            $ipH,
+        ]) . "\n";
+        @file_put_contents($logFile, $line, FILE_APPEND | LOCK_EX);
+    }
+}
+
 if (empty($clients)) {
     if ($q !== '') {
         // 搜尋無結果不要 404，讓使用者看到搜尋 banner + 清空連結
