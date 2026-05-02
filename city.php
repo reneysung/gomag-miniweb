@@ -283,6 +283,64 @@ $breadcrumbLd = [
 </section>
 <?php endif; ?>
 
+<?php
+// ═══ Phase D: 該縣市本週熱門 / 最新加入 / 口碑 ═══
+$hotStmt = $db->prepare("
+  SELECT cl.id, cl.subdomain, cl.slug, cl.brand_name, cl.tagline, cl.hero_image_path,
+         cl.address, c.name AS cat_name, c.icon AS cat_icon, c.slug AS cat_slug
+  FROM clients cl LEFT JOIN categories c ON cl.category_id=c.id
+  WHERE cl.is_active=1 AND COALESCE(cl.is_placeholder,0)=0 AND cl.address LIKE ?
+    AND cl.is_featured=1
+  ORDER BY cl.id DESC LIMIT 4");
+$hotStmt->execute([$cityName . '%']);
+$hotStores = $hotStmt->fetchAll();
+
+$latestStmt = $db->prepare("
+  SELECT cl.id, cl.subdomain, cl.slug, cl.brand_name, cl.tagline, cl.hero_image_path,
+         cl.address, c.name AS cat_name, c.icon AS cat_icon, c.slug AS cat_slug
+  FROM clients cl LEFT JOIN categories c ON cl.category_id=c.id
+  WHERE cl.is_active=1 AND COALESCE(cl.is_placeholder,0)=0 AND cl.address LIKE ?
+  ORDER BY cl.created_at DESC, cl.id DESC LIMIT 4");
+$latestStmt->execute([$cityName . '%']);
+$latestStores = $latestStmt->fetchAll();
+
+$cityReviewsStmt = $db->prepare("
+  SELECT t.reviewer_name, t.rating, t.content, cl.brand_name, cl.subdomain, cl.slug
+  FROM testimonials t JOIN clients cl ON t.client_id = cl.id
+  WHERE t.is_active=1 AND cl.is_active=1 AND cl.address LIKE ?
+  ORDER BY t.rating DESC, t.id DESC LIMIT 6");
+$cityReviewsStmt->execute([$cityName . '%']);
+$cityReviews = $cityReviewsStmt->fetchAll();
+
+// 共用 render 卡片 helper
+function renderCityStoreCard(array $cl): void {
+  $sub = $cl['subdomain'] ?? $cl['slug'];
+  $heroImg = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
+  ?>
+  <a class="g-store-card" href="<?= BASE_URL ?>/store.php?sub=<?= urlencode($sub) ?>">
+    <div class="g-store-img" <?= $heroImg ? 'style="background-image:url(\''.$heroImg.'\')"' : '' ?>>
+      <?php if (!$heroImg): ?><div class="g-store-img-fallback"><span class="icon"><?= h($cl['cat_icon']??'🏪') ?></span><span class="label"><?= h($cl['cat_name']??'') ?></span></div><?php endif; ?>
+    </div>
+    <div class="g-store-meta-top"><div class="g-store-name"><?= h($cl['brand_name']) ?></div></div>
+    <div class="g-store-loc"><?= h($cl['cat_icon']??'') ?> <?= h($cl['cat_name']??'') ?></div>
+    <?php if ($cl['tagline']): ?><div class="g-store-cat-label"><?= h(mb_strimwidth($cl['tagline'], 0, 32, '…', 'UTF-8')) ?></div><?php endif; ?>
+  </a>
+  <?php
+}
+?>
+
+<?php if ($hotStores): ?>
+<!-- ═══ 本週熱門 ═══ -->
+<section class="g-section">
+  <div class="g-section-head">
+    <div><h2 class="g-section-title">🔥 本週<?= h($cityName) ?>熱門</h2></div>
+  </div>
+  <div class="g-store-grid">
+    <?php foreach ($hotStores as $cl) renderCityStoreCard($cl); ?>
+  </div>
+</section>
+<?php endif; ?>
+
 <!-- ═══ 各分類店家清單（保留現有 SEO 結構，套新樣式）═══ -->
 <?php foreach ($byCat as $catName => $catClients):
     $first = $catClients[0];
@@ -337,6 +395,49 @@ $breadcrumbLd = [
   </div>
 </section>
 <?php endforeach; ?>
+
+<?php if ($latestStores && count($latestStores) >= 2): ?>
+<!-- ═══ 最新加入 ═══ -->
+<section class="g-section">
+  <div class="g-section-head">
+    <div><h2 class="g-section-title">🆕 <?= h($cityName) ?>最新加入</h2></div>
+  </div>
+  <div class="g-store-grid">
+    <?php foreach ($latestStores as $cl) renderCityStoreCard($cl); ?>
+  </div>
+</section>
+<?php endif; ?>
+
+<?php if ($cityReviews): ?>
+<!-- ═══ 真實口碑 ═══ -->
+<section class="g-section" style="background:var(--g-bg-alt); max-width:none; padding-left:0; padding-right:0;">
+  <div style="max-width:1320px; margin:0 auto; padding:0 32px;">
+    <div class="g-section-head">
+      <div><h2 class="g-section-title">💬 <?= h($cityName) ?>真實口碑</h2></div>
+    </div>
+    <div class="g-reviews-list">
+      <?php foreach ($cityReviews as $r):
+        $sub = $r['subdomain'] ?? $r['slug'];
+        $initial = mb_substr($r['reviewer_name'], 0, 1);
+      ?>
+      <div class="g-review-item">
+        <div class="g-review-head">
+          <div class="g-review-avatar"><?= h($initial) ?></div>
+          <div>
+            <div class="g-review-name"><?= h($r['reviewer_name']) ?></div>
+            <div class="g-review-stars-small"><?= str_repeat('★', $r['rating']) ?><?= str_repeat('☆', 5 - $r['rating']) ?></div>
+          </div>
+        </div>
+        <p class="g-review-text"><?= h(mb_strimwidth($r['content'], 0, 160, '…', 'UTF-8')) ?></p>
+        <a href="<?= BASE_URL ?>/store.php?sub=<?= urlencode($sub) ?>" style="display:inline-block; margin-top:10px; font-size:.8rem; color:var(--g-ink-muted); text-decoration:none; border-bottom:1px dashed var(--g-border);">
+          → <?= h($r['brand_name']) ?>
+        </a>
+      </div>
+      <?php endforeach; ?>
+    </div>
+  </div>
+</section>
+<?php endif; ?>
 
 <!-- ═══ B 端業務 banner ═══ -->
 <div class="g-banner-wrap">
