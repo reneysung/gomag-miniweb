@@ -33,6 +33,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'store_meta_desc'        => trim($_POST['store_meta_desc'] ?? ''),
         'store_keywords'         => trim($_POST['store_keywords'] ?? ''),
         'store_og_image'         => trim($_POST['store_og_image'] ?? ''),
+        // Phase C: Owner block
+        'owner_name'             => trim($_POST['owner_name'] ?? ''),
+        'owner_intro'            => trim($_POST['owner_intro'] ?? ''),
     ];
 
     // Logo 上傳
@@ -45,6 +48,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $path = uploadImage($_FILES['hero_image'], 'brand');
         if ($path) $fields['hero_image_path'] = $path;
     }
+    // Phase C: Owner avatar 上傳
+    if (!empty($_FILES['owner_avatar']['name'])) {
+        $path = uploadImage($_FILES['owner_avatar'], 'brand');
+        if ($path) $fields['owner_avatar'] = $path;
+    }
+    // Phase C: Photo gallery 多檔上傳
+    $existingPhotos = !empty($_POST['existing_photos']) ? json_decode($_POST['existing_photos'], true) : [];
+    if (!is_array($existingPhotos)) $existingPhotos = [];
+    if (!empty($_FILES['photos']['name'][0])) {
+        foreach ($_FILES['photos']['name'] as $i => $name) {
+            if (!$name || $_FILES['photos']['error'][$i] !== UPLOAD_ERR_OK) continue;
+            $f = ['name' => $name, 'type' => $_FILES['photos']['type'][$i], 'tmp_name' => $_FILES['photos']['tmp_name'][$i],
+                  'size' => $_FILES['photos']['size'][$i], 'error' => $_FILES['photos']['error'][$i]];
+            $p = uploadImage($f, 'brand');
+            if ($p) $existingPhotos[] = $p;
+        }
+    }
+    $fields['photos'] = $existingPhotos ? json_encode(array_values(array_unique($existingPhotos)), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null;
 
     // Hero Stats（JSON）
     $heroStats = [];
@@ -334,6 +355,61 @@ while (count($currentTags) < 4) $currentTags[] = '';
       <label>營業時間（純文字描述即可）</label>
       <textarea name="business_hours" class="form-control" rows="3" placeholder="例：週一～週六 09:00-18:00&#10;週日公休"><?= h($client['business_hours'] ?? '') ?></textarea>
       <div class="hint">會顯示在主站行銷頁的「營業資訊」區塊</div>
+    </div>
+  </div>
+</div>
+
+<!-- Phase C: 經營者 Owner Block -->
+<div class="card" style="margin-bottom:20px; border:1.5px solid #FF5A36;">
+  <div class="card-header"><h2>👤 經營者資訊（Owner Block）</h2></div>
+  <div class="card-body">
+    <p class="hint" style="margin-bottom:14px;">顯示在新版店家頁「關於」上方，含圓形頭像 + 名字 + 一行介紹。</p>
+    <div style="display:grid; grid-template-columns: 100px 1fr; gap:16px; align-items:start;">
+      <div>
+        <?php if (!empty($client['owner_avatar'])): ?>
+        <img src="<?= BASE_URL ?>/<?= h($client['owner_avatar']) ?>" alt="" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:2px solid #FF5A36;">
+        <?php else: ?>
+        <div style="width:80px; height:80px; border-radius:50%; background:linear-gradient(135deg,#FF5A36,#E0421F); color:#fff; display:grid; place-items:center; font-size:32px; font-weight:800;"><?= h(mb_substr($client['owner_name'] ?? $client['brand_name'] ?? '?', 0, 1)) ?></div>
+        <?php endif; ?>
+      </div>
+      <div style="display:grid; gap:10px;">
+        <div class="form-group-admin" style="margin:0;">
+          <label>經營者姓名</label>
+          <input type="text" name="owner_name" class="form-control" value="<?= h($client['owner_name'] ?? '') ?>" placeholder="例：蘇老闆 / 主廚 Eric">
+        </div>
+        <div class="form-group-admin" style="margin:0;">
+          <label>一行介紹</label>
+          <input type="text" name="owner_intro" class="form-control" value="<?= h($client['owner_intro'] ?? '') ?>" placeholder="例：日本學藝歸國 · 開業 8 年">
+        </div>
+        <div class="form-group-admin" style="margin:0;">
+          <label>頭像（可選）</label>
+          <input type="file" name="owner_avatar" accept="image/*">
+          <div class="hint">不上傳則用名字第一字 + 橘漸層 fallback</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Phase C: Photo Gallery -->
+<?php $existingPhotos = !empty($client['photos']) ? (json_decode($client['photos'], true) ?: []) : []; ?>
+<div class="card" style="margin-bottom:20px; border:1.5px solid #FF5A36;">
+  <div class="card-header"><h2>📷 照片集（Photo Gallery）</h2></div>
+  <div class="card-body">
+    <p class="hint" style="margin-bottom:14px;">顯示在新版店家頁 Hero 之後，最多前 5 張會以 Airbnb 樣式 grid 呈現。</p>
+    <input type="hidden" name="existing_photos" value='<?= h(json_encode($existingPhotos, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?>'>
+    <?php if ($existingPhotos): ?>
+    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:8px; margin-bottom:14px;">
+      <?php foreach ($existingPhotos as $p): ?>
+      <div style="aspect-ratio:1; border-radius:8px; overflow:hidden; background:url('<?= BASE_URL ?>/<?= h($p) ?>') center/cover #eee; border:1px solid #ddd;"></div>
+      <?php endforeach; ?>
+    </div>
+    <p class="hint" style="font-size:.8rem; color:#888;">⚠️ 目前有 <?= count($existingPhotos) ?> 張。新上傳會「累加」到後面（不會取代）。如需清空請聯絡開發者。</p>
+    <?php endif; ?>
+    <div class="form-group-admin" style="margin-top:14px;">
+      <label>上傳新照片（可多選）</label>
+      <input type="file" name="photos[]" accept="image/*" multiple>
+      <div class="hint">建議 4:3 或 1:1 比例，每張 5MB 以下</div>
     </div>
   </div>
 </div>
