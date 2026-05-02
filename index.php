@@ -95,367 +95,238 @@ $metaDesc  = "匯集 {$totalClients}+ 家全台優質店家：餐飲美食、居
 require_once __DIR__ . '/main/layout_head.php';
 ?>
 
-<!-- ═══════ Hero 區 ═══════ -->
+<!-- ═══════ Hero（g-* 設計，輪播 banners + 文案 overlay）═══════ -->
 <?php if (!empty($banners)): ?>
-<!-- ──── 有 Banner：圖片輪播模式 ──── -->
-<section class="m-hero m-hero-carousel" id="heroCarousel">
-  <div class="hero-slides">
-    <?php foreach ($banners as $i => $b): ?>
-    <?php
-      $imgUrl = BASE_URL . '/' . h($b['image_path']);
-      $hasLink = !empty($b['link_url']);
-      $tag = $hasLink ? 'a' : 'div';
-      $linkAttr = $hasLink ? 'href="' . h($b['link_url']) . '"' : '';
-    ?>
-    <<?= $tag ?> class="hero-slide<?= $i === 0 ? ' active' : '' ?>" <?= $linkAttr ?>
-       style="background-image:url('<?= $imgUrl ?>');">
-      <?php if ($b['title'] || $b['subtitle']): ?>
-      <div class="hero-slide-overlay"></div>
-      <div class="hero-slide-content">
-        <?php if ($b['title']): ?>
-        <h1><?= h($b['title']) ?></h1>
-        <?php endif; ?>
-        <?php if ($b['subtitle']): ?>
-        <p><?= h($b['subtitle']) ?></p>
-        <?php endif; ?>
-        <form class="m-hero-search" method="GET" action="<?= BASE_URL ?>/search.php"
-              onclick="event.stopPropagation();" onsubmit="event.stopPropagation();">
-          <input type="text" name="q" placeholder="搜尋店家、服務、地點..." autocomplete="off">
-          <button type="submit">搜尋</button>
-        </form>
+<section class="g-hero-carousel" id="g-hero">
+  <?php foreach ($banners as $i => $b):
+    $imgUrl = BASE_URL . '/' . h($b['image_path']);
+  ?>
+  <div class="g-hero-slide<?= $i === 0 ? ' is-active' : '' ?>" style="background-image:url('<?= $imgUrl ?>');">
+    <div class="g-hero-slide-overlay"></div>
+    <div class="g-hero-slide-inner">
+      <?php if ($b['title']): ?>
+      <div class="g-hero-slide-tag">
+        <span class="g-hero-slide-tag-dot"></span>
+        <span><?= h($b['subtitle'] ?: '在地優質店家・口碑驗證') ?></span>
       </div>
+      <h1 class="g-hero-slide-title"><?= h($b['title']) ?></h1>
       <?php endif; ?>
-    </<?= $tag ?>>
-    <?php endforeach; ?>
+      <form class="g-hero-slide-search" method="GET" action="<?= BASE_URL ?>/search.php" role="search">
+        <input type="text" name="q" placeholder="搜尋店家、服務、地點…" autocomplete="off">
+        <button type="submit" aria-label="搜尋">🔍</button>
+      </form>
+    </div>
   </div>
+  <?php endforeach; ?>
 
   <?php if (count($banners) > 1): ?>
-  <!-- 控制鈕 -->
-  <button class="hero-nav hero-prev" onclick="heroSlide(-1)" aria-label="上一張">‹</button>
-  <button class="hero-nav hero-next" onclick="heroSlide(1)" aria-label="下一張">›</button>
-  <!-- 指示點 -->
-  <div class="hero-dots">
+  <button class="g-hero-nav g-hero-prev" aria-label="上一張">‹</button>
+  <button class="g-hero-nav g-hero-next" aria-label="下一張">›</button>
+  <div class="g-hero-dots">
     <?php foreach ($banners as $i => $b): ?>
-    <button class="hero-dot<?= $i === 0 ? ' active' : '' ?>"
-            onclick="heroGoTo(<?= $i ?>)" aria-label="第 <?= $i + 1 ?> 張"></button>
+    <button class="g-hero-dot<?= $i === 0 ? ' is-active' : '' ?>" data-slide="<?= $i ?>" aria-label="第 <?= $i + 1 ?> 張"></button>
     <?php endforeach; ?>
   </div>
   <?php endif; ?>
 </section>
 
-<style>
-.m-hero-carousel {
-  position: relative;
-  padding: 0;
-  overflow: hidden;
-  min-height: 480px;
-  background: #1c3d3d;
-}
-.m-hero-carousel .hero-slides {
-  position: relative;
-  width: 100%;
-  height: 480px;
-}
-.m-hero-carousel .hero-slide {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  opacity: 0;
-  transition: opacity .8s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  color: #fff;
-}
-.m-hero-carousel .hero-slide.active { opacity: 1; z-index: 2; }
-.m-hero-carousel .hero-slide-overlay {
-  position: absolute; inset: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,.2) 0%, rgba(0,0,0,.55) 100%);
-}
-.m-hero-carousel .hero-slide-content {
-  position: relative;
-  z-index: 2;
-  text-align: center;
-  padding: 0 20px;
-  max-width: 800px;
-  width: 100%;
-}
-.m-hero-carousel .hero-slide-content h1 {
-  font-size: clamp(1.8rem, 5vw, 3rem);
-  font-weight: 800;
-  margin-bottom: 14px;
-  text-shadow: 0 2px 12px rgba(0,0,0,.5);
-  line-height: 1.2;
-}
-.m-hero-carousel .hero-slide-content p {
-  font-size: clamp(1rem, 2vw, 1.2rem);
-  margin-bottom: 24px;
-  text-shadow: 0 2px 8px rgba(0,0,0,.5);
-}
-
-.m-hero-carousel .hero-nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 44px; height: 44px;
-  background: rgba(255,255,255,.2);
-  backdrop-filter: blur(8px);
-  border: none;
-  border-radius: 50%;
-  color: #fff;
-  font-size: 1.8rem;
-  font-weight: 300;
-  cursor: pointer;
-  z-index: 5;
-  transition: background .2s;
-  display: flex; align-items: center; justify-content: center;
-}
-.m-hero-carousel .hero-nav:hover { background: rgba(255,255,255,.35); }
-.m-hero-carousel .hero-prev { left: 20px; }
-.m-hero-carousel .hero-next { right: 20px; }
-
-.m-hero-carousel .hero-dots {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 8px;
-  z-index: 5;
-}
-.m-hero-carousel .hero-dot {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  background: rgba(255,255,255,.5);
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  transition: all .2s;
-}
-.m-hero-carousel .hero-dot.active {
-  background: #fff;
-  width: 28px;
-  border-radius: 5px;
-}
-
-@media (max-width: 768px) {
-  .m-hero-carousel,
-  .m-hero-carousel .hero-slides { height: 360px; min-height: 360px; }
-  .m-hero-carousel .hero-nav { width: 36px; height: 36px; font-size: 1.4rem; }
-  .m-hero-carousel .hero-prev { left: 10px; }
-  .m-hero-carousel .hero-next { right: 10px; }
-}
-</style>
-
 <script>
 (function() {
-  const slides = document.querySelectorAll('#heroCarousel .hero-slide');
-  const dots   = document.querySelectorAll('#heroCarousel .hero-dot');
+  var slides = document.querySelectorAll('#g-hero .g-hero-slide');
+  var dots   = document.querySelectorAll('#g-hero .g-hero-dot');
   if (slides.length < 2) return;
-  let idx = 0;
-  let timer = null;
-
-  function show(i) {
-    idx = (i + slides.length) % slides.length;
-    slides.forEach((s, k) => s.classList.toggle('active', k === idx));
-    dots.forEach((d, k) => d.classList.toggle('active', k === idx));
+  var idx = 0;
+  function go(n) {
+    idx = (n + slides.length) % slides.length;
+    slides.forEach(function(s, i) { s.classList.toggle('is-active', i === idx); });
+    dots.forEach(function(d, i) { d.classList.toggle('is-active', i === idx); });
   }
-  function start() {
-    stop();
-    timer = setInterval(() => show(idx + 1), 5000);
-  }
-  function stop() { if (timer) clearInterval(timer); }
-
-  window.heroSlide = (dir) => { show(idx + dir); start(); };
-  window.heroGoTo  = (i)   => { show(i); start(); };
-
-  const carousel = document.getElementById('heroCarousel');
-  carousel.addEventListener('mouseenter', stop);
-  carousel.addEventListener('mouseleave', start);
-
-  // 觸控滑動
-  let startX = 0;
-  carousel.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, {passive:true});
-  carousel.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].clientX - startX;
-    if (Math.abs(dx) > 50) show(idx + (dx < 0 ? 1 : -1));
-    start();
+  document.querySelector('#g-hero .g-hero-prev').addEventListener('click', function() { go(idx - 1); reset(); });
+  document.querySelector('#g-hero .g-hero-next').addEventListener('click', function() { go(idx + 1); reset(); });
+  dots.forEach(function(d) {
+    d.addEventListener('click', function() { go(parseInt(d.dataset.slide, 10)); reset(); });
   });
-
-  start();
+  var timer = null;
+  function reset() { if (timer) clearInterval(timer); timer = setInterval(function() { go(idx + 1); }, 6000); }
+  reset();
 })();
 </script>
-
 <?php else: ?>
-<!-- ──── 沒有 Banner：預設漸層模式 ──── -->
-<section class="m-hero">
-  <div class="m-hero-inner">
-    <h1>找在地好店家<br><span class="accent">就上店家好口碑</span></h1>
-    <p>匯集在地 <?= $totalClients ?>+ 家優質商家，從餐飲到專業服務，找對店家從這裡開始。</p>
-    <form class="m-hero-search" method="GET" action="<?= BASE_URL ?>/search.php">
-      <input type="text" name="q" placeholder="搜尋店家、服務、地點..." autocomplete="off">
-      <button type="submit">搜尋</button>
-    </form>
+<section class="g-hero-carousel">
+  <div class="g-hero-slide is-active" style="background:linear-gradient(135deg,#2a2a2a,#0f0f0f);">
+    <div class="g-hero-slide-inner">
+      <div class="g-hero-slide-tag">
+        <span class="g-hero-slide-tag-dot"></span>
+        <span>全台 <?= $totalClients ?>+ 家在地優質店家</span>
+      </div>
+      <h1 class="g-hero-slide-title">找在地好店家，<br><span>就上店家好口碑</span></h1>
+      <p class="g-hero-slide-desc">從餐飲到專業服務，全台口碑商家一站式找對店家。</p>
+      <form class="g-hero-slide-search" method="GET" action="<?= BASE_URL ?>/search.php" role="search">
+        <input type="text" name="q" placeholder="搜尋店家、服務、地點…" autocomplete="off">
+        <button type="submit" aria-label="搜尋">🔍</button>
+      </form>
+    </div>
   </div>
 </section>
 <?php endif; ?>
 
-<!-- ═══════ 分類入口 ═══════ -->
-<section class="m-section">
-  <div class="m-container">
-    <h2 class="m-section-title">瀏覽分類</h2>
-    <p class="m-section-sub">依產業類別找到您要的店家</p>
-
-    <div class="m-cat-grid">
-      <?php foreach ($categories as $cat): ?>
-      <a class="m-cat-card" href="<?= BASE_URL ?>/category.php?slug=<?= h($cat['slug']) ?>">
-        <div class="icon"><?= h($cat['icon']) ?></div>
-        <div class="name"><?= h($cat['name']) ?></div>
-        <div class="count"><?= $cat['client_count'] ?> 家店家</div>
-      </a>
-      <?php endforeach; ?>
+<!-- ═══════ 12 大分類 explore cards ═══════ -->
+<section class="g-section">
+  <div class="g-section-head">
+    <div>
+      <h2 class="g-section-title">瀏覽分類</h2>
+      <p class="g-section-sub"><?= count($categories) ?> 大分類，找到您要的服務</p>
     </div>
+    <a href="<?= BASE_URL ?>/category.php" class="g-section-link">所有分類</a>
+  </div>
+  <div class="g-explore-grid g-explore-grid--4col">
+    <?php foreach ($categories as $cat):
+      // 取該分類第一張可用 hero 當卡片背景
+      $coverStmt = $db->prepare("SELECT hero_image_path FROM clients WHERE category_id=? AND is_active=1 AND hero_image_path IS NOT NULL AND hero_image_path != '' AND COALESCE(is_placeholder,0)=0 ORDER BY id DESC LIMIT 1");
+      $coverStmt->execute([$cat['id']]);
+      $cover = $coverStmt->fetchColumn();
+      $coverUrl = $cover ? BASE_URL . '/' . h($cover) : '';
+    ?>
+    <a class="g-explore-card" href="<?= BASE_URL ?>/category.php?slug=<?= h($cat['slug']) ?>">
+      <?php if ($coverUrl): ?>
+      <div class="g-explore-card-img" style="background-image:url('<?= h($coverUrl) ?>');"></div>
+      <?php else: ?>
+      <div class="g-explore-card-fallback"><?= h($cat['icon']) ?></div>
+      <?php endif; ?>
+      <div class="g-explore-card-overlay">
+        <div class="g-explore-card-name"><?= h($cat['icon']) ?> <?= h($cat['name']) ?></div>
+        <div class="g-explore-card-count"><?= $cat['client_count'] ?> 家店家</div>
+      </div>
+      <div class="g-explore-card-arrow">→</div>
+    </a>
+    <?php endforeach; ?>
   </div>
 </section>
 
-<!-- ═══════ 縣市入口 ═══════ -->
+<!-- ═══════ 縣市瀏覽 ═══════ -->
 <?php if (!empty($cityCounts)): ?>
-<section class="m-section" style="background:var(--m-bg-alt); border-top:1px solid var(--m-border); border-bottom:1px solid var(--m-border);">
-  <div class="m-container">
-    <h2 class="m-section-title">📍 依縣市瀏覽</h2>
-    <p class="m-section-sub">在地店家依城市分區，找你附近的口碑商家</p>
-
-    <div class="m-cat-grid" style="grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));">
-      <?php foreach ($cityCounts as $cityName => $cnt):
-          $citySlug = $cityNameToSlug[$cityName];
-      ?>
-      <a class="m-cat-card" href="<?= BASE_URL ?>/city.php?slug=<?= h($citySlug) ?>">
-        <div class="icon" style="font-size:2.4rem;">📍</div>
-        <div class="name"><?= h($cityName) ?></div>
-        <div class="count"><?= $cnt ?> 家店家</div>
-      </a>
-      <?php endforeach; ?>
-      <a class="m-cat-card" href="<?= BASE_URL ?>/city.php" style="border-style:dashed;">
-        <div class="icon" style="font-size:2rem; opacity:.5;">→</div>
-        <div class="name" style="opacity:.7;">看全部縣市</div>
-        <div class="count">&nbsp;</div>
-      </a>
+<section class="g-section" style="background:var(--g-bg-alt);">
+  <div class="g-section-head">
+    <div>
+      <h2 class="g-section-title">📍 依縣市瀏覽</h2>
+      <p class="g-section-sub">在地店家依城市分區，找你附近的口碑商家</p>
     </div>
+    <a href="<?= BASE_URL ?>/city.php" class="g-section-link">所有縣市</a>
+  </div>
+  <div class="g-store-grid" style="grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));">
+    <?php foreach ($cityCounts as $cityName => $cnt):
+      $citySlug = $cityNameToSlug[$cityName];
+    ?>
+    <a class="g-store-card" href="<?= BASE_URL ?>/city.php?slug=<?= h($citySlug) ?>" style="text-align:center;">
+      <div class="g-store-img" style="aspect-ratio:1.4; background:linear-gradient(135deg, var(--g-bg-alt), var(--g-bg)); display:grid; place-items:center; font-size:48px;">📍</div>
+      <div class="g-store-meta-top" style="justify-content:center;">
+        <div class="g-store-name" style="font-size:18px;"><?= h($cityName) ?></div>
+      </div>
+      <div class="g-store-loc" style="font-family:var(--g-font-num); font-weight:700; color:var(--g-accent);"><?= $cnt ?> 家店家</div>
+    </a>
+    <?php endforeach; ?>
   </div>
 </section>
 <?php endif; ?>
 
-<!-- ═══════ 精選店家（每分類一家）═══════ -->
-<section class="m-section" style="background:var(--m-bg-alt); border-top:1px solid var(--m-border); border-bottom:1px solid var(--m-border);">
-  <div class="m-container">
-    <h2 class="m-section-title">分類精選</h2>
-    <p class="m-section-sub">每個分類為您挑選一家代表店家</p>
-
-    <?php if (empty($featuredClients)): ?>
-    <div style="text-align:center; padding:40px; color:var(--m-text-muted);">
-      尚無店家資料
+<!-- ═══════ 分類精選店家 ═══════ -->
+<?php if (!empty($featuredClients)): ?>
+<section class="g-section">
+  <div class="g-section-head">
+    <div>
+      <h2 class="g-section-title">分類精選</h2>
+      <p class="g-section-sub">每個分類為您挑選一家代表店家</p>
     </div>
-    <?php else: ?>
-    <div class="m-store-grid">
-      <?php foreach ($featuredClients as $cl): ?>
-      <?php
-        $heroImg = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
-        $linkUrl = BASE_URL . '/store.php?sub=' . urlencode($cl['subdomain'] ?? $cl['slug']);
-      ?>
-      <a class="m-store-card" href="<?= $linkUrl ?>">
-        <div class="cover" <?= $heroImg ? 'style="background-image:url(\''.$heroImg.'\')"' : '' ?>>
-          <?php if ($cl['cat_name']): ?>
-          <span class="cat-tag"><?= h($cl['cat_icon']) ?> <?= h($cl['cat_name']) ?></span>
-          <?php endif; ?>
+  </div>
+  <div class="g-store-grid">
+    <?php foreach ($featuredClients as $cl):
+      $heroImg = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
+      $linkUrl = BASE_URL . '/store.php?sub=' . urlencode($cl['subdomain'] ?? $cl['slug']);
+    ?>
+    <a class="g-store-card" href="<?= $linkUrl ?>">
+      <div class="g-store-img" <?= $heroImg ? 'style="background-image:url(\''.$heroImg.'\')"' : '' ?>>
+        <?php if (!$heroImg): ?>
+        <div class="g-store-img-fallback">
+          <span class="icon"><?= h($cl['cat_icon'] ?? '🏪') ?></span>
+          <span class="label"><?= h($cl['cat_name'] ?? '') ?></span>
         </div>
-        <div class="body">
-          <h3><?= h($cl['brand_name']) ?></h3>
-          <?php if ($cl['tagline']): ?>
-          <div class="tagline"><?= h($cl['tagline']) ?></div>
-          <?php endif; ?>
-          <div class="badges">
-            <?php if ($cl['has_minisite']): ?>
-            <span class="badge badge-mini">🌐 有官網</span>
-            <?php endif; ?>
-            <?php if ($cl['external_website_url']): ?>
-            <span class="badge badge-ext">🔗 自有官網</span>
-            <?php endif; ?>
-          </div>
-          <div class="meta">
-            <?php if ($cl['address']): ?>
-            <span>📍 <?= h(mb_strimwidth($cl['address'], 0, 18, '…')) ?></span>
-            <?php endif; ?>
-            <?php if ($cl['phone']): ?>
-            <span>📞 <?= h($cl['phone']) ?></span>
-            <?php endif; ?>
-          </div>
-        </div>
-      </a>
-      <?php endforeach; ?>
-    </div>
-    <?php endif; ?>
+        <?php endif; ?>
+      </div>
+      <div class="g-store-meta-top">
+        <div class="g-store-name"><?= h($cl['brand_name']) ?></div>
+      </div>
+      <div class="g-store-loc"><?= h($cl['cat_icon'] ?? '') ?> <?= h($cl['cat_name'] ?? '') ?></div>
+      <?php if ($cl['tagline']): ?>
+      <div class="g-store-cat-label"><?= h(mb_strimwidth($cl['tagline'], 0, 36, '…', 'UTF-8')) ?></div>
+      <?php endif; ?>
+    </a>
+    <?php endforeach; ?>
   </div>
 </section>
+<?php endif; ?>
 
 <!-- ═══════ 本月新加入 ═══════ -->
 <?php if (!empty($newThisMonth)): ?>
-<section class="m-section">
-  <div class="m-container">
-    <h2 class="m-section-title">
-      <span style="background:var(--m-accent); color:#fff; font-size:.75rem; padding:3px 10px; border-radius:20px; vertical-align:middle; margin-right:8px;">NEW</span>
-      本月新加入
-    </h2>
-    <p class="m-section-sub"><?= date('Y年n月') ?>．新增 <?= count($newThisMonth) ?> 家店家</p>
-
-    <div class="m-store-grid">
-      <?php foreach ($newThisMonth as $cl): ?>
-      <?php
-        $heroImg = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
-        $linkUrl = BASE_URL . '/store.php?sub=' . urlencode($cl['subdomain'] ?? $cl['slug']);
-        $daysAgo = (int)((time() - strtotime($cl['created_at'])) / 86400);
-        $timeLabel = $daysAgo == 0 ? '今天' : ($daysAgo == 1 ? '昨天' : "{$daysAgo} 天前");
-      ?>
-      <a class="m-store-card" href="<?= $linkUrl ?>">
-        <div class="cover" <?= $heroImg ? 'style="background-image:url(\''.$heroImg.'\')"' : '' ?>>
-          <?php if ($cl['cat_name']): ?>
-          <span class="cat-tag"><?= h($cl['cat_icon']) ?> <?= h($cl['cat_name']) ?></span>
-          <?php endif; ?>
-          <span class="cat-tag" style="position:absolute; top:12px; right:12px; left:auto; background:var(--m-accent);">
-            ⏰ <?= $timeLabel ?>
-          </span>
-        </div>
-        <div class="body">
-          <h3><?= h($cl['brand_name']) ?></h3>
-          <?php if ($cl['tagline']): ?>
-          <div class="tagline"><?= h($cl['tagline']) ?></div>
-          <?php endif; ?>
-          <div class="meta">
-            <?php if ($cl['address']): ?>
-            <span>📍 <?= h(mb_strimwidth($cl['address'], 0, 18, '…')) ?></span>
-            <?php endif; ?>
-            <?php if ($cl['phone']): ?>
-            <span>📞 <?= h($cl['phone']) ?></span>
-            <?php endif; ?>
-          </div>
-        </div>
-      </a>
-      <?php endforeach; ?>
+<section class="g-section" style="background:var(--g-bg-alt);">
+  <div class="g-section-head">
+    <div>
+      <h2 class="g-section-title">🆕 本月新加入</h2>
+      <p class="g-section-sub"><?= date('Y 年 n 月') ?>・新增 <?= count($newThisMonth) ?> 家店家</p>
     </div>
+  </div>
+  <div class="g-store-grid">
+    <?php foreach ($newThisMonth as $cl):
+      $heroImg = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
+      $linkUrl = BASE_URL . '/store.php?sub=' . urlencode($cl['subdomain'] ?? $cl['slug']);
+      $daysAgo = (int)((time() - strtotime($cl['created_at'])) / 86400);
+      $timeLabel = $daysAgo == 0 ? '今天' : ($daysAgo == 1 ? '昨天' : "{$daysAgo} 天前");
+    ?>
+    <a class="g-store-card" href="<?= $linkUrl ?>">
+      <div class="g-store-img" <?= $heroImg ? 'style="background-image:url(\''.$heroImg.'\')"' : '' ?>>
+        <?php if (!$heroImg): ?>
+        <div class="g-store-img-fallback">
+          <span class="icon"><?= h($cl['cat_icon'] ?? '🏪') ?></span>
+          <span class="label"><?= h($cl['cat_name'] ?? '') ?></span>
+        </div>
+        <?php endif; ?>
+        <span class="g-store-badge" style="background:var(--g-accent); color:white;">⏰ <?= $timeLabel ?></span>
+      </div>
+      <div class="g-store-meta-top">
+        <div class="g-store-name"><?= h($cl['brand_name']) ?></div>
+      </div>
+      <div class="g-store-loc"><?= h($cl['cat_icon'] ?? '') ?> <?= h($cl['cat_name'] ?? '') ?></div>
+      <?php if ($cl['tagline']): ?>
+      <div class="g-store-cat-label"><?= h(mb_strimwidth($cl['tagline'], 0, 36, '…', 'UTF-8')) ?></div>
+      <?php endif; ?>
+    </a>
+    <?php endforeach; ?>
   </div>
 </section>
 <?php endif; ?>
 
-<!-- ═══════ CTA 區 ═══════ -->
-<section class="m-section" style="text-align:center;">
-  <div class="m-container">
-    <h2 class="m-section-title">想讓店家曝光？</h2>
-    <p class="m-section-sub">加入店家好口碑平台，獲得專屬行銷頁與小官網・月費 NT$300 起</p>
-    <a href="mailto:contact@gomag.com.tw" class="m-btn m-btn-primary" style="padding:14px 32px; font-size:1rem;">
-      聯絡我們申請加入 →
-    </a>
+<!-- ═══════ B 端 CTA banner ═══════ -->
+<div class="g-banner-wrap">
+  <div class="g-banner">
+    <div class="g-banner-bg"></div>
+    <div class="g-banner-text">
+      <div class="g-banner-eyebrow">B2B Partnership</div>
+      <h3 class="g-banner-title">想讓店家曝光？</h3>
+      <p class="g-banner-desc">加入店家好口碑，專屬行銷頁 + 小官網一次擁有・月費 NT$300 起。業務團隊到店服務，零學習成本。</p>
+    </div>
+    <a href="mailto:<?= h(getPlatformSetting('contact_email', 'contact@gomag.com.tw')) ?>" class="g-banner-btn">立即聯絡 →</a>
+  </div>
+</div>
+
+<!-- ═══════ 大 CTA ═══════ -->
+<section class="g-cta">
+  <div class="g-cta-inner">
+    <div class="g-cta-eyebrow">Make it Yours</div>
+    <h2 class="g-cta-title">把生意做大，<br>從找到對的客人開始。</h2>
+    <p class="g-cta-desc">店家好口碑專注在地口碑曝光 — 月費 NT$300 起，業務團隊到店服務，幫你把生意做大。</p>
+    <div class="g-cta-btns">
+      <a href="mailto:<?= h(getPlatformSetting('contact_email', 'contact@gomag.com.tw')) ?>" class="g-cta-btn g-cta-btn-primary">立即聯絡</a>
+      <a href="<?= BASE_URL ?>/category.php" class="g-cta-btn g-cta-btn-secondary">瀏覽店家</a>
+    </div>
   </div>
 </section>
 

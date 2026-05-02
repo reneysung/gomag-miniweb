@@ -66,8 +66,12 @@ gtag('config', '<?= h($gaTrackingId) ?>');
 /* 讓個別頁面可在 require 此檔前設 $extraCss = ['/path.css',...] 載入額外樣式
  * 自動加 ?v={mtime} cache-busting，避免 CDN 卡住舊版 CSS
  */
-if (!empty($extraCss)):
-    foreach ((array)$extraCss as $cssUrl):
+// Phase F：全站預設載 gomag.css（header/footer 都用 g-* 樣式）
+$autoCss = [BASE_URL . '/assets/css/gomag.css'];
+$mergedCss = array_merge($autoCss, (array)($extraCss ?? []));
+$mergedCss = array_unique($mergedCss);
+if (!empty($mergedCss)):
+    foreach ($mergedCss as $cssUrl):
         // 嘗試解析本機路徑取 mtime 做 cache key
         $cssVer = '';
         // 把 BASE_URL prefix 移除，剩下的就是相對於專案 root 的路徑
@@ -405,16 +409,17 @@ img { max-width: 100%; display: block; height: auto; }
 </head>
 <body>
 
-<header class="m-header">
-  <div class="m-header-inner">
-    <a class="m-logo" href="<?= BASE_URL ?>/">
-      <span class="icon">🏪</span>
-      <span>店家好口碑</span>
+<header class="g-site-header">
+  <div class="g-site-header-inner">
+    <a class="g-site-logo" href="<?= BASE_URL ?>/">
+      <span class="g-site-logo-mark">店</span>
+      <span><?= h($platformName) ?></span>
     </a>
-    <nav class="m-nav">
-      <a href="<?= BASE_URL ?>/" class="<?= $currentPage === 'index' ? 'active' : '' ?>">首頁</a>
-      <a href="<?= BASE_URL ?>/category.php" class="<?= $currentPage === 'category' ? 'active' : '' ?>">分類</a>
-      <a href="<?= BASE_URL ?>/search.php" class="m-search-btn">
+    <nav class="g-site-nav">
+      <a href="<?= BASE_URL ?>/" class="<?= $currentPage === 'index' ? 'is-active' : '' ?>">首頁</a>
+      <a href="<?= BASE_URL ?>/category.php" class="<?= $currentPage === 'category' ? 'is-active' : '' ?>">分類</a>
+      <a href="<?= BASE_URL ?>/city.php" class="<?= $currentPage === 'city' ? 'is-active' : '' ?>">縣市</a>
+      <a href="<?= BASE_URL ?>/search.php" class="g-site-nav-search">
         🔍 <span>搜尋店家</span>
       </a>
     </nav>
