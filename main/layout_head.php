@@ -38,6 +38,8 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
 <meta property="og:url"         content="<?= h($canonical) ?>">
 <meta property="og:image"       content="<?= h($ogImage) ?>">
 <meta name="twitter:card"       content="summary_large_image">
+<link rel="icon" type="image/svg+xml" href="<?= BASE_URL ?>/favicon.svg">
+<link rel="apple-touch-icon" href="<?= BASE_URL ?>/favicon.svg">
 <?php if ($gscVerification): ?>
 <meta name="google-site-verification" content="<?= h($gscVerification) ?>">
 <?php endif; ?>
