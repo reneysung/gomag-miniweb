@@ -16,11 +16,21 @@ $metaTitle = $seo['meta_title'] ?? ($client['brand_name'] . '｜' . ($client['ta
 $metaDesc  = $seo['meta_desc']  ?? ($client['about_text'] ? mb_strimwidth($client['about_text'], 0, 120, '…') : '');
 $canonicalUrl = getCanonicalUrl($slug, $pageKey);
 $ogImage   = $seo['og_image'] ?? ($client['hero_image_path'] ? BASE_URL . '/' . $client['hero_image_path'] : '');
-$lineUrl   = $social['line_url']     ?? '#';
+// LINE URL：line_url 直填 > line_id 自動組 > 沒設則 ''（templates 用 if 判斷）
+$lineUrl = '';
+if (!empty($social['line_url']) && filter_var($social['line_url'], FILTER_VALIDATE_URL)) {
+    $lineUrl = $social['line_url'];
+} elseif (!empty($social['line_id'])) {
+    $rawId = ltrim(trim($social['line_id']), '@');
+    // 過濾中文/特殊符號（LINE OA ID 只能 a-z 0-9 - _）
+    if (preg_match('/^[a-zA-Z0-9_\-]+$/', $rawId)) {
+        $lineUrl = 'https://line.me/R/ti/p/@' . $rawId;
+    }
+}
 $fbUrl     = $social['fb_page_url']  ?? '#';
 $phone     = $client['phone']        ?? '';
 $_ind = $client['industry'] ?? '';
-$_isFood = str_contains($_ind,'餐') || str_contains($_ind,'食') || str_contains($_ind,'料理') || str_contains($_ind,'咖啡') || str_contains($_ind,'甜點');
+$_isFood = (bool)preg_match('/(餐|食|料理|咖啡|甜點|甜品|烘焙|燒肉|牛排|火鍋|鍋物|壽司|麵|飯|披薩|拉麵|烤|飲料|手搖|茶飲|甜|蛋糕|麵包|食坊|食堂|宵夜)/u', $_ind);
 $_casesLabel = $_isFood ? '料理作品' : '施工案例';
 $_casesIcon  = $_isFood ? '🍽️' : '📸';
 $_logoIcon   = $_isFood ? '🍝' : '🌊';
@@ -182,7 +192,7 @@ img{max-width:100%;display:block}
   <div class="container inner">
     <div>📞 <?= h($phone) ?>&nbsp;&nbsp;📍 <?= h($client['address'] ?? '') ?></div>
     <div class="links">
-      <?php if ($lineUrl !== '#'): ?><a href="<?= h($lineUrl) ?>" target="_blank">💬 LINE 聯絡</a><?php endif; ?>
+      <?php if ($lineUrl): ?><a href="<?= h($lineUrl) ?>" target="_blank">💬 LINE 聯絡</a><?php endif; ?>
       <?php if ($fbUrl   !== '#'): ?><a href="<?= h($fbUrl)   ?>" target="_blank">📘 Facebook</a><?php endif; ?>
     </div>
   </div>
@@ -224,14 +234,14 @@ img{max-width:100%;display:block}
     <?php if ($phone): ?>
       <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$phone)) ?>" class="highlight">📞 <?= h($phone) ?></a>
     <?php endif; ?>
-    <?php if ($lineUrl !== '#'): ?>
+    <?php if ($lineUrl): ?>
       <a href="<?= h($lineUrl) ?>" class="highlight" target="_blank">💬 LINE 諮詢</a>
     <?php endif; ?>
   </nav>
 </header>
 
 <!-- Floating LINE -->
-<?php if ($lineUrl !== '#'): ?>
+<?php if ($lineUrl): ?>
 <a href="<?= h($lineUrl) ?>" class="float-line" target="_blank" title="LINE 聯絡我們">
   <svg viewBox="0 0 24 24"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
 </a>

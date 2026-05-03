@@ -4,20 +4,44 @@ require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/front_functions.php';
 
+header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
+
 $sub  = getSubdomain();
 $slug = $sub;
 $site = loadSiteData($sub);
 if (!$site) { http_response_code(404); die('網站不存在'); }
 
-$pageKey = 'services';
-$client  = $site['client'];
+$pageKey  = 'services';
+$client   = $site['client'];
+$social   = $site['social'] ?? [];
+$services = $site['services'] ?? [];
+$phone    = $client['phone'] ?? '';
 
-require __DIR__ . '/layout_head.php';
-?>
+// LINE URL 正規化
+$lineUrl = '';
+if (!empty($social['line_url']) && filter_var($social['line_url'], FILTER_VALIDATE_URL)) {
+    $lineUrl = $social['line_url'];
+} elseif (!empty($social['line_id'])) {
+    $rawId = ltrim(trim($social['line_id']), '@');
+    if (preg_match('/^[a-zA-Z0-9_\-]+$/', $rawId)) $lineUrl = 'https://line.me/R/ti/p/@' . $rawId;
+}
 
-<?php
 $ind = $client['industry'] ?? '';
-$isFood = str_contains($ind,'餐') || str_contains($ind,'食') || str_contains($ind,'料理') || str_contains($ind,'咖啡') || str_contains($ind,'甜點');
+$isFood = (bool)preg_match('/(餐|食|料理|咖啡|甜點|甜品|烘焙|燒肉|牛排|火鍋|鍋物|壽司|麵|飯|披薩|拉麵|烤|飲料|手搖|茶飲|甜|蛋糕|麵包|食坊|食堂|宵夜)/u', $ind);
+
+// 餐飲業走 Hawksmoor 風菜單頁
+if ($isFood) {
+    require __DIR__ . '/services_food.php';
+    return;
+}
+
+// 非食物業 → PrettyClean 風新版
+require __DIR__ . '/services_service.php';
+return;
+// === 以下舊版 m-* 設計保留作 fallback（已停用，將來可移除）===
+require __DIR__ . '/layout_head.php';
 ?>
 <div class="page-banner">
   <div class="container"><h1><?= $isFood ? '🍽️ 服務項目' : '🛠️ 服務項目' ?></h1><p><?= $isFood ? '嚴選食材・用心料理・暖心服務' : '專業清潔・用心到位・安心保障' ?></p></div>
@@ -72,8 +96,8 @@ $isFood = str_contains($ind,'餐') || str_contains($ind,'食') || str_contains($
           <?php endforeach; ?>
         </div>
         <div style="display:flex;gap:12px;flex-wrap:wrap">
-          <?php $lineUrl=$site['social']['line_url']??'#'; ?>
-          <?php if($lineUrl!=='#'): ?><a href="<?= h($lineUrl) ?>" class="btn btn-accent" target="_blank">💬 <?= $isFood ? 'LINE 訂位預約' : 'LINE 詢問報價' ?></a><?php endif; ?>
+          <?php /* lineUrl 來自 layout_head 已正規化 */ ?>
+          <?php if($lineUrl): ?><a href="<?= h($lineUrl) ?>" class="btn btn-accent" target="_blank">💬 <?= $isFood ? 'LINE 訂位預約' : 'LINE 詢問報價' ?></a><?php endif; ?>
           <?php if($client['phone']): ?><a href="tel:<?= h(preg_replace('/[^0-9+]/','',$client['phone'])) ?>" class="btn btn-outline">📞 <?= $isFood ? '電話訂位' : '電話諮詢' ?></a><?php endif; ?>
         </div>
       </div>
@@ -115,7 +139,7 @@ $isFood = str_contains($ind,'餐') || str_contains($ind,'食') || str_contains($
           <?php endforeach; ?>
         </div>
         <div style="display:flex;gap:12px;flex-wrap:wrap">
-          <?php if($lineUrl!=='#'): ?><a href="<?= h($lineUrl) ?>" class="btn btn-accent" target="_blank">💬 <?= $isFood ? 'LINE 訂位預約' : 'LINE 詢問報價' ?></a><?php endif; ?>
+          <?php if($lineUrl): ?><a href="<?= h($lineUrl) ?>" class="btn btn-accent" target="_blank">💬 <?= $isFood ? 'LINE 訂位預約' : 'LINE 詢問報價' ?></a><?php endif; ?>
           <?php if($client['phone']): ?><a href="tel:<?= h(preg_replace('/[^0-9+]/','',$client['phone'])) ?>" class="btn btn-outline">📞 <?= $isFood ? '電話訂位' : '電話諮詢' ?></a><?php endif; ?>
         </div>
       </div>

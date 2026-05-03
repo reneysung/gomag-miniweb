@@ -4,6 +4,11 @@ require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/front_functions.php';
 
+// Phase F redesign 期間：強制 CDN 不 cache（避免 stale）
+header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
+
 $sub = getSubdomain();
 if (!$sub) { http_response_code(404); die('找不到網站'); }
 
@@ -30,11 +35,20 @@ $pageKey = 'home';
 $client  = $site['client'];
 $social  = $site['social'];
 $phone   = $client['phone'] ?? '';
-$lineUrl = $social['line_url'] ?? '#';
+// LINE URL 邏輯（line_url 直填 > line_id 自組 > ''）
+$lineUrl = '';
+if (!empty($social['line_url']) && filter_var($social['line_url'], FILTER_VALIDATE_URL)) {
+    $lineUrl = $social['line_url'];
+} elseif (!empty($social['line_id'])) {
+    $rawId = ltrim(trim($social['line_id']), '@');
+    if (preg_match('/^[a-zA-Z0-9_\-]+$/', $rawId)) {
+        $lineUrl = 'https://line.me/R/ti/p/@' . $rawId;
+    }
+}
 
 // ── 依產業設定動態文案 ──
 $ind = $client['industry'] ?? '';
-$isFood = str_contains($ind,'餐') || str_contains($ind,'食') || str_contains($ind,'料理') || str_contains($ind,'咖啡') || str_contains($ind,'甜點');
+$isFood = (bool)preg_match('/(餐|食|料理|咖啡|甜點|甜品|烘焙|燒肉|牛排|火鍋|鍋物|壽司|麵|飯|披薩|拉麵|烤|飲料|手搖|茶飲|甜|蛋糕|麵包|食坊|食堂|宵夜)/u', $ind);
 
 // ── 從 DB 讀取 hero_stats 和 about_tags（如果有），否則使用業種預設值 ──
 $dbHeroStats = !empty($client['hero_stats']) ? json_decode($client['hero_stats'], true) : null;
@@ -65,55 +79,525 @@ $aboutTags = $dbAboutTags ?: $defaultAboutTags;
 // aboutStats 從 heroStats 衍生（交替顯示 accent 色）
 $aboutStats = array_map(fn($s, $i) => [$s[0], $s[1], $i % 2 ? 'accent' : ''], $heroStats, array_keys($heroStats));
 
+// 餐飲業走專屬攝影集 layout（Hawksmoor 風）
+if ($isFood) {
+    require __DIR__ . '/index_food.php';
+    return;
+}
+
 require __DIR__ . '/layout_head.php';
 ?>
 
-<!-- ══ 1. HERO ═══════════════════════════════════════════ -->
-<section class="hero">
-  <div class="hero-bg" <?php if($client['hero_image_path']): ?>style="background-image:url('<?= BASE_URL.'/'.h($client['hero_image_path']) ?>')"<?php endif; ?>>
-    <div class="hero-overlay"></div>
-    <div class="container hero-content">
-      <div class="hero-badge animate-in">✨ <?= h($client['industry'] ?? '專業服務') ?></div>
-      <h1 class="hero-title animate-in delay-1">
-        <?= h($client['brand_name']) ?><br>
-        <span><?= h($client['tagline'] ?? '用心服務，品質保證') ?></span>
-      </h1>
-      <p class="hero-sub animate-in delay-2">
-        <?php
-        $svcNames = array_column(array_slice($site['services'],0,4),'name');
-        echo h(implode('・',$svcNames));
-        ?><br><?= h($client['address'] ?? '') ?>
-      </p>
-      <div class="hero-actions animate-in delay-3">
-        <?php if($lineUrl!=='#'): ?><a href="<?= h($lineUrl) ?>" class="btn btn-accent" target="_blank">💬 LINE 立即諮詢</a><?php endif; ?>
-        <?php if($phone): ?><a href="tel:<?= h(preg_replace('/[^0-9+]/','',$phone)) ?>" class="btn btn-outline" style="color:#fff;border-color:rgba(255,255,255,.6)">📞 <?= h($phone) ?></a><?php endif; ?>
-      </div>
-      <div class="hero-stats animate-in delay-4">
-        <?php foreach($heroStats as $hs): ?>
-        <div class="stat-item"><strong><?= $hs[0] ?></strong><span><?= $hs[1] ?></span></div>
-        <?php endforeach; ?>
+<!-- ══ 1. HERO（業種切換：餐飲 → Hawksmoor 風，其他 → PrettyClean 風）══ -->
+<?php
+$heroImg = !empty($client['hero_image_path'])
+    ? BASE_URL . '/' . h($client['hero_image_path'])
+    : industryDefaultHero($client['industry'] ?? '');
+$rating = $heroStats[3][0] ?? '4.9★';
+$ratingNum = preg_replace('/[★\s]/u', '', $rating) ?: '4.9';
+?>
+
+<?php if ($isFood): ?>
+<!-- ─── 餐飲 Hawksmoor 風 Hero（暗黑優雅 cinematic）─── -->
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+
+<section class="hero-dine">
+  <div class="hero-dine-bg" style="background-image:url('<?= h($heroImg) ?>');"></div>
+  <div class="hero-dine-overlay"></div>
+  <div class="hero-dine-vignette"></div>
+
+  <div class="hero-dine-content">
+    <div class="hero-dine-eyebrow animate-in">
+      <span class="dine-line"></span>
+      <span class="dine-eyebrow-text">WELCOME TO</span>
+      <span class="dine-line"></span>
+    </div>
+
+    <h1 class="hero-dine-title animate-in delay-1">
+      <?= h($client['brand_name']) ?>
+    </h1>
+
+    <p class="hero-dine-quote animate-in delay-2">
+      <span class="dine-quote-mark">“</span><?= h($client['tagline'] ?? '一道道用心料理，等你慢慢品嚐') ?><span class="dine-quote-mark">”</span>
+    </p>
+
+    <div class="hero-dine-actions animate-in delay-3">
+      <?php if($lineUrl): ?>
+      <a href="<?= h($lineUrl) ?>" class="dine-cta dine-cta-book" target="_blank">
+        BOOK A TABLE · 立即訂位
+      </a>
+      <?php endif; ?>
+      <?php if($phone): ?>
+      <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$phone)) ?>" class="dine-cta-phone">
+        📞 <?= h($phone) ?>
+      </a>
+      <?php endif; ?>
+    </div>
+
+    <div class="hero-dine-meta animate-in delay-4">
+      <?php if($client['address']): ?><span><?= h($client['address']) ?></span><?php endif; ?>
+      <?php if($client['business_hours']): ?>
+      <span class="dine-meta-sep">·</span><span><?= h($client['business_hours']) ?></span>
+      <?php endif; ?>
+    </div>
+  </div>
+
+  <!-- Award/評鑑引用 band -->
+  <div class="hero-dine-awards">
+    <div class="container">
+      <div class="dine-award-quote animate-in">
+        <div class="dine-award-stars">★★★★★</div>
+        <div class="dine-award-text">「<?= h($ratingNum) ?> Google 評分・<?= h($heroStats[1][0] ?? '10年') ?> 在地經營・<?= h($heroStats[2][0] ?? '5000+') ?> <?= h($heroStats[2][1] ?? '位食客') ?>」</div>
       </div>
     </div>
   </div>
 </section>
 
 <style>
-.hero{position:relative;min-height:580px;display:flex;align-items:center}
-.hero-bg{position:absolute;inset:0;background:var(--g-ink);background-size:cover;background-position:center}
-.hero-overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(var(--g-ink-rgb),.92) 0%,rgba(var(--g-ink-rgb),.75) 60%,rgba(var(--g-ink-rgb),.5) 100%)}
-.hero-content{position:relative;z-index:1;color:#fff;padding:80px 20px 72px;max-width:680px}
-.hero-badge{display:inline-block;background:rgba(var(--g-accent-rgb),.25);border:1px solid rgba(var(--g-accent-rgb),.5);color:#f5d080;padding:5px 16px;border-radius:20px;font-size:.8rem;font-weight:700;letter-spacing:.08em;margin-bottom:18px}
-.hero-title{font-size:clamp(2rem,5vw,3.2rem);font-weight:900;line-height:1.2;margin-bottom:18px}
-.hero-title span{color:var(--g-accent);display:block;font-size:.7em;margin-top:6px}
-.hero-sub{font-size:1rem;line-height:1.8;opacity:.85;margin-bottom:28px}
-.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:40px}
-.hero-stats{display:flex;background:rgba(255,255,255,.1);backdrop-filter:blur(8px);border-radius:12px;padding:16px 24px;border:1px solid rgba(255,255,255,.15)}
-.stat-item{flex:1;text-align:center;padding:0 12px;border-right:1px solid rgba(255,255,255,.2)}
-.stat-item:last-child{border-right:none}
-.stat-item strong{display:block;font-size:1.4rem;font-weight:900;color:var(--g-accent)}
-.stat-item span{font-size:.72rem;opacity:.8}
-@media(max-width:600px){.hero-stats{padding:12px}.stat-item{padding:0 6px}.stat-item strong{font-size:1.1rem}}
+/* Hawksmoor 風 Hero — 暗黑 cinematic、置中、襯線標題、award band */
+.hero-dine {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  background: #0a0807;
+}
+.hero-dine-bg {
+  position: absolute; inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.45;
+  filter: contrast(1.1) saturate(1.05);
+  transform: scale(1.04);
+  animation: hero-dine-zoom 30s ease-in-out infinite alternate;
+}
+@keyframes hero-dine-zoom {
+  from { transform: scale(1.04); }
+  to   { transform: scale(1.14); }
+}
+.hero-dine-overlay {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(180deg, rgba(10,8,7,0.6) 0%, rgba(10,8,7,0.3) 35%, rgba(10,8,7,0.85) 100%);
+}
+.hero-dine-vignette {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center, transparent 30%, rgba(10,8,7,0.6) 100%);
+  pointer-events: none;
+}
+.hero-dine-content {
+  position: relative; z-index: 2;
+  text-align: center;
+  padding: 80px 20px 140px;
+  max-width: 900px;
+  color: #f5e6c8;
+}
+
+/* Eyebrow */
+.hero-dine-eyebrow {
+  display: flex; align-items: center; justify-content: center;
+  gap: 18px;
+  margin-bottom: 36px;
+}
+.dine-line {
+  display: block;
+  width: 50px; height: 1px;
+  background: rgba(245,230,200,0.5);
+}
+.dine-eyebrow-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  letter-spacing: 0.4em;
+  font-size: .85rem;
+  color: rgba(245,230,200,0.85);
+  text-transform: uppercase;
+}
+
+/* Title — serif, big, elegant */
+.hero-dine-title {
+  font-family: 'Cormorant Garamond', 'Noto Serif TC', serif;
+  font-size: clamp(3.2rem, 9vw, 7rem);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  color: #fff;
+  margin: 0 0 32px;
+  text-shadow: 0 4px 40px rgba(0,0,0,0.6);
+}
+
+/* Quote */
+.hero-dine-quote {
+  font-family: 'Cormorant Garamond', 'Noto Serif TC', serif;
+  font-style: italic;
+  font-size: clamp(1.1rem, 1.8vw, 1.4rem);
+  font-weight: 400;
+  color: rgba(245,230,200,0.88);
+  line-height: 1.5;
+  margin: 0 auto 48px;
+  max-width: 620px;
+  text-shadow: 0 2px 18px rgba(0,0,0,0.5);
+}
+.dine-quote-mark {
+  font-family: 'Cormorant Garamond', serif;
+  color: rgba(245,230,200,0.55);
+  font-size: 1.4em;
+  font-weight: 500;
+  vertical-align: -0.1em;
+  margin: 0 -2px;
+}
+
+/* CTAs */
+.hero-dine-actions {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 18px;
+  margin-bottom: 36px;
+}
+.dine-cta {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 18px 44px;
+  font-size: .9rem; font-weight: 700;
+  letter-spacing: 0.16em;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: all .3s ease;
+  white-space: nowrap;
+}
+.dine-cta-book {
+  background: transparent;
+  color: #fff;
+  border: 1.5px solid rgba(245,230,200,0.7);
+  border-radius: 0;
+  position: relative;
+}
+.dine-cta-book::before {
+  content: ''; position: absolute; inset: 0;
+  background: rgba(245,230,200,0.08);
+  opacity: 0; transition: opacity .3s ease;
+}
+.dine-cta-book:hover {
+  border-color: #f5e6c8;
+  letter-spacing: 0.2em;
+}
+.dine-cta-book:hover::before { opacity: 1; }
+.dine-cta-phone {
+  font-family: 'Cormorant Garamond', serif;
+  color: rgba(245,230,200,0.85);
+  font-size: 1.1rem; font-weight: 500;
+  text-decoration: none;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid rgba(245,230,200,0.3);
+  padding-bottom: 2px;
+  transition: all .25s ease;
+}
+.dine-cta-phone:hover { color: #f5e6c8; border-color: #f5e6c8; }
+
+/* Meta */
+.hero-dine-meta {
+  display: inline-flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: .95rem;
+  color: rgba(245,230,200,0.65);
+  font-style: italic;
+}
+.dine-meta-sep { color: rgba(245,230,200,0.35); }
+
+/* Award band — 底部評鑑引用 */
+.hero-dine-awards {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  z-index: 2;
+  padding: 28px 20px;
+  background: linear-gradient(180deg, transparent 0%, rgba(10,8,7,0.6) 100%);
+  border-top: 1px solid rgba(245,230,200,0.12);
+}
+.dine-award-quote {
+  text-align: center;
+  color: rgba(245,230,200,0.85);
+}
+.dine-award-stars {
+  font-size: 1rem;
+  color: #f4b53b;
+  letter-spacing: 4px;
+  margin-bottom: 6px;
+  text-shadow: 0 0 14px rgba(244,181,59,0.4);
+}
+.dine-award-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: .95rem;
+  letter-spacing: 0.04em;
+}
+
+/* RWD */
+@media (max-width: 768px) {
+  .hero-dine { min-height: 92vh; }
+  .hero-dine-content { padding: 56px 16px 120px; }
+  .hero-dine-title { font-size: clamp(2.5rem, 11vw, 4rem); }
+  .hero-dine-quote { font-size: 1.05rem; margin-bottom: 36px; }
+  .dine-cta-book { padding: 15px 32px; font-size: .82rem; letter-spacing: 0.12em; }
+  .dine-line { width: 32px; }
+  .dine-eyebrow-text { font-size: .78rem; letter-spacing: 0.32em; }
+  .hero-dine-meta { font-size: .85rem; }
+  .dine-award-text { font-size: .85rem; }
+}
 </style>
+
+<?php else: ?>
+<!-- ─── 服務業 PrettyClean 風 Hero（亮色照片 + 雙 CTA + marquee）─── -->
+<section class="hero-pro">
+  <div class="hero-pro-bg" style="background-image:url('<?= h($heroImg) ?>');"></div>
+  <div class="hero-pro-overlay"></div>
+
+  <div class="container hero-pro-content">
+    <div class="hero-pro-tag animate-in">
+      <span class="hero-pro-tag-dot"></span>
+      <?= h($client['industry'] ?? '專業服務') ?>
+      <?php if(preg_match('/^(.{2,3}[市縣])/u', $client['address'] ?? '', $m)): ?>
+      <span class="hero-pro-tag-sep">·</span> <?= h($m[1]) ?>
+      <?php endif; ?>
+    </div>
+
+    <h1 class="hero-pro-title animate-in delay-1">
+      <?= h($client['brand_name']) ?>
+    </h1>
+
+    <p class="hero-pro-sub animate-in delay-2">
+      <?= h($client['tagline'] ?? '用心服務，品質保證') ?>
+    </p>
+
+    <div class="hero-pro-actions animate-in delay-3">
+      <?php if($lineUrl): ?>
+      <a href="<?= h($lineUrl) ?>" class="hero-pro-cta hero-pro-cta-primary" target="_blank">
+        免費估價諮詢 →
+      </a>
+      <?php endif; ?>
+      <?php if($phone): ?>
+      <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$phone)) ?>" class="hero-pro-cta hero-pro-cta-secondary">
+        📞 <?= h($phone) ?>
+      </a>
+      <?php endif; ?>
+    </div>
+
+    <div class="hero-pro-trust animate-in delay-4">
+      <div class="trust-item">
+        <span class="trust-stars">★★★★★</span>
+        <span class="trust-text"><strong><?= h($ratingNum) ?></strong> Google 評分</span>
+      </div>
+      <span class="trust-divider"></span>
+      <div class="trust-item">
+        <span class="trust-text"><strong><?= h($heroStats[0][0] ?? '500+') ?></strong> <?= h($heroStats[0][1] ?? '服務客戶') ?></span>
+      </div>
+      <span class="trust-divider"></span>
+      <div class="trust-item">
+        <span class="trust-text"><strong><?= h($heroStats[1][0] ?? '8年') ?></strong> <?= h($heroStats[1][1] ?? '深耕在地') ?></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 跑馬燈裝飾文字（仿 prettycleantx 重複文字） -->
+  <div class="hero-pro-marquee" aria-hidden="true">
+    <div class="marquee-track">
+      <?php $marqueeText = ($client['industry'] ?? '專業服務') . ' · ' . ($client['brand_name']) . ' · '; ?>
+      <span><?= str_repeat(h($marqueeText), 6) ?></span>
+      <span><?= str_repeat(h($marqueeText), 6) ?></span>
+    </div>
+  </div>
+</section>
+
+<style>
+/* Phase 2.2「PrettyClean 風」Hero — 大照片 + 置中粗標 + 雙 CTA + marquee 跑馬燈 */
+.hero-pro {
+  position: relative;
+  min-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  background: var(--g-ink);
+}
+.hero-pro-bg {
+  position: absolute; inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.55;
+  transform: scale(1.04);
+  animation: hero-pro-zoom 24s ease-in-out infinite alternate;
+}
+@keyframes hero-pro-zoom {
+  from { transform: scale(1.04); }
+  to   { transform: scale(1.12); }
+}
+.hero-pro-overlay {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 30%, rgba(0,0,0,0.55) 100%),
+    linear-gradient(135deg, rgba(var(--g-accent-rgb),0.12) 0%, transparent 60%);
+}
+.hero-pro-content {
+  position: relative; z-index: 2;
+  text-align: center;
+  padding: 80px 20px 100px;
+  max-width: 920px;
+}
+
+.hero-pro-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,0.95);
+  color: var(--g-ink);
+  padding: 8px 18px;
+  border-radius: 100px;
+  font-size: .82rem; font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 28px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+.hero-pro-tag-dot {
+  width: 6px; height: 6px;
+  background: var(--g-accent); border-radius: 50%;
+  animation: hero-pro-pulse 2s ease-in-out infinite;
+}
+@keyframes hero-pro-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(var(--g-accent-rgb), 0.6); }
+  50% { box-shadow: 0 0 0 6px rgba(var(--g-accent-rgb), 0); }
+}
+.hero-pro-tag-sep { color: rgba(0,0,0,0.25); }
+
+.hero-pro-title {
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: clamp(3rem, 8vw, 6rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: #fff;
+  margin: 0 0 22px;
+  text-shadow: 0 4px 30px rgba(0,0,0,0.4);
+}
+
+.hero-pro-sub {
+  font-size: clamp(1.05rem, 2vw, 1.4rem);
+  font-weight: 400;
+  color: rgba(255,255,255,0.92);
+  line-height: 1.55;
+  margin: 0 auto 40px;
+  max-width: 640px;
+  text-shadow: 0 2px 16px rgba(0,0,0,0.3);
+}
+
+.hero-pro-actions {
+  display: flex; gap: 14px; flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 48px;
+}
+.hero-pro-cta {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 16px 32px;
+  border-radius: 100px;
+  font-size: 1rem; font-weight: 700;
+  text-decoration: none;
+  transition: all .3s cubic-bezier(.22,.61,.36,1);
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+.hero-pro-cta-primary {
+  background: var(--g-accent);
+  color: #fff;
+  box-shadow: 0 12px 30px -8px rgba(var(--g-accent-rgb), 0.65);
+}
+.hero-pro-cta-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 40px -10px rgba(var(--g-accent-rgb), 0.8);
+  filter: brightness(1.05);
+}
+.hero-pro-cta-secondary {
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #fff;
+  border: 1.5px solid rgba(255,255,255,0.4);
+}
+.hero-pro-cta-secondary:hover {
+  background: rgba(255,255,255,0.25);
+  border-color: rgba(255,255,255,0.7);
+}
+
+.hero-pro-trust {
+  display: inline-flex; align-items: center; gap: 18px;
+  flex-wrap: wrap;
+  justify-content: center;
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 100px;
+  padding: 14px 28px;
+  color: rgba(255,255,255,0.92);
+  font-size: .92rem;
+}
+.trust-item { display: inline-flex; align-items: center; gap: 8px; }
+.trust-item strong { color: #fff; font-weight: 800; font-size: 1rem; }
+.trust-stars {
+  color: #f4b53b;
+  font-size: .95rem;
+  letter-spacing: 1px;
+  text-shadow: 0 0 12px rgba(244,181,59,0.5);
+}
+.trust-divider {
+  width: 1px; height: 16px;
+  background: rgba(255,255,255,0.3);
+}
+
+/* Marquee 跑馬燈（仿 prettycleantx） */
+.hero-pro-marquee {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  z-index: 1;
+  overflow: hidden;
+  height: 60px;
+  display: flex; align-items: center;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(8px);
+}
+.marquee-track {
+  display: flex; gap: 0;
+  white-space: nowrap;
+  animation: hero-pro-marquee 40s linear infinite;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.18);
+  text-transform: uppercase;
+  font-family: 'Noto Sans TC', sans-serif;
+}
+.marquee-track span {
+  flex-shrink: 0;
+  padding: 0 8px;
+}
+@keyframes hero-pro-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* RWD */
+@media (max-width: 768px) {
+  .hero-pro { min-height: 95vh; }
+  .hero-pro-content { padding: 56px 16px 100px; }
+  .hero-pro-title { font-size: clamp(2.2rem, 9vw, 3.4rem); }
+  .hero-pro-sub { font-size: 1rem; margin-bottom: 32px; }
+  .hero-pro-actions { gap: 10px; margin-bottom: 36px; }
+  .hero-pro-cta { padding: 14px 22px; font-size: .92rem; }
+  .hero-pro-trust { padding: 12px 18px; gap: 10px; font-size: .82rem; }
+  .trust-divider { display: none; }
+  .hero-pro-marquee { height: 44px; }
+  .marquee-track { font-size: 1rem; }
+}
+</style>
+<?php endif; ?>
+<!-- /HERO 業種切換結束 -->
 
 <!-- ══ 2. 關於我們 ════════════════════════════════════════ -->
 <section class="section" style="background:var(--g-bg-alt)">
@@ -369,7 +853,7 @@ if($featured): ?>
 
         <!-- LINE + 電話 CTA -->
         <div style="display:flex;gap:12px;margin-top:24px;flex-wrap:wrap">
-          <?php if($lineUrl!=='#'): ?>
+          <?php if($lineUrl): ?>
             <a href="<?= h($lineUrl) ?>" class="btn btn-accent" target="_blank" style="flex:1;justify-content:center">💬 LINE 立即諮詢</a>
           <?php endif; ?>
           <?php if($phone): ?>

@@ -1,8 +1,16 @@
 <?php
 // site/layout_foot.php
 $phone   = $site['client']['phone']       ?? '';
-$lineUrl = $site['social']['line_url']    ?? '#';
-$fbUrl   = $site['social']['fb_page_url'] ?? '#';
+$social  = $site['social'] ?? [];
+// LINE URL 正規化
+$lineUrl = '';
+if (!empty($social['line_url']) && filter_var($social['line_url'], FILTER_VALIDATE_URL)) {
+    $lineUrl = $social['line_url'];
+} elseif (!empty($social['line_id'])) {
+    $rawId = ltrim(trim($social['line_id']), '@');
+    if (preg_match('/^[a-zA-Z0-9_\-]+$/', $rawId)) $lineUrl = 'https://line.me/R/ti/p/@' . $rawId;
+}
+$fbUrl   = $social['fb_page_url'] ?? '#';
 $client  = $site['client'];
 ?>
 
@@ -24,7 +32,7 @@ $client  = $site['client'];
         <?php endif; ?>
         <div class="footer-social">
           <?php if ($fbUrl !== '#'): ?><a href="<?= h($fbUrl) ?>" target="_blank">📘</a><?php endif; ?>
-          <?php if ($lineUrl !== '#'): ?><a href="<?= h($lineUrl) ?>" target="_blank">💬</a><?php endif; ?>
+          <?php if ($lineUrl): ?><a href="<?= h($lineUrl) ?>" target="_blank">💬</a><?php endif; ?>
         </div>
       </div>
       <div>
@@ -60,7 +68,7 @@ $client  = $site['client'];
   <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$phone)) ?>" class="tab-item accent">
     <span class="icon">📞</span>電話</a>
   <?php endif; ?>
-  <?php if ($lineUrl !== '#'): ?>
+  <?php if ($lineUrl): ?>
   <a href="<?= h($lineUrl) ?>" class="tab-item" target="_blank" style="color:#06c755">
     <span class="icon">💬</span>LINE</a>
   <?php endif; ?>

@@ -4,13 +4,41 @@ require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/front_functions.php';
 
+header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
+
 $sub  = getSubdomain();
 $slug = $sub;
 $site = loadSiteData($sub);
 if (!$site) { http_response_code(404); die('網站不存在'); }
 
-$pageKey = 'cases';
-$client  = $site['client'];
+$pageKey  = 'cases';
+$client   = $site['client'];
+$social   = $site['social'] ?? [];
+$services = $site['services'] ?? [];
+$phone    = $client['phone'] ?? '';
+
+$lineUrl = '';
+if (!empty($social['line_url']) && filter_var($social['line_url'], FILTER_VALIDATE_URL)) {
+    $lineUrl = $social['line_url'];
+} elseif (!empty($social['line_id'])) {
+    $rawId = ltrim(trim($social['line_id']), '@');
+    if (preg_match('/^[a-zA-Z0-9_\-]+$/', $rawId)) $lineUrl = 'https://line.me/R/ti/p/@' . $rawId;
+}
+
+$ind = $client['industry'] ?? '';
+$isFood = (bool)preg_match('/(餐|食|料理|咖啡|甜點|甜品|烘焙|燒肉|牛排|火鍋|鍋物|壽司|麵|飯|披薩|拉麵|烤|飲料|手搖|茶飲|甜|蛋糕|麵包|食坊|食堂|宵夜)/u', $ind);
+
+if ($isFood) {
+    require __DIR__ . '/cases_food.php';
+    return;
+}
+
+// 非食物業 → PrettyClean 風新版
+require __DIR__ . '/cases_service.php';
+return;
+// === 以下舊版保留作 fallback ===
 
 // Helper: scan folder for images
 function scanPhotos(string $path): array {

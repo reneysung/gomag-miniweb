@@ -148,6 +148,81 @@ function outputThemeCss(array $theme): void {
     echo '}</style>';
 }
 
+/**
+ * 業種預設 hero 背景圖 — 沒設 client.hero_image_path 時 fallback
+ * 來源：Unsplash 免費商用圖（可未來換成自家 CDN）
+ */
+function industryDefaultHero(string $industry): string {
+    $map = [
+        '餐|食|料理|咖啡|甜點|烘焙'  => 'photo-1517248135467-4c7edcad34c4',  // food spread
+        '清潔|居家|裝潢|裝修|地板|系統|家具' => 'photo-1581578731548-c64695cc6952',  // cleaning
+        '美容|美髮|美睫|美甲|按摩|spa' => 'photo-1521590832167-7bcbfaa6381f',  // salon
+        '汽車|機車|車體|包膜|保養'   => 'photo-1492144534655-ae79c964c9d7',  // auto
+        '旅館|民宿|飯店|住宿|motel'  => 'photo-1542314831-068cd1dbfeeb',     // hotel
+        '教育|教學|補習|學|語言|家教'   => 'photo-1503676260728-1c00da094a0b',  // education
+        '醫|診所|健康|長照'         => 'photo-1559329007-40df8a9345d8',     // clinic
+        '零售|購物|批發|商品'        => 'photo-1481437156560-3205f6a55735',  // shop
+        '工程|寬頻|網路|資訊|專業|企管'  => 'photo-1554224155-6726b3ff858f',  // office/professional
+        '婚禮|活動|宴會'           => 'photo-1519741497674-611481863552',  // wedding
+        '運動|健身|休閒'           => 'photo-1517649763962-0c623066013b',  // sports
+    ];
+    foreach ($map as $pattern => $unsplashId) {
+        if (preg_match('/(' . $pattern . ')/u', $industry)) {
+            return "https://images.unsplash.com/{$unsplashId}?w=1800&q=80&auto=format&fit=crop";
+        }
+    }
+    return 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=1800&q=80&auto=format&fit=crop';
+}
+
+/**
+ * 餐飲業攝影集 — 給 mini-site 食品店家鋪滿 atmospheric 照片用
+ * 來源：Unsplash 免費商用，curated steakhouse/restaurant photography
+ */
+function foodPhotoSet(): array {
+    $base = 'https://images.unsplash.com/';
+    $params = '?w=1400&q=85&auto=format&fit=crop';
+    // 統一牛排館主題（無咖哩、無彩色甜點，避免風格跳 tone）
+    return [
+        'hero'     => $base . 'photo-1600891964599-f61ba0e24092' . $params,  // 烤牛排 hero
+        'interior' => $base . 'photo-1414235077428-338989a2e8c0' . $params,  // 暗色餐廳內裝
+        'fire'     => $base . 'photo-1544025162-d76694265947' . $params,     // 炭火烤肋排
+        'sliced'   => $base . 'photo-1558030006-450675393462' . $params,     // 切片牛排
+        'meat'     => $base . 'photo-1607528048834-30bff58fbb87' . $params,  // 生肉備料
+        'wine'     => $base . 'photo-1510812431401-41d2bd2722f3' . $params,  // 紅酒
+        'chef'     => $base . 'photo-1577106263724-2c8e03bfe9cf' . $params,  // 主廚備餐
+        'table'    => $base . 'photo-1517248135467-4c7edcad34c4' . $params,  // 餐桌擺設
+        // legacy 別名（向後相容）
+        'plating'  => $base . 'photo-1558030006-450675393462' . $params,
+        'closeup'  => $base . 'photo-1558030006-450675393462' . $params,
+        'cocktail' => $base . 'photo-1510812431401-41d2bd2722f3' . $params,
+        'dessert'  => $base . 'photo-1577106263724-2c8e03bfe9cf' . $params,
+        'side'     => $base . 'photo-1607528048834-30bff58fbb87' . $params,
+    ];
+}
+
+/**
+ * 服務業攝影集 — 給清潔/裝修/汽美/居家服務 mini-site 用
+ * Unsplash 免費商用，curated cleaning/home service photography
+ */
+function servicePhotoSet(): array {
+    $base = 'https://images.unsplash.com/';
+    $params = '?w=1400&q=85&auto=format&fit=crop';
+    return [
+        'hero'      => $base . 'photo-1581578731548-c64695cc6952' . $params,  // 清潔噴霧
+        'living'    => $base . 'photo-1416879595882-3373a0480b5b' . $params,  // 整潔客廳
+        'kitchen'   => $base . 'photo-1556909114-f6e7ad7d3136' . $params,     // 乾淨廚房
+        'bathroom'  => $base . 'photo-1552321554-5fefe8c9ef14' . $params,     // 整齊浴室
+        'team'      => $base . 'photo-1604147706283-d7119b5b822c' . $params,  // 服務團隊
+        'tools'     => $base . 'photo-1527515637462-cff94eecc1ac' . $params,  // 清潔工具
+        'window'    => $base . 'photo-1527515545081-5db817172677' . $params,  // 擦窗
+        'before'    => $base . 'photo-1558618666-fcd25c85cd64' . $params,     // before 髒亂
+        'after'     => $base . 'photo-1493809842364-78817add7ffb' . $params,  // after 整潔
+        'detail'    => $base . 'photo-1527515637462-cff94eecc1ac' . $params,  // 細節
+        'happy'     => $base . 'photo-1582719471384-894fbb16e074' . $params,  // 滿意客戶
+        'workshop'  => $base . 'photo-1581578731548-c64695cc6952' . $params,  // 施工
+    ];
+}
+
 function hexToRgb(string $hex): array {
     $hex = ltrim($hex, '#');
     return [hexdec(substr($hex,0,2)), hexdec(substr($hex,2,2)), hexdec(substr($hex,4,2))];
