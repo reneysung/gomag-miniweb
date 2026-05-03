@@ -65,3 +65,5 @@ repulab-backup.log
 _backups/
 _logs/
 _seed_full_demo.php
+_audit_clients.php
+_seed_food_demo.php

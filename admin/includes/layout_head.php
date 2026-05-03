@@ -487,6 +487,11 @@ textarea.form-control { resize: vertical; min-height: 90px; }
        href="<?= BASE_URL ?>/admin/pages/clients.php">
       <span class="icon">🏪</span> 所有客戶
     </a>
+    <a class="nav-item <?= $currentPage === 'audit' ? 'active' : '' ?>"
+       href="<?= BASE_URL ?>/admin/pages/audit.php">
+      <span class="icon">🩺</span> 資料健診
+      <span style="margin-left:auto; background:#FF5A36; color:#fff; font-size:.6rem; font-weight:800; padding:1px 6px; border-radius:20px;">NEW</span>
+    </a>
     <a class="nav-item <?= $currentPage === 'categories' ? 'active' : '' ?>"
        href="<?= BASE_URL ?>/admin/pages/categories.php">
       <span class="icon">📂</span> 分類管理
