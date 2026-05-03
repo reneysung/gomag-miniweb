@@ -113,7 +113,7 @@ require __DIR__ . '/layout_head.php';
     <div class="dine-about-text animate-in delay-1">
       <div class="dine-section-eyebrow">OUR STORY</div>
       <h2 class="dine-section-title">關於<?= h($client['brand_name']) ?></h2>
-      <p class="dine-about-body"><?= nl2br(h(mb_strimwidth($client['about_text'] ?? '用心料理，溫度上桌。每一道菜，都是廚房裡的一份故事。', 0, 280, '…'))) ?></p>
+      <p class="dine-about-body"><?= nl2br(h(mb_strimwidth(strip_tags($client['about_text'] ?? '') ?: '用心料理，溫度上桌。每一道菜，都是廚房裡的一份故事。', 0, 280, '…'))) ?></p>
       <div class="dine-about-tags">
         <?php foreach($aboutTags as $f): ?><span class="dine-about-tag"><?= h($f) ?></span><?php endforeach; ?>
       </div>

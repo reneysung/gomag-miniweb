@@ -11,7 +11,7 @@ RewriteEngine On
 </FilesMatch>
 
 # Pretty URL
-RewriteRule ^store/([a-z0-9_-]+)/?$ store.php?sub=$1 [L,QSA]
+RewriteRule ^store/([A-Za-z0-9_-]+)/?$ store.php?sub=$1 [L,QSA]
 RewriteRule ^category/([a-z0-9-]+)/?$ category.php?slug=$1 [L,QSA]
 RewriteRule ^city/?$ city.php [L,QSA]
 RewriteRule ^city/([a-z0-9-]+)/?$ city.php?slug=$1 [L,QSA]
@@ -23,9 +23,9 @@ RewriteRule ^robots\.txt$ robots.php [L]
 # 用 %{HTTP_HOST} 組絕對 URL，避免 MAMP base path 干擾（staging/prod doc root 為 /）
 RewriteCond %{HTTPS} =on
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^([a-z0-9_-]+)\.html$ https://%{HTTP_HOST}/store/$1 [R=301,L]
+RewriteRule ^([A-Za-z0-9_-]+)\.html$ https://%{HTTP_HOST}/store/$1 [R=301,L]
 
 RewriteCond %{HTTPS} !=on
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^([a-z0-9_-]+)\.html$ http://%{HTTP_HOST}/store/$1 [R=301,L]
+RewriteRule ^([A-Za-z0-9_-]+)\.html$ http://%{HTTP_HOST}/store/$1 [R=301,L]
 </IfModule>

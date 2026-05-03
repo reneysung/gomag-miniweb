@@ -608,7 +608,14 @@ $ratingNum = preg_replace('/[★\s]/u', '', $rating) ?: '4.9';
           <div class="label">ABOUT US</div>
           <h2>關於<?= h($client['brand_name']) ?></h2>
         </div>
-        <p style="color:#555;line-height:1.9;margin-bottom:20px"><?= nl2br(h($client['about_text']??'')) ?></p>
+        <div style="color:#555;line-height:1.9;margin-bottom:20px" class="rich-content">
+          <?php
+          // about_text 由 Quill 編富文本（HTML），含 HTML 直接 echo；純文字才 escape
+          $_about = $client['about_text'] ?? '';
+          if ($_about !== '' && strip_tags($_about) !== $_about) echo $_about;
+          else echo nl2br(h($_about));
+          ?>
+        </div>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px">
           <?php foreach($aboutTags as $f): ?>
             <div style="background:rgba(var(--g-ink-rgb),.07);color:var(--g-ink);padding:6px 14px;border-radius:20px;font-size:.82rem;font-weight:700;border:1px solid rgba(var(--g-ink-rgb),.15)"><?= $f ?></div>

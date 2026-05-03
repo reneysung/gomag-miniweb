@@ -13,7 +13,7 @@ $services = $site['services'];
 $seo      = getSeo($site, $pageKey);
 
 $metaTitle = $seo['meta_title'] ?? ($client['brand_name'] . '｜' . ($client['tagline'] ?? ''));
-$metaDesc  = $seo['meta_desc']  ?? ($client['about_text'] ? mb_strimwidth($client['about_text'], 0, 120, '…') : '');
+$metaDesc  = $seo['meta_desc']  ?? ($client['about_text'] ? mb_strimwidth(strip_tags($client['about_text']), 0, 120, '…') : '');
 $canonicalUrl = getCanonicalUrl($slug, $pageKey);
 $ogImage   = $seo['og_image'] ?? ($client['hero_image_path'] ? BASE_URL . '/' . $client['hero_image_path'] : '');
 // LINE URL：line_url 直填 > line_id 自動組 > 沒設則 ''（templates 用 if 判斷）
@@ -178,6 +178,19 @@ img{max-width:100%;display:block}
 @media (prefers-reduced-motion: reduce) {
   .animate-in { animation: none; opacity: 1; transform: none; }
 }
+
+/* ══ RICH CONTENT (Quill editor output: code-block / image / list / blockquote) ══ */
+.rich-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 16px 0; }
+.rich-content pre.ql-syntax,
+.rich-content pre { background: #1a1a1a; color: #e6edf3; padding: 14px 18px; border-radius: 6px; font-family: 'SF Mono', 'Menlo', 'Consolas', monospace; font-size: .85rem; overflow-x: auto; line-height: 1.6; margin: 12px 0; white-space: pre; }
+.rich-content code:not(pre code) { background: #f3f4f6; color: #c7254e; padding: 2px 6px; border-radius: 3px; font-family: monospace; font-size: .9em; }
+.rich-content a { color: var(--g-accent); text-decoration: underline; word-break: break-word; }
+.rich-content blockquote { border-left: 3px solid var(--g-accent); padding: 4px 14px; margin: 12px 0; color: #666; font-style: italic; background: rgba(var(--g-accent-rgb),.04); }
+.rich-content ul, .rich-content ol { margin: 8px 0 8px 24px; padding-left: 8px; }
+.rich-content ul li, .rich-content ol li { margin: 4px 0; }
+.rich-content h1, .rich-content h2, .rich-content h3, .rich-content h4 { margin: 20px 0 10px; font-weight: 800; line-height: 1.4; color: var(--g-ink); }
+.rich-content p { margin: 8px 0; }
+.rich-content iframe { max-width: 100%; }
 </style>
 </head>
 <body>
