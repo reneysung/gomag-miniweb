@@ -17,4 +17,15 @@ RewriteRule ^city/?$ city.php [L,QSA]
 RewriteRule ^city/([a-z0-9-]+)/?$ city.php?slug=$1 [L,QSA]
 RewriteRule ^sitemap\.xml$ sitemap.php [L]
 RewriteRule ^robots\.txt$ robots.php [L]
+
+# 舊 gomag.com.tw 店家頁 SEO 301：/{slug}.html → /store/{slug}
+# 只在實體 .html 檔不存在時才 redirect（避免誤傷未來新增的真實 .html 檔）
+# 用 %{HTTP_HOST} 組絕對 URL，避免 MAMP base path 干擾（staging/prod doc root 為 /）
+RewriteCond %{HTTPS} =on
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^([a-z0-9_-]+)\.html$ https://%{HTTP_HOST}/store/$1 [R=301,L]
+
+RewriteCond %{HTTPS} !=on
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^([a-z0-9_-]+)\.html$ http://%{HTTP_HOST}/store/$1 [R=301,L]
 </IfModule>
