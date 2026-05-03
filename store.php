@@ -17,7 +17,7 @@ $slug_redirects = [
 ];
 if (isset($slug_redirects[$sub])) {
     $newSub = $slug_redirects[$sub];
-    $newUrl = (IS_LOCAL ? BASE_URL . '/store.php?sub=' . urlencode($newSub) : 'https://www.gomag.com.tw/store/' . urlencode($newSub));
+    $newUrl = (IS_LOCAL || IS_STAGING) ? BASE_URL . '/store.php?sub=' . urlencode($newSub) : 'https://www.gomag.com.tw/store/' . urlencode($newSub);
     header('HTTP/1.1 301 Moved Permanently');
     header('Location: ' . $newUrl);
     exit;
@@ -117,7 +117,7 @@ if ($isPlaceholder) {
 // 主 CTA URL：mini-site > 外部官網 > none
 $miniSiteUrl = null;
 if ($client['has_minisite']) {
-    $miniSiteUrl = IS_LOCAL
+    $miniSiteUrl = (IS_LOCAL || IS_STAGING)
         ? BASE_URL . '/site/index.php?sub=' . urlencode($client['subdomain'] ?? $client['slug'])
         : 'https://' . ($client['subdomain'] ?? $client['slug']) . '.gomag.com.tw/';
 }

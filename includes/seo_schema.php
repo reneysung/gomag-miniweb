@@ -8,7 +8,7 @@
  * 產生該頁面的 Canonical URL
  */
 function getCanonicalUrl(string $sub, string $pageKey): string {
-    if (IS_LOCAL) {
+    if (IS_LOCAL || IS_STAGING) {
         return siteUrl($sub, $pageKey === 'home' ? '' : $pageKey);
     }
     $base = 'https://' . $sub . '.gomag.com.tw';
@@ -24,7 +24,7 @@ function schemaLocalBusiness(array $client, array $social, array $services): arr
         '@type'   => 'LocalBusiness',
         '@id'     => '#business',
         'name'    => $client['brand_name'],
-        'url'     => IS_LOCAL
+        'url'     => (IS_LOCAL || IS_STAGING)
             ? BASE_URL . '/site/index.php?sub=' . ($client['subdomain'] ?? $client['slug'])
             : 'https://' . ($client['subdomain'] ?? $client['slug']) . '.gomag.com.tw/',
     ];

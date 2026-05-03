@@ -36,8 +36,9 @@ function getSubdomain(): string {
  * 本機環境：http://localhost:8888/miniweb/xusen/services
  */
 function siteUrl(string $sub, string $page = ''): string {
-    if (IS_LOCAL) {
-        // 本機：用 query parameter，不需要 mod_rewrite
+    // 本機 + Hostinger staging（沒有真實子網域 DNS）→ 都走 query 模式
+    // 只有 prod gomag.com.tw 才走子網域 + pretty URL
+    if (IS_LOCAL || IS_STAGING) {
         if (!$page || $page === 'index') {
             return BASE_URL . '/site/index.php?sub=' . urlencode($sub);
         }

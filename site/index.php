@@ -23,7 +23,7 @@ if (empty($site['client']['has_minisite'])) {
         exit;
     }
     // 跳主站行銷頁（301 永久轉址，保 SEO）
-    $mainSite = IS_LOCAL
+    $mainSite = (IS_LOCAL || IS_STAGING)
         ? BASE_URL . '/store.php?sub=' . urlencode($sub)
         : 'https://www.gomag.com.tw/store/' . urlencode($sub);
     header('Location: ' . $mainSite, true, 301);

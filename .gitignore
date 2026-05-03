@@ -64,3 +64,4 @@ cache/**
 repulab-backup.log
 _backups/
 _logs/
+_seed_full_demo.php
