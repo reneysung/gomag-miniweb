@@ -67,3 +67,4 @@ _logs/
 _seed_full_demo.php
 _audit_clients.php
 _seed_food_demo.php
+_scrape_legacy.php
