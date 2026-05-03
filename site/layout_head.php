@@ -78,16 +78,11 @@ img{max-width:100%;display:block}
 .section-title h2{font-size:clamp(1.5rem,3vw,2rem);font-weight:900;color:var(--g-ink);line-height:1.3}
 .section-title p{margin-top:12px;color:#666;font-size:.95rem;max-width:520px;margin-left:auto;margin-right:auto}
 
-/* ══ TOPBAR ════════════════════════════════════════════════ */
-.topbar-strip{background:var(--g-ink);color:rgba(255,255,255,.85);font-size:.8rem;padding:7px 0;display:none}
-@media(min-width:768px){.topbar-strip{display:block}}
-.topbar-strip .inner{display:flex;justify-content:space-between;align-items:center}
-.topbar-strip a{color:rgba(255,255,255,.85);transition:color .2s}
-.topbar-strip a:hover{color:#fff}
-.topbar-strip .links{display:flex;gap:20px}
+/* ══ TOPBAR（全 mini-site 隱藏：電話地址放 footer / contact 區即可，不疊在 logo 上）══ */
+.topbar-strip{display:none !important;}
 
 /* ══ HEADER ════════════════════════════════════════════════ */
-.site-header{position:sticky;top:0;z-index:200;background:rgba(255,255,255,.97);backdrop-filter:blur(12px);border-bottom:1px solid rgba(var(--g-ink-rgb),.08);box-shadow:0 2px 20px rgba(0,0,0,.06)}
+.site-header{position:sticky;top:0;z-index:500;background:rgba(255,255,255,.97);backdrop-filter:blur(12px);border-bottom:1px solid rgba(var(--g-ink-rgb),.08);box-shadow:0 2px 20px rgba(0,0,0,.06)}
 .header-inner{display:flex;align-items:center;justify-content:space-between;height:66px}
 .site-logo{display:flex;align-items:center;gap:10px;font-weight:900;font-size:1.15rem;color:var(--g-ink)}
 .site-logo img{height:40px;width:auto;object-fit:contain}
