@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<title>店家好口碑 · 前後台地圖</title>
+<style>
+  :root {
+    --ink: #1c3d3d;
+    --accent: #FF5A36;
+    --bg: #f5f7f6;
+    --border: #d4d8d6;
+    --muted: #6b7570;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, "Noto Sans TC", sans-serif; background: var(--bg); color: var(--ink); line-height: 1.6; padding: 24px; }
+  .container { max-width: 1100px; margin: 0 auto; }
+  header { padding: 18px 24px; background: var(--ink); color: #fff; border-radius: 12px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  header h1 { font-size: 1.4rem; font-weight: 900; }
+  header .sub { font-size: .85rem; opacity: .8; margin-top: 2px; }
+  header .env { background: var(--accent); padding: 4px 12px; border-radius: 20px; font-size: .75rem; font-weight: 700; letter-spacing: .05em; }
+  .env-switch { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 20px; }
+  .env-switch button { background: #fff; border: 1.5px solid var(--border); padding: 8px 16px; border-radius: 8px; font-size: .8rem; cursor: pointer; font-weight: 700; transition: all .15s; }
+  .env-switch button:hover { border-color: var(--accent); color: var(--accent); }
+  .env-switch button.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media(max-width:780px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: #fff; border-radius: 12px; padding: 20px 24px; border: 1px solid var(--border); }
+  .card h2 { font-size: .95rem; font-weight: 800; letter-spacing: .05em; padding-bottom: 12px; margin-bottom: 14px; border-bottom: 2px solid var(--accent); display: flex; align-items: center; gap: 8px; }
+  .card h2 .icon { font-size: 1.3rem; }
+  ul { list-style: none; }
+  li { padding: 8px 0; border-bottom: 1px dashed #eee; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  li:last-child { border-bottom: none; }
+  li .label { flex: 0 0 130px; font-size: .85rem; color: var(--muted); font-weight: 600; }
+  li a { color: var(--ink); text-decoration: none; font-family: 'SF Mono', Menlo, monospace; font-size: .82rem; flex: 1; word-break: break-all; padding: 3px 8px; border-radius: 4px; transition: background .15s; }
+  li a:hover { background: rgba(var(--accent), .1); color: var(--accent); }
+  .badge { background: var(--accent); color: #fff; font-size: .55rem; font-weight: 800; padding: 2px 7px; border-radius: 12px; letter-spacing: .05em; }
+  .badge-old { background: #999; }
+  .demo-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+  @media(max-width:600px) { .demo-cards { grid-template-columns: 1fr; } }
+  .demo-card { display: block; padding: 16px; border: 1.5px solid var(--border); border-radius: 10px; text-decoration: none; color: var(--ink); transition: all .2s; background: linear-gradient(135deg, #fff 0%, #f8faf9 100%); }
+  .demo-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,.08); }
+  .demo-card .emoji { font-size: 1.8rem; margin-bottom: 6px; }
+  .demo-card .name { font-weight: 800; font-size: .95rem; margin-bottom: 4px; }
+  .demo-card .desc { font-size: .75rem; color: var(--muted); }
+  .env-note { background: #fff8e1; border: 1px solid #ffd54f; border-radius: 8px; padding: 10px 14px; font-size: .8rem; color: #5d4037; margin-bottom: 16px; }
+  footer { text-align: center; color: var(--muted); font-size: .75rem; margin-top: 32px; padding: 16px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <div>
+    <h1>🏪 店家好口碑 · 前後台地圖</h1>
+    <div class="sub">內部用 · 209 客戶 · 2026-05-03 更新</div>
+  </div>
+  <span class="env" id="envLabel">STAGING</span>
+</header>
+
+<div class="env-switch">
+  <button class="active" data-env="https://aqua-elephant-856571.hostingersite.com" data-name="STAGING">🟡 Staging（目前）</button>
+  <button data-env="http://localhost:8888/miniweb" data-name="LOCAL">🟢 本機 MAMP</button>
+  <button data-env="https://www.gomag.com.tw" data-name="PROD">🔴 正式（DNS 待切）</button>
+</div>
+
+<div class="env-note" id="envNote">
+  目前在 demo 階段，所有連結指向 Hostinger staging。DNS 切到 gomag.com.tw 後同樣路徑會自動變正式 URL。
+</div>
+
+<div class="grid">
+
+  <div class="card">
+    <h2><span class="icon">🌐</span>前台</h2>
+    <ul>
+      <li><span class="label">主站首頁</span><a href="" data-path="/">/</a></li>
+      <li><span class="label">縣市總覽</span><a href="" data-path="/city">/city</a></li>
+      <li><span class="label">縣市落地頁</span><a href="" data-path="/city/tainan">/city/tainan</a></li>
+      <li><span class="label">分類頁範例</span><a href="" data-path="/category/food">/category/food</a></li>
+      <li><span class="label">店家行銷頁</span><a href="" data-path="/store/xusen">/store/{subdomain}</a></li>
+      <li><span class="label">Mini-site</span><a href="" data-path="/site/index.php?sub=xusen">/site/index.php?sub={sub}</a></li>
+      <li><span class="label">Sitemap</span><a href="" data-path="/sitemap.xml">/sitemap.xml</a></li>
+      <li><span class="label">Robots</span><a href="" data-path="/robots.txt">/robots.txt</a></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2><span class="icon">🛠️</span>後台 (Admin)</h2>
+    <ul>
+      <li><span class="label">登入</span><a href="" data-path="/admin/login.php">/admin/login.php</a></li>
+      <li><span class="label">Dashboard</span><a href="" data-path="/admin/index.php">/admin/index.php</a></li>
+      <li><span class="label">所有客戶</span><a href="" data-path="/admin/pages/clients.php">/admin/pages/clients.php</a></li>
+      <li><span class="label">新增客戶</span><a href="" data-path="/admin/pages/new_client.php">/admin/pages/new_client.php</a></li>
+      <li><span class="label">資料健診 <span class="badge">NEW</span></span><a href="" data-path="/admin/pages/audit.php">/admin/pages/audit.php</a></li>
+      <li><span class="label">基本資訊</span><a href="" data-path="/admin/pages/settings.php">/admin/pages/settings.php</a></li>
+      <li><span class="label">主題顏色</span><a href="" data-path="/admin/pages/themes.php">/admin/pages/themes.php</a></li>
+      <li><span class="label">社群連結</span><a href="" data-path="/admin/pages/social.php">/admin/pages/social.php</a></li>
+      <li><span class="label">SEO 設定</span><a href="" data-path="/admin/pages/seo.php">/admin/pages/seo.php</a></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2><span class="icon">📦</span>內容管理</h2>
+    <ul>
+      <li><span class="label">區塊管理 <span class="badge">NEW</span></span><a href="" data-path="/admin/pages/store_blocks.php">/admin/pages/store_blocks.php</a></li>
+      <li><span class="label">城市管理 <span class="badge">NEW</span></span><a href="" data-path="/admin/pages/cities.php">/admin/pages/cities.php</a></li>
+      <li><span class="label">服務項目 <span class="badge badge-old">舊</span></span><a href="" data-path="/admin/pages/services.php">/admin/pages/services.php</a></li>
+      <li><span class="label">施工案例</span><a href="" data-path="/admin/pages/cases.php">/admin/pages/cases.php</a></li>
+      <li><span class="label">客戶評價</span><a href="" data-path="/admin/pages/testimonials.php">/admin/pages/testimonials.php</a></li>
+      <li><span class="label">FAQ 管理</span><a href="" data-path="/admin/pages/faqs.php">/admin/pages/faqs.php</a></li>
+      <li><span class="label">客戶詢問</span><a href="" data-path="/admin/pages/leads.php">/admin/pages/leads.php</a></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2><span class="icon">⚙️</span>系統管理（Super Admin）</h2>
+    <ul>
+      <li><span class="label">分類管理</span><a href="" data-path="/admin/pages/categories.php">/admin/pages/categories.php</a></li>
+      <li><span class="label">首頁 Banner</span><a href="" data-path="/admin/pages/banners.php">/admin/pages/banners.php</a></li>
+      <li><span class="label">Google 評價</span><a href="" data-path="/admin/pages/google_batch.php">/admin/pages/google_batch.php</a></li>
+      <li><span class="label">平台設定</span><a href="" data-path="/admin/pages/platform.php">/admin/pages/platform.php</a></li>
+      <li><span class="label">變更密碼</span><a href="" data-path="/admin/pages/password.php">/admin/pages/password.php</a></li>
+      <li><span class="label">分析端點</span><a href="" data-path="/analytics/search.php">/analytics/search.php?key=...</a></li>
+    </ul>
+  </div>
+
+</div>
+
+<div class="card" style="margin-top:18px">
+  <h2><span class="icon">🎬</span>Demo 客戶（給人看 demo 用）</h2>
+  <div class="demo-cards">
+    <a class="demo-card" href="" data-path="/site/index.php?sub=fulldemo">
+      <div class="emoji">🧹</div>
+      <div class="name">展示清潔工坊</div>
+      <div class="desc">服務業範例 · 居家清潔 · subdomain=fulldemo</div>
+    </a>
+    <a class="demo-card" href="" data-path="/site/index.php?sub=fooddemo">
+      <div class="emoji">🍣</div>
+      <div class="name">築炎日式燒肉酒場</div>
+      <div class="desc">餐飲範例 · 自動套食物模板 · subdomain=fooddemo</div>
+    </a>
+    <a class="demo-card" href="" data-path="/site/index.php?sub=xusen">
+      <div class="emoji">💧</div>
+      <div class="name">旭浪清潔（真實客戶）</div>
+      <div class="desc">主品牌 · 4 服務 / 4 評價 / 6 FAQ / 2 blocks</div>
+    </a>
+    <a class="demo-card" href="" data-path="/store/062281421">
+      <div class="emoji">💅</div>
+      <div class="name">綝綝美甲美睫紋繡學院</div>
+      <div class="desc">舊客戶範例 · SEO 已從舊主站繼承 · 主站行銷頁</div>
+    </a>
+  </div>
+</div>
+
+<div class="card" style="margin-top:18px">
+  <h2><span class="icon">🔗</span>URL 結構（新舊對照）</h2>
+  <ul>
+    <li><span class="label">舊主站</span><code style="background:#f0f0f0;padding:3px 8px;border-radius:3px;font-size:.78rem">gomag.com.tw/{slug}.html</code></li>
+    <li><span class="label">新主站</span><code style="background:#f0f0f0;padding:3px 8px;border-radius:3px;font-size:.78rem">gomag.com.tw/store/{slug}</code></li>
+    <li><span class="label">轉換</span>舊 URL 自動 <strong>301</strong> 跳新 URL（209/209 已驗）✓</li>
+    <li><span class="label">新功能</span>每家 mini-site：未來 <code style="background:#f0f0f0;padding:3px 8px;border-radius:3px;font-size:.78rem">{slug}.gomag.com.tw/</code></li>
+  </ul>
+</div>
+
+<footer>
+  本檔放在 <code>docs/SITEMAP.html</code> · 直接在瀏覽器開即可 · 切換上方環境按鈕測試對應網域
+</footer>
+
+</div>
+
+<script>
+  const links = document.querySelectorAll('a[data-path]');
+  const buttons = document.querySelectorAll('.env-switch button');
+  const envLabel = document.getElementById('envLabel');
+  const envNote = document.getElementById('envNote');
+  const noteText = {
+    STAGING: '目前在 demo 階段，所有連結指向 Hostinger staging。DNS 切到 gomag.com.tw 後同樣路徑會自動變正式 URL。',
+    LOCAL: '本機 MAMP（http://localhost:8888/miniweb/）— 開 MAMP 才能訪問。',
+    PROD: '正式 gomag.com.tw — DNS 切過去後生效，目前可能仍指舊主站靜態 .html 頁。',
+  };
+
+  function applyEnv(base, name) {
+    links.forEach(a => a.href = base + a.dataset.path);
+    envLabel.textContent = name;
+    envNote.textContent = noteText[name];
+    buttons.forEach(b => b.classList.toggle('active', b.dataset.name === name));
+  }
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => applyEnv(btn.dataset.env, btn.dataset.name));
+  });
+
+  // initial
+  applyEnv('https://aqua-elephant-856571.hostingersite.com', 'STAGING');
+</script>
+
+</body>
+</html>
