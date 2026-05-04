@@ -71,3 +71,4 @@ _scrape_legacy.php
 _enrich_google_places.php
 _verify_launch.php
 _enrich_industry.php
+_enrich_hero_photos.php
