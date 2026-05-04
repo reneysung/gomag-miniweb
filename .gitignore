@@ -72,3 +72,4 @@ _enrich_google_places.php
 _verify_launch.php
 _enrich_industry.php
 _enrich_hero_photos.php
+_seed_landing_template.php
