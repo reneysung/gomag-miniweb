@@ -428,18 +428,87 @@ while (count($currentTags) < 4) $currentTags[] = '';
 
 <!-- 主站行銷頁延伸內容 -->
 <div class="card" style="margin-bottom:20px;border-left:4px solid var(--accent);">
-  <div class="card-header"><h2>🎯 主站行銷頁延伸內容</h2></div>
-  <div class="card-body">
-    <div class="form-group-admin">
-      <label>主站行銷頁額外內容</label>
-      <textarea name="landing_extra_content" class="form-control wysiwyg" rows="10"><?= h($client['landing_extra_content'] ?? '') ?></textarea>
-      <div class="hint">
-        顯示在主站 <code><?= h(IS_LOCAL ? BASE_URL.'/store.php?sub='.($client['subdomain'] ?? 'xxx') : 'https://www.gomag.com.tw/store/'.($client['subdomain'] ?? 'xxx')) ?></code> 的延伸介紹區。<br>
-        ✅ 支援文字格式、貼圖、貼影片、表格、超連結。直接拖拉或貼上圖片就會上傳。
-      </div>
+  <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+    <h2>🎯 主站行銷頁延伸內容（一頁式）</h2>
+    <div style="display:inline-flex;gap:0;border:1.5px solid var(--border);border-radius:8px;overflow:hidden">
+      <button type="button" id="modeRich"
+        style="padding:6px 14px;background:#fff;border:none;cursor:pointer;font-size:.78rem;font-weight:700;color:var(--muted);transition:all .15s">
+        ✏️ 富文本
+      </button>
+      <button type="button" id="modeRaw"
+        style="padding:6px 14px;background:var(--ink,#1c3d3d);color:#fff;border:none;cursor:pointer;font-size:.78rem;font-weight:700">
+        &lt;/&gt; HTML 原始碼
+      </button>
     </div>
   </div>
+  <div class="card-body">
+    <div class="form-group-admin">
+      <textarea name="landing_extra_content" id="landingTextarea" rows="18"
+        style="width:100%;padding:14px;border:1.5px solid var(--border);border-radius:7px;font-family:'SF Mono','Menlo','Consolas',monospace;font-size:.78rem;line-height:1.55;background:#fafbfc;tab-size:2"
+        placeholder="<!-- 貼 HTML 程式碼 / 一頁式 layout 程式碼 -->&#10;&#10;<section class=&quot;hero&quot; style=&quot;background:#1a1a1a;color:#fff;padding:60px 20px;text-align:center;border-radius:10px&quot;>&#10;  <h2 style=&quot;font-size:2rem;font-weight:900;margin-bottom:10px&quot;>專業團隊・10 年經驗</h2>&#10;  <p>台南在地・5,000+ 位滿意客戶</p>&#10;</section>"
+      ><?= h($client['landing_extra_content'] ?? '') ?></textarea>
+      <div class="hint" id="landingHint" style="margin-top:8px;padding:10px 14px;background:#fff8e1;border:1px solid #ffd54f;border-radius:6px;color:#5d4037">
+        <strong>HTML 原始碼模式</strong>（目前模式）<br>
+        ✅ 直接貼一頁式 HTML、含 inline style / 自訂 class / Grid / Flex 都可。<br>
+        ✅ 圖片用 <code>&lt;img src="https://..."&gt;</code>（會自動補 alt）。<br>
+        ⚠️ HTML 寫錯只影響此區塊不會破壞整頁。<br>
+        顯示在 <code><?= h(IS_LOCAL ? BASE_URL.'/store.php?sub='.($client['subdomain'] ?? 'xxx') : 'https://www.gomag.com.tw/store/'.($client['subdomain'] ?? 'xxx')) ?></code>
+      </div>
+    </div>
+    <details style="margin-top:14px">
+      <summary style="cursor:pointer;font-weight:700;color:var(--accent);font-size:.9rem">📋 範本：5 種一頁式區塊（點開複製）</summary>
+      <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <button type="button" class="snippet-btn" data-snippet="hero" style="padding:8px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer;text-align:left;font-size:.8rem">🎬 Hero 大標 + CTA</button>
+        <button type="button" class="snippet-btn" data-snippet="features" style="padding:8px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer;text-align:left;font-size:.8rem">✨ 4 格特色卡</button>
+        <button type="button" class="snippet-btn" data-snippet="gallery" style="padding:8px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer;text-align:left;font-size:.8rem">🖼️ 圖片 Gallery</button>
+        <button type="button" class="snippet-btn" data-snippet="faq" style="padding:8px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer;text-align:left;font-size:.8rem">❓ FAQ 折疊區</button>
+        <button type="button" class="snippet-btn" data-snippet="cta" style="padding:8px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer;text-align:left;font-size:.8rem">📞 CTA 聯絡區</button>
+        <button type="button" class="snippet-btn" data-snippet="quote" style="padding:8px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer;text-align:left;font-size:.8rem">💬 客戶見證引用</button>
+      </div>
+      <div class="hint" style="margin-top:10px">點任一範本 → 自動加到下方 textarea 末尾</div>
+    </details>
+  </div>
 </div>
+
+<script>
+// === 一頁式範本（HTML snippets）===
+const SNIPPETS = {
+  hero: `\n<section style="background:linear-gradient(135deg,#1a1a1a,#2c2c2c);color:#fff;padding:60px 30px;text-align:center;border-radius:12px;margin:24px 0">\n  <div style="font-size:.7rem;letter-spacing:.2em;opacity:.7;margin-bottom:12px">EXPERIENCE</div>\n  <h2 style="font-size:2rem;font-weight:900;margin-bottom:14px;line-height:1.3">專業團隊・10 年經驗</h2>\n  <p style="opacity:.85;font-size:1rem;margin-bottom:24px">台南在地・5,000+ 位滿意客戶</p>\n  <a href="tel:0612345678" style="display:inline-block;background:#FF5A36;color:#fff;padding:14px 32px;border-radius:50px;font-weight:700;text-decoration:none">📞 立即洽詢</a>\n</section>\n`,
+  features: `\n<section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin:24px 0">\n  <div style="padding:24px;background:#fff;border:1px solid #e5e5e5;border-radius:10px;text-align:center"><div style="font-size:2rem;margin-bottom:10px">⭐</div><h3 style="font-weight:800;margin-bottom:6px">10 年經驗</h3><p style="color:#666;font-size:.85rem">在地深耕</p></div>\n  <div style="padding:24px;background:#fff;border:1px solid #e5e5e5;border-radius:10px;text-align:center"><div style="font-size:2rem;margin-bottom:10px">🛡️</div><h3 style="font-weight:800;margin-bottom:6px">7 天保固</h3><p style="color:#666;font-size:.85rem">不滿意免費複工</p></div>\n  <div style="padding:24px;background:#fff;border:1px solid #e5e5e5;border-radius:10px;text-align:center"><div style="font-size:2rem;margin-bottom:10px">💯</div><h3 style="font-weight:800;margin-bottom:6px">5000+ 客戶</h3><p style="color:#666;font-size:.85rem">滿意推薦</p></div>\n  <div style="padding:24px;background:#fff;border:1px solid #e5e5e5;border-radius:10px;text-align:center"><div style="font-size:2rem;margin-bottom:10px">🌿</div><h3 style="font-weight:800;margin-bottom:6px">環保用品</h3><p style="color:#666;font-size:.85rem">SGS 認證</p></div>\n</section>\n`,
+  gallery: `\n<section style="margin:24px 0">\n  <h2 style="font-size:1.4rem;font-weight:900;margin-bottom:16px;text-align:center">作品集</h2>\n  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px">\n    <img src="https://picsum.photos/400/300?1" style="width:100%;height:240px;object-fit:cover;border-radius:8px">\n    <img src="https://picsum.photos/400/300?2" style="width:100%;height:240px;object-fit:cover;border-radius:8px">\n    <img src="https://picsum.photos/400/300?3" style="width:100%;height:240px;object-fit:cover;border-radius:8px">\n  </div>\n</section>\n`,
+  faq: `\n<section style="margin:24px 0">\n  <h2 style="font-size:1.4rem;font-weight:900;margin-bottom:16px;text-align:center">常見問題</h2>\n  <details style="background:#fff;border:1px solid #e5e5e5;border-radius:8px;padding:14px 18px;margin-bottom:8px"><summary style="font-weight:700;cursor:pointer">有提供保固嗎？</summary><div style="margin-top:10px;color:#666;line-height:1.7">所有服務 7 天滿意保固，不滿意 24 小時內回覆免費複工。</div></details>\n  <details style="background:#fff;border:1px solid #e5e5e5;border-radius:8px;padding:14px 18px;margin-bottom:8px"><summary style="font-weight:700;cursor:pointer">需要自備清潔用品嗎？</summary><div style="margin-top:10px;color:#666;line-height:1.7">不需要！所有清潔劑、機具皆自備，使用 SGS 環保認證產品。</div></details>\n</section>\n`,
+  cta: `\n<section style="background:#FF5A36;color:#fff;padding:48px 24px;text-align:center;border-radius:12px;margin:24px 0">\n  <h2 style="font-size:1.6rem;font-weight:900;margin-bottom:10px">立即預約・免費估價</h2>\n  <p style="opacity:.9;margin-bottom:24px">填表 24 小時內專人回覆</p>\n  <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap">\n    <a href="tel:0612345678" style="background:#fff;color:#FF5A36;padding:14px 28px;border-radius:50px;font-weight:800;text-decoration:none">📞 06-1234-5678</a>\n    <a href="https://line.me/R/ti/p/@xxx" style="background:#06c755;color:#fff;padding:14px 28px;border-radius:50px;font-weight:800;text-decoration:none">💬 LINE 諮詢</a>\n  </div>\n</section>\n`,
+  quote: `\n<blockquote style="background:#f8f9fa;border-left:4px solid #FF5A36;padding:24px 28px;margin:24px 0;border-radius:0 8px 8px 0">\n  <p style="font-size:1.05rem;line-height:1.8;color:#333;margin-bottom:14px">"師傅準時、有禮貌，洗到像新的一樣！廚房以前那層黃漬完全消失。下次大掃除一定再找。"</p>\n  <footer style="color:#888;font-size:.85rem">— 林小姐 台南東區・⭐⭐⭐⭐⭐</footer>\n</blockquote>\n`,
+};
+
+document.querySelectorAll('.snippet-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    const ta = document.getElementById('landingTextarea');
+    ta.value += SNIPPETS[b.dataset.snippet] || '';
+    ta.scrollTop = ta.scrollHeight;
+    ta.focus();
+  });
+});
+
+// 模式切換（純 UI，未來可串 Quill init）
+const modeRich = document.getElementById('modeRich');
+const modeRaw  = document.getElementById('modeRaw');
+const hint     = document.getElementById('landingHint');
+const ta       = document.getElementById('landingTextarea');
+
+modeRaw.addEventListener('click', () => {
+  modeRaw.style.background = 'var(--ink,#1c3d3d)'; modeRaw.style.color = '#fff';
+  modeRich.style.background = '#fff'; modeRich.style.color = 'var(--muted)';
+  ta.style.fontFamily = "'SF Mono','Menlo','Consolas',monospace";
+  ta.style.fontSize = '.78rem';
+  ta.style.background = '#fafbfc';
+  hint.innerHTML = '<strong>HTML 原始碼模式</strong>（目前模式）<br>✅ 直接貼一頁式 HTML、含 inline style / 自訂 class / Grid / Flex 都可。<br>✅ 圖片用 <code>&lt;img src="https://..."&gt;</code>（會自動補 alt）。<br>⚠️ HTML 寫錯只影響此區塊不會破壞整頁。';
+  hint.style.background = '#fff8e1'; hint.style.borderColor = '#ffd54f'; hint.style.color = '#5d4037';
+});
+modeRich.addEventListener('click', () => {
+  alert('富文本模式由 Quill 接管，但會 strip 複雜 HTML（無 section/inline style）。\n\n建議：用「HTML 原始碼模式」貼一頁式內容比較自由。\n\n如真要切換到富文本，請存檔後重整頁面（會抓回欄位內容）。');
+});
+</script>
 
 <!-- ═══════ SEO 設定（行銷頁專用）═══════ -->
 <div class="card" style="margin-bottom:20px; border-left:4px solid #16a34a;">
