@@ -11,7 +11,7 @@ $db = getDB();
 $clients = $db->query('SELECT subdomain, slug, has_minisite, updated_at FROM clients WHERE is_active=1 ORDER BY id')->fetchAll();
 $cats = $db->query('SELECT slug FROM categories WHERE is_active=1')->fetchAll();
 
-$baseUrl = IS_LOCAL ? BASE_URL : 'https://www.gomag.com.tw';
+$baseUrl = (IS_LOCAL || IS_STAGING) ? BASE_URL : 'https://www.gomag.com.tw';
 $today = date('Y-m-d');
 
 echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
@@ -101,7 +101,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
       if (!$cl['has_minisite']) continue;
       $sub = $cl['subdomain'] ?: $cl['slug'];
       $lastmod = date('Y-m-d', strtotime($cl['updated_at']));
-      $miniBase = IS_LOCAL ? BASE_URL . '/site' : 'https://' . $sub . '.gomag.com.tw';
+      $miniBase = (IS_LOCAL || IS_STAGING) ? BASE_URL . '/site' : 'https://' . $sub . '.gomag.com.tw';
       $pages = [
           ['', '0.9', 'weekly'],
           ['services', '0.8', 'monthly'],
@@ -109,7 +109,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
           ['testimonials', '0.6', 'monthly'],
       ];
       foreach ($pages as [$p, $prio, $freq]):
-          $url = IS_LOCAL
+          $url = (IS_LOCAL || IS_STAGING)
               ? $miniBase . '/' . ($p ? $p . '.php' : 'index.php') . '?sub=' . urlencode($sub)
               : $miniBase . '/' . $p;
   ?>

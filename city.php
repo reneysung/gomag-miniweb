@@ -62,7 +62,7 @@ if (!$slug) {
 
     $pageTitle = '依縣市瀏覽店家｜店家好口碑';
     $metaDesc  = '依縣市快速找店：' . implode('、', array_slice(array_keys($stats), 0, 5)) . '等地區店家。';
-    $canonical = IS_LOCAL ? BASE_URL . '/city.php' : 'https://www.gomag.com.tw/city';
+    $canonical = (IS_LOCAL || IS_STAGING) ? BASE_URL . '/city.php' : 'https://www.gomag.com.tw/city';
     require_once __DIR__ . '/main/layout_head.php';
     ?>
 
@@ -212,7 +212,7 @@ $totalCategories  = count($catCounts);
 $pageTitle  = "{$cityName}店家推薦｜共 {$totalStores} 家口碑商家整理";
 $metaDesc   = ($intro['tagline'] ?? '') . '。';
 $metaDesc  .= "{$cityName} {$totalStores} 家店家精選：" . implode('、', array_keys($catCounts)) . "。";
-$canonical  = IS_LOCAL ? BASE_URL . '/city.php?slug=' . urlencode($slug) : 'https://www.gomag.com.tw/city/' . urlencode($slug);
+$canonical  = (IS_LOCAL || IS_STAGING) ? BASE_URL . '/city.php?slug=' . urlencode($slug) : 'https://www.gomag.com.tw/city/' . urlencode($slug);
 
 require_once __DIR__ . '/main/layout_head.php';
 
@@ -228,7 +228,7 @@ foreach ($clients as $cl) {
             '@type' => 'LocalBusiness',
             'name' => $cl['brand_name'],
             'address' => $cl['address'],
-            'url' => (IS_LOCAL ? BASE_URL . '/store.php?sub=' . $sub : 'https://www.gomag.com.tw/store/' . $sub),
+            'url' => ((IS_LOCAL || IS_STAGING) ? BASE_URL . '/store.php?sub=' . $sub : 'https://www.gomag.com.tw/store/' . $sub),
         ],
     ];
 }
@@ -249,8 +249,8 @@ $breadcrumbLd = [
     '@context' => 'https://schema.org',
     '@type' => 'BreadcrumbList',
     'itemListElement' => [
-        ['@type' => 'ListItem', 'position' => 1, 'name' => '首頁', 'item' => (IS_LOCAL ? BASE_URL . '/' : 'https://www.gomag.com.tw/')],
-        ['@type' => 'ListItem', 'position' => 2, 'name' => '縣市瀏覽', 'item' => (IS_LOCAL ? BASE_URL . '/city.php' : 'https://www.gomag.com.tw/city')],
+        ['@type' => 'ListItem', 'position' => 1, 'name' => '首頁', 'item' => ((IS_LOCAL || IS_STAGING) ? BASE_URL . '/' : 'https://www.gomag.com.tw/')],
+        ['@type' => 'ListItem', 'position' => 2, 'name' => '縣市瀏覽', 'item' => ((IS_LOCAL || IS_STAGING) ? BASE_URL . '/city.php' : 'https://www.gomag.com.tw/city')],
         ['@type' => 'ListItem', 'position' => 3, 'name' => $cityName],
     ],
 ];

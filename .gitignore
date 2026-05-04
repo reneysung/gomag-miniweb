@@ -70,3 +70,4 @@ _seed_food_demo.php
 _scrape_legacy.php
 _enrich_google_places.php
 _verify_launch.php
+_enrich_industry.php

@@ -7,8 +7,8 @@ require_once __DIR__ . '/includes/config.php';
 
 header('Content-Type: text/plain; charset=UTF-8');
 
-$sitemapUrl = IS_LOCAL
-    ? BASE_URL . '/sitemap.php'
+$sitemapUrl = (IS_LOCAL || IS_STAGING)
+    ? BASE_URL . '/sitemap.xml'
     : 'https://gomag.com.tw/sitemap.xml';
 ?>
 User-agent: *
