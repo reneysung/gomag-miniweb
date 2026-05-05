@@ -1,58 +1,7 @@
-<!DOCTYPE html>
-<html lang="zh-Hant-TW">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="robots" content="noindex,nofollow">
-<title>伍佰眼鏡 一頁式範本 · 店家好口碑</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, "Noto Sans TC", "Microsoft JhengHei", sans-serif; background: #f0f4f6; color: #222; line-height: 1.6; padding: 0; }
-  .doc-wrap { max-width: 880px; margin: 0 auto; padding: 24px 20px 80px; }
-  .doc-banner { background: #1c3d3d; color: #fff; padding: 22px 28px; border-radius: 12px; margin-bottom: 24px; box-shadow: 0 4px 16px rgba(0,0,0,.08); }
-  .doc-banner h1 { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; }
-  .doc-banner p { font-size: .85rem; opacity: .85; line-height: 1.7; }
-  .doc-banner code { background: rgba(255,255,255,.15); padding: 2px 8px; border-radius: 4px; font-family: 'SF Mono', Menlo, monospace; font-size: .8rem; }
-  .doc-actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
-  .doc-btn { background: #FF5A36; color: #fff; padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 700; font-size: .85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
-  .doc-btn:hover { filter: brightness(1.1); }
-  .doc-btn.secondary { background: rgba(255,255,255,.18); }
-  .doc-section-label { font-size: .8rem; font-weight: 700; letter-spacing: .1em; color: #888; text-transform: uppercase; margin: 28px 0 10px; padding-left: 4px; }
-  .doc-preview { background: #fff; border-radius: 12px; padding: 18px 20px; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
-  .doc-code-box { background: #1a1a1a; color: #e6edf3; padding: 18px 20px; border-radius: 12px; max-height: 420px; overflow: auto; font-family: 'SF Mono', Menlo, Consolas, monospace; font-size: .72rem; line-height: 1.55; white-space: pre; tab-size: 2; }
-  .doc-code-box.collapsed { display: none; }
-  /* === 模擬 store.php 的 .landing-content 容器 === */
-  .landing-preview { line-height: 1.8; }
-  .doc-toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #16a34a; color: #fff; padding: 12px 24px; border-radius: 50px; font-weight: 700; font-size: .9rem; box-shadow: 0 4px 16px rgba(0,0,0,.2); opacity: 0; pointer-events: none; transition: opacity .3s; z-index: 999; }
-  .doc-toast.show { opacity: 1; }
-</style>
-</head>
-<body>
-<div class="doc-wrap">
-
-<!-- ═════ 範本說明 ═════ -->
-<div class="doc-banner">
-  <h1>👓 伍佰眼鏡-臨安店 · 一頁式公司簡介範本</h1>
-  <p>
-    11 區塊・20 KB・整合 3 篇 pixnet + Google Places API + 既有 DB。
-    這份範本檔已直接寫進 staging DB（可在前台 <code>/store/glasses01</code> 直接看到效果），
-    若要編輯或重新貼，按下方「📋 複製所有 HTML」貼到後台 <code>landing_extra_content</code> textarea。
-  </p>
-  <div class="doc-actions">
-    <button class="doc-btn" onclick="copyAll()">📋 複製所有 HTML</button>
-    <button class="doc-btn secondary" onclick="toggleCode()">&lt;/&gt; 顯示原始碼</button>
-    <a class="doc-btn secondary" href="https://aqua-elephant-856571.hostingersite.com/store/glasses01" target="_blank">👁 看前台效果</a>
-  </div>
-</div>
-
-<!-- ═════ 預覽區（直接渲染）═════ -->
-<div class="doc-section-label">▼ 預覽（前台會看到的樣子）</div>
-<div class="doc-preview">
-<div class="landing-preview" id="landingHTML">
 <!-- ╔═════════ Begin landing_extra_content (複製從這裡) ═════════╗ -->
 
 <!-- ═════ 1. Hero ═════ -->
-<section style="background:linear-gradient(rgba(0,0,0,.72),rgba(0,0,0,.62)),url('https://aqua-elephant-856571.hostingersite.com/uploads/clients/pixnet/pixnet_glasses01_76fa10e0.jpg') center/cover;color:#fff;padding:80px 30px;text-align:center;border-radius:12px;margin:24px 0">
+<section style="background:linear-gradient(rgba(0,0,0,.72),rgba(0,0,0,.62)),url('/uploads/clients/pixnet/pixnet_glasses01_76fa10e0.jpg') center/cover;color:#fff;padding:80px 30px;text-align:center;border-radius:12px;margin:24px 0">
   <div style="font-size:.75rem;letter-spacing:.25em;opacity:.85;margin-bottom:14px;text-transform:uppercase">TAINAN OPTICAL</div>
   <h2 style="font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:700;margin-bottom:10px;line-height:1.3">多焦+變色 3,980 元配到好</h2>
   <h3 style="font-size:clamp(1.05rem,2vw,1.3rem);font-weight:600;margin-bottom:18px;color:#FFD54F">近視・老花・墨鏡 一副搞定</h3>
@@ -174,22 +123,22 @@
   <h2 style="font-size:1.45rem;font-weight:700;margin-bottom:8px;text-align:center">📸 店家實拍</h2>
   <p style="text-align:center;color:#888;font-size:.85rem;margin-bottom:18px">店面外觀・新址 333 號・鏡框展示・配鏡過程・變色實測（pixnet 部落客實拍）</p>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px">
-    <img src="https://aqua-elephant-856571.hostingersite.com/uploads/clients/pixnet/pixnet_glasses01_76fa10e0.jpg" alt="伍佰眼鏡-臨安店實拍 1" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
-    <img src="https://aqua-elephant-856571.hostingersite.com/uploads/clients/pixnet/pixnet_glasses01_ac823070.jpg" alt="伍佰眼鏡-臨安店實拍 2" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
-    <img src="https://aqua-elephant-856571.hostingersite.com/uploads/clients/pixnet/pixnet_glasses01_30cb6991.jpg" alt="伍佰眼鏡-臨安店實拍 3" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
-    <img src="https://aqua-elephant-856571.hostingersite.com/uploads/clients/pixnet/pixnet_glasses01_176a770a.jpg" alt="伍佰眼鏡-臨安店實拍 4" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
-    <img src="https://aqua-elephant-856571.hostingersite.com/uploads/clients/pixnet/pixnet_glasses01_cfffb133.jpg" alt="伍佰眼鏡-臨安店實拍 5" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
-    <img src="https://aqua-elephant-856571.hostingersite.com/uploads/clients/pixnet/pixnet_glasses01_60641d2a.jpg" alt="伍佰眼鏡-臨安店實拍 6" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
-    <img src="https://aqua-elephant-856571.hostingersite.com/uploads/clients/pixnet/pixnet_glasses01_30400934.jpg" alt="伍佰眼鏡-臨安店實拍 7" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
-    <img src="https://aqua-elephant-856571.hostingersite.com/uploads/clients/pixnet/pixnet_glasses01_85956fba.jpg" alt="伍佰眼鏡-臨安店實拍 8" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
-    <img src="https://aqua-elephant-856571.hostingersite.com/uploads/clients/pixnet/pixnet_glasses01_4f1f7984.jpg" alt="伍佰眼鏡-臨安店實拍 9" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
-    <img src="https://aqua-elephant-856571.hostingersite.com/uploads/clients/pixnet/pixnet_glasses01_081924df.jpg" alt="伍佰眼鏡-臨安店實拍 10" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
-    <img src="https://aqua-elephant-856571.hostingersite.com/uploads/clients/pixnet/pixnet_glasses01_189b3fae.jpg" alt="伍佰眼鏡-臨安店實拍 11" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
-    <img src="https://aqua-elephant-856571.hostingersite.com/uploads/clients/pixnet/pixnet_glasses01_e1f3359b.jpg" alt="伍佰眼鏡-臨安店實拍 12" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
-    <img src="https://aqua-elephant-856571.hostingersite.com/uploads/clients/pixnet/pixnet_glasses01_5bfef6f5.jpg" alt="伍佰眼鏡-臨安店實拍 13" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
-    <img src="https://aqua-elephant-856571.hostingersite.com/uploads/clients/pixnet/pixnet_glasses01_d2c78d09.jpg" alt="伍佰眼鏡-臨安店實拍 14" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
-    <img src="https://aqua-elephant-856571.hostingersite.com/uploads/clients/pixnet/pixnet_glasses01_175a7167.jpg" alt="伍佰眼鏡-臨安店實拍 15" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
-    <img src="https://aqua-elephant-856571.hostingersite.com/uploads/clients/pixnet/pixnet_glasses01_642f597b.jpg" alt="伍佰眼鏡-臨安店實拍 16" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
+    <img src="/uploads/clients/pixnet/pixnet_glasses01_76fa10e0.jpg" alt="伍佰眼鏡-臨安店實拍 1" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
+    <img src="/uploads/clients/pixnet/pixnet_glasses01_ac823070.jpg" alt="伍佰眼鏡-臨安店實拍 2" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
+    <img src="/uploads/clients/pixnet/pixnet_glasses01_30cb6991.jpg" alt="伍佰眼鏡-臨安店實拍 3" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
+    <img src="/uploads/clients/pixnet/pixnet_glasses01_176a770a.jpg" alt="伍佰眼鏡-臨安店實拍 4" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
+    <img src="/uploads/clients/pixnet/pixnet_glasses01_cfffb133.jpg" alt="伍佰眼鏡-臨安店實拍 5" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
+    <img src="/uploads/clients/pixnet/pixnet_glasses01_60641d2a.jpg" alt="伍佰眼鏡-臨安店實拍 6" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
+    <img src="/uploads/clients/pixnet/pixnet_glasses01_30400934.jpg" alt="伍佰眼鏡-臨安店實拍 7" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
+    <img src="/uploads/clients/pixnet/pixnet_glasses01_85956fba.jpg" alt="伍佰眼鏡-臨安店實拍 8" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
+    <img src="/uploads/clients/pixnet/pixnet_glasses01_4f1f7984.jpg" alt="伍佰眼鏡-臨安店實拍 9" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
+    <img src="/uploads/clients/pixnet/pixnet_glasses01_081924df.jpg" alt="伍佰眼鏡-臨安店實拍 10" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
+    <img src="/uploads/clients/pixnet/pixnet_glasses01_189b3fae.jpg" alt="伍佰眼鏡-臨安店實拍 11" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
+    <img src="/uploads/clients/pixnet/pixnet_glasses01_e1f3359b.jpg" alt="伍佰眼鏡-臨安店實拍 12" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
+    <img src="/uploads/clients/pixnet/pixnet_glasses01_5bfef6f5.jpg" alt="伍佰眼鏡-臨安店實拍 13" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
+    <img src="/uploads/clients/pixnet/pixnet_glasses01_d2c78d09.jpg" alt="伍佰眼鏡-臨安店實拍 14" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
+    <img src="/uploads/clients/pixnet/pixnet_glasses01_175a7167.jpg" alt="伍佰眼鏡-臨安店實拍 15" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
+    <img src="/uploads/clients/pixnet/pixnet_glasses01_642f597b.jpg" alt="伍佰眼鏡-臨安店實拍 16" style="width:100%;height:240px;object-fit:cover;border-radius:8px;display:block" loading="lazy">
   </div>
 </section>
 
@@ -281,41 +230,4 @@
   </div>
 </section>
 
-<!-- ╚═════════ End landing_extra_content ═════════╝ -->
-</div>
-</div>
-
-<!-- ═════ 原始碼（隱藏，按鈕展開）═════ -->
-<div class="doc-section-label">▼ 原始碼（複製這段貼到後台 textarea）</div>
-<pre class="doc-code-box collapsed" id="codeBox"></pre>
-
-</div>
-
-<div class="doc-toast" id="toast">✅ 已複製到剪貼簿</div>
-
-<script>
-// 抓 landing 區的原始 HTML，把絕對 URL 換成 root-relative（DNS 切後也通）
-const landingEl = document.getElementById('landingHTML');
-const rawHtml = landingEl.innerHTML
-  .replace(/https:\/\/aqua-elephant-856571\.hostingersite\.com\//g, '/')
-  .trim();
-
-// 顯示在 pre code（textContent 自動 escape）
-document.getElementById('codeBox').textContent = rawHtml;
-
-function copyAll() {
-  navigator.clipboard.writeText(rawHtml).then(() => {
-    const t = document.getElementById('toast');
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2000);
-  });
-}
-
-function toggleCode() {
-  const box = document.getElementById('codeBox');
-  box.classList.toggle('collapsed');
-}
-</script>
-
-</body>
-</html>
+<!-- ╚═════════ End landing_extra_content
