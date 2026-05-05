@@ -49,6 +49,7 @@ if (!empty($social['line_url']) && filter_var($social['line_url'], FILTER_VALIDA
 // ── 依產業設定動態文案 ──
 $ind = $client['industry'] ?? '';
 $isFood = (bool)preg_match('/(餐|食|料理|咖啡|甜點|甜品|烘焙|燒肉|牛排|火鍋|鍋物|壽司|麵|飯|披薩|拉麵|烤|飲料|手搖|茶飲|甜|蛋糕|麵包|食坊|食堂|宵夜)/u', $ind);
+$isDesign = !$isFood && (bool)preg_match('/(室內設計|室內裝修|室內裝潢|空間設計|空間規劃|裝潢設計|建築設計|景觀設計|商空設計|店面設計|室內空間)/u', $ind);
 
 // ── 從 DB 讀取 hero_stats 和 about_tags（如果有），否則使用業種預設值 ──
 $dbHeroStats = !empty($client['hero_stats']) ? json_decode($client['hero_stats'], true) : null;
@@ -82,6 +83,12 @@ $aboutStats = array_map(fn($s, $i) => [$s[0], $s[1], $i % 2 ? 'accent' : ''], $h
 // 餐飲業走專屬攝影集 layout（Hawksmoor 風）
 if ($isFood) {
     require __DIR__ . '/index_food.php';
+    return;
+}
+
+// 室內設計走 Editorial / 建築攝影風 layout
+if ($isDesign) {
+    require __DIR__ . '/index_design.php';
     return;
 }
 
