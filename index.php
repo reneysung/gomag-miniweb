@@ -7,7 +7,7 @@ $db = getDB();
 
 // ─── 取分類列表（含每個分類的客戶數）────────────────
 $categories = $db->query("
-    SELECT c.id, c.name, c.slug, c.icon, c.description,
+    SELECT c.id, c.name, c.slug, c.icon, c.description, c.banner_image_path,
            COUNT(cl.id) AS client_count
     FROM categories c
     LEFT JOIN clients cl ON cl.category_id = c.id AND cl.is_active = 1
@@ -181,11 +181,16 @@ require_once __DIR__ . '/main/layout_head.php';
   </div>
   <div class="g-explore-grid g-explore-grid--4col">
     <?php foreach ($categories as $cat):
-      // 取該分類第一張可用 hero 當卡片背景
-      $coverStmt = $db->prepare("SELECT hero_image_path FROM clients WHERE category_id=? AND is_active=1 AND hero_image_path IS NOT NULL AND hero_image_path != '' AND COALESCE(is_placeholder,0)=0 ORDER BY id DESC LIMIT 1");
-      $coverStmt->execute([$cat['id']]);
-      $cover = $coverStmt->fetchColumn();
-      $coverUrl = $cover ? BASE_URL . '/' . h($cover) : '';
+      // 卡片背景優先用 categories.banner_image_path（分類專屬通用美圖）
+      // 沒設才 fallback 到該分類底下第一家客戶的 hero
+      if (!empty($cat['banner_image_path'])) {
+          $coverUrl = BASE_URL . '/' . h($cat['banner_image_path']);
+      } else {
+          $coverStmt = $db->prepare("SELECT hero_image_path FROM clients WHERE category_id=? AND is_active=1 AND hero_image_path IS NOT NULL AND hero_image_path != '' AND COALESCE(is_placeholder,0)=0 ORDER BY id DESC LIMIT 1");
+          $coverStmt->execute([$cat['id']]);
+          $cover = $coverStmt->fetchColumn();
+          $coverUrl = $cover ? BASE_URL . '/' . h($cover) : '';
+      }
     ?>
     <a class="g-explore-card" href="<?= BASE_URL ?>/category.php?slug=<?= h($cat['slug']) ?>">
       <?php if ($coverUrl): ?>
