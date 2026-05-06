@@ -16,7 +16,11 @@
 // require layout_head 以取得 $lineUrl, $fbUrl, $phone 等共用變數（跟 _food 同模式）
 require __DIR__ . '/layout_head.php';
 
-// 取資料（layout_head 內已撈好 $client/$services/$cases/$testimonials/$lineUrl）
+// $cases / $testimonials 在 layout_head 沒 set，從 $site 補
+$cases = $site['cases'] ?? [];
+$testimonials = $site['testimonials'] ?? [];
+
+// 取資料（layout_head 內已撈好 $client / $services / $lineUrl）
 $brand    = $client['brand_name'] ?? '';
 $tagline  = $client['tagline'] ?? '';
 $industry = $client['industry'] ?? '';

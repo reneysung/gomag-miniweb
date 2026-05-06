@@ -5,6 +5,9 @@
  */
 $pageKey = 'testimonials';
 require __DIR__ . '/layout_head.php';
+
+// $testimonials 在 layout_head 沒 set，從 $site 補上（同 testimonials.php 主檔）
+$testimonials = $site['testimonials'] ?? [];
 ?>
 
 <style>

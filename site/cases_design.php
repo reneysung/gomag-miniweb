@@ -5,6 +5,9 @@
  */
 $pageKey = 'cases';
 require __DIR__ . '/layout_head.php';
+
+// $cases 在 layout_head 沒 set，從 $site 補
+$cases = $site['cases'] ?? [];
 ?>
 
 <style>
