@@ -67,30 +67,117 @@ $testimonials = $site['testimonials'] ?? [];
   .ed-cta-btn.primary:hover { background: transparent; color: #c8a57a; }
 
   .ed-empty { text-align: center; padding: 80px 30px; color: #807868; }
+
+  /* === Card layout：左右交替 圖 + 引用 === */
+  .ed-testi-card {
+    display: grid; grid-template-columns: 1fr 1.2fr; gap: 0;
+    border-top: 1px solid rgba(232,227,216,.12);
+    align-items: stretch;
+  }
+  .ed-testi-card:last-child { border-bottom: 1px solid rgba(232,227,216,.12); }
+  .ed-testi-card.reverse .ed-testi-img { order: 2; }
+  @media(max-width:768px) {
+    .ed-testi-card, .ed-testi-card.reverse { grid-template-columns: 1fr; }
+    .ed-testi-card.reverse .ed-testi-img { order: 0; }
+  }
+  .ed-testi-img {
+    background-size: cover; background-position: center;
+    min-height: 320px;
+    background-color: #1a1a1a;
+  }
+  .ed-testi-body {
+    padding: 60px 50px;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  @media(max-width:768px) { .ed-testi-body { padding: 48px 24px; } }
+  .ed-testi-body .stars { color: #c8a57a; margin-bottom: 18px; font-size: 1rem; letter-spacing: .25em; }
+  .ed-testi-body .quote {
+    font-family: 'Noto Serif TC', serif;
+    font-size: clamp(1.05rem, 1.8vw, 1.3rem);
+    line-height: 1.9;
+    color: #e8e3d8;
+    font-weight: 400;
+    margin-bottom: 26px;
+    font-style: italic;
+  }
+  .ed-testi-body .author {
+    font-size: .82rem; letter-spacing: .12em;
+    color: #c8a57a; text-transform: uppercase; font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .ed-testi-body .meta { font-size: .72rem; color: #807868; letter-spacing: .08em; margin-bottom: 22px; }
+  .ed-testi-body .read-more {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 24px;
+    border: 1px solid rgba(200,165,122,.4);
+    color: #c8a57a; text-decoration: none;
+    font-size: .78rem; letter-spacing: .12em; font-weight: 600;
+    text-transform: uppercase;
+    transition: all .2s;
+    align-self: flex-start;
+  }
+  .ed-testi-body .read-more:hover { background: #c8a57a; color: #0a0a0a; border-color: #c8a57a; }
+  .ed-testi-body .read-more svg { width: 14px; height: 14px; }
 </style>
+
+<?php
+// 5 條 testimonial 配 5 張案例圖（按 client_id=213 撈相關圖；若是 artru subdomain 用既有 staging 圖）
+$bgImages = [
+  '/uploads/clients/artru/artru_p2_b88d1f9e.jpg',
+  '/uploads/clients/artru/artru_p2_179d0125.jpg',
+  '/uploads/clients/artru/artru_p7_a3356e11.jpg',
+  '/uploads/clients/artru/artru_p6_e60bfe00.jpg',
+  '/uploads/clients/artru/artru_p1_ecdce62e.jpg',
+];
+
+// source 顯示對應
+$sourceLabels = [
+  'mobile01' => 'Mobile01 開箱',
+  'vocus'    => 'vocus.cc 開箱',
+  'pixnet'   => 'pixnet 部落客',
+  'google'   => 'Google 評論',
+  'fb'       => 'Facebook 推薦',
+];
+?>
 
 <section class="ed-page-hero animate-in">
   <span class="eyebrow">CLIENT VOICES</span>
   <h1>屋主好評</h1>
   <div class="divider"></div>
-  <p>真實住進去的人，最真實的回饋</p>
+  <p>來自 Mobile01・vocus 部落客・Google 評論——真實住進去的人，最真實的回饋</p>
 </section>
 
 <?php if (empty($testimonials)): ?>
 <div class="ed-empty">客戶分享整理中</div>
 <?php else: ?>
 
-<section class="ed-testi-list">
-  <?php foreach ($testimonials as $t): ?>
-  <div class="ed-testi animate-in">
-    <div class="stars">
-      <?= str_repeat('★', (int)$t['rating']) . str_repeat('☆', 5 - (int)$t['rating']) ?>
+<section style="max-width:1200px;margin:60px auto;padding:0 24px">
+  <?php foreach ($testimonials as $i => $t):
+      $reverse = ($i % 2 === 1) ? ' reverse' : '';
+      $bg = $bgImages[$i % count($bgImages)];
+      // 從 reviewer_name 抽出 source（vocus / mobile01 等關鍵字）作來源 label
+      $sourceLabel = $sourceLabels[$t['source']] ?? ucfirst($t['source'] ?? '');
+      // 若 source 是 'mobile01' 但 vocus URL，特別處理
+      if (!empty($t['source_url']) && str_contains($t['source_url'], 'vocus.cc')) {
+          $sourceLabel = 'vocus.cc 開箱';
+      }
+  ?>
+  <div class="ed-testi-card animate-in<?= $reverse ?>">
+    <div class="ed-testi-img" style="background-image:url('<?= h($bg) ?>')"></div>
+    <div class="ed-testi-body">
+      <div class="stars"><?= str_repeat('★', (int)$t['rating']) . str_repeat('☆', 5 - (int)$t['rating']) ?></div>
+      <p class="quote">「<?= h($t['content']) ?>」</p>
+      <div class="author">— <?= h($t['reviewer_name']) ?></div>
+      <?php if ($sourceLabel): ?>
+      <div class="meta">via <?= h($sourceLabel) ?></div>
+      <?php endif; ?>
+      <?php if (!empty($t['source_url'])): ?>
+      <a href="<?= h($t['source_url']) ?>" target="_blank" rel="nofollow" class="read-more">
+        看完整文章
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+      <?php endif; ?>
     </div>
-    <p class="quote">「<?= h($t['content']) ?>」</p>
-    <div class="author">— <?= h($t['reviewer_name']) ?></div>
-    <?php if (!empty($t['source']) && $t['source'] !== 'demo'): ?>
-    <div class="meta">via <?= h(strtoupper($t['source'])) ?></div>
-    <?php endif; ?>
   </div>
   <?php endforeach; ?>
 </section>
