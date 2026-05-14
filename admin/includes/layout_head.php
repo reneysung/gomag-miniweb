@@ -538,7 +538,7 @@ textarea.form-control { resize: vertical; min-height: 90px; }
       if (!empty($clientData['has_minisite'])) {
           // mini-site：PROD 用子網域，LOCAL/STAGING 用 path
           $_previewUrl = IS_PROD
-              ? 'https://' . urlencode($_sub) . '.gomag.com.tw/'
+              ? 'https://' . urlencode($_sub) . '.' . MINISITE_DOMAIN . '/'
               : BASE_URL . '/site/index.php?sub=' . urlencode($_sub);
           $_previewLabel = '🌐 預覽小官網';
       } else {

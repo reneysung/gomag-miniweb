@@ -80,7 +80,7 @@ require_once __DIR__ . '/includes/layout_head.php';
       $_sub = $client['subdomain'] ?? $client['slug'];
       if (!empty($client['has_minisite'])) {
           $_topUrl = IS_PROD
-              ? 'https://' . urlencode($_sub) . '.gomag.com.tw/'
+              ? 'https://' . urlencode($_sub) . '.' . MINISITE_DOMAIN . '/'
               : BASE_URL . '/site/index.php?sub=' . urlencode($_sub);
           $_topLabel = '🌐 前往小官網';
       } else {

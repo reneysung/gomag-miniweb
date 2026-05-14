@@ -44,8 +44,8 @@ function siteUrl(string $sub, string $page = ''): string {
         }
         return BASE_URL . '/site/' . $page . '.php?sub=' . urlencode($sub);
     }
-    // 正式：子網域 + pretty URL
-    $base = 'https://' . $sub . '.gomag.com.tw';
+    // 正式：子網域 + pretty URL（mini-site 走獨立白牌域名 wmf.com.tw）
+    $base = 'https://' . $sub . '.' . MINISITE_DOMAIN;
     if (!$page || $page === 'index') return $base . '/';
     return $base . '/' . $page;
 }

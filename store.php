@@ -119,7 +119,7 @@ $miniSiteUrl = null;
 if ($client['has_minisite']) {
     $miniSiteUrl = (IS_LOCAL || IS_STAGING)
         ? BASE_URL . '/site/index.php?sub=' . urlencode($client['subdomain'] ?? $client['slug'])
-        : 'https://' . ($client['subdomain'] ?? $client['slug']) . '.gomag.com.tw/';
+        : 'https://' . ($client['subdomain'] ?? $client['slug']) . '.' . MINISITE_DOMAIN . '/';
 }
 
 // SEO：客戶自定 > 自動產生

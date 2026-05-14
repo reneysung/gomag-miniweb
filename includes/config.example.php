@@ -42,6 +42,10 @@ if (IS_LOCAL) {
     define('ADMIN_URL', 'https://www.gomag.com.tw/admin');
 }
 
+// 子網域 mini-site 域名（白牌獨立服務）
+// 例：xusen.wmf.com.tw, fooddemo.wmf.com.tw
+define('MINISITE_DOMAIN', 'wmf.com.tw');
+
 // PDO 連線
 function getDB(): PDO {
     static $pdo = null;

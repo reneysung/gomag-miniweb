@@ -101,7 +101,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
       if (!$cl['has_minisite']) continue;
       $sub = $cl['subdomain'] ?: $cl['slug'];
       $lastmod = date('Y-m-d', strtotime($cl['updated_at']));
-      $miniBase = (IS_LOCAL || IS_STAGING) ? BASE_URL . '/site' : 'https://' . $sub . '.gomag.com.tw';
+      $miniBase = (IS_LOCAL || IS_STAGING) ? BASE_URL . '/site' : 'https://' . $sub . '.' . MINISITE_DOMAIN;
       $pages = [
           ['', '0.9', 'weekly'],
           ['services', '0.8', 'monthly'],

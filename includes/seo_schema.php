@@ -11,7 +11,7 @@ function getCanonicalUrl(string $sub, string $pageKey): string {
     if (IS_LOCAL || IS_STAGING) {
         return siteUrl($sub, $pageKey === 'home' ? '' : $pageKey);
     }
-    $base = 'https://' . $sub . '.gomag.com.tw';
+    $base = 'https://' . $sub . '.' . MINISITE_DOMAIN;
     if ($pageKey === 'home') return $base . '/';
     return $base . '/' . $pageKey;
 }
@@ -26,7 +26,7 @@ function schemaLocalBusiness(array $client, array $social, array $services): arr
         'name'    => $client['brand_name'],
         'url'     => (IS_LOCAL || IS_STAGING)
             ? BASE_URL . '/site/index.php?sub=' . ($client['subdomain'] ?? $client['slug'])
-            : 'https://' . ($client['subdomain'] ?? $client['slug']) . '.gomag.com.tw/',
+            : 'https://' . ($client['subdomain'] ?? $client['slug']) . '.' . MINISITE_DOMAIN . '/',
     ];
 
     if (!empty($client['tagline'])) {
