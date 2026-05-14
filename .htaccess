@@ -10,6 +10,19 @@ RewriteEngine On
   Require all denied
 </FilesMatch>
 
+# ── Mini-site 子網域路由：{sub}.gomag.com.tw → site/ ──
+# 主站 gomag.com.tw（無子網域）不會 match；www / 062051129 排除
+# 062051129 另有獨立 docroot，本檔對它不生效，排除僅為保險
+RewriteCond %{HTTP_HOST} ^([a-z0-9-]+)\.gomag\.com\.tw$ [NC]
+RewriteCond %{HTTP_HOST} !^www\.gomag\.com\.tw$ [NC]
+RewriteCond %{HTTP_HOST} !^062051129\.gomag\.com\.tw$ [NC]
+RewriteRule ^$ site/index.php?sub=%1 [L,QSA]
+
+RewriteCond %{HTTP_HOST} ^([a-z0-9-]+)\.gomag\.com\.tw$ [NC]
+RewriteCond %{HTTP_HOST} !^www\.gomag\.com\.tw$ [NC]
+RewriteCond %{HTTP_HOST} !^062051129\.gomag\.com\.tw$ [NC]
+RewriteRule ^(services|cases|testimonials|contact)/?$ site/$1.php?sub=%1 [L,QSA]
+
 # Pretty URL
 RewriteRule ^store/([A-Za-z0-9_-]+)/?$ store.php?sub=$1 [L,QSA]
 RewriteRule ^category/([a-z0-9-]+)/?$ category.php?slug=$1 [L,QSA]
