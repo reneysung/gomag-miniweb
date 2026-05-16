@@ -16,6 +16,7 @@ function getDuplicateSkipSlugs(): array {
         'gourmetrestaurant1', // 來道好食雞 → gourmetrestaurant2 (id=76 → 145)
         '065957487',          // 二鍋壽喜燒 → 062263168 (id=90 → 13)
         'docaroating',        // 鍍卡：拼錯修正 → docar
+        'xusen',              // 旭浪清潔 demo → 外部 062051129 舊官網（不是站內合併）
     ];
 }
 

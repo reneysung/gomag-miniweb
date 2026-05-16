@@ -30,6 +30,17 @@ if (isset($slug_redirects[$sub])) {
     exit;
 }
 
+// ─── 外部 301 轉址（同店分屬不同 docroot）─────────
+// 本系統 demo slug → 對應已上線的舊系統官網（避免 duplicate content）
+$external_redirects = [
+    'xusen' => 'https://062051129.gomag.com.tw/',  // 旭浪清潔：新系統 demo → 舊系統獨立官網
+];
+if (isset($external_redirects[$sub])) {
+    header('HTTP/1.1 301 Moved Permanently');
+    header('Location: ' . $external_redirects[$sub]);
+    exit;
+}
+
 // 撈店家完整資料 + 分類
 $stmt = $db->prepare("
     SELECT cl.*, c.name AS cat_name, c.icon AS cat_icon, c.slug AS cat_slug
