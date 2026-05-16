@@ -241,8 +241,45 @@ CTA：立即預約 / LINE 諮詢
 
 ---
 
-## 七、文件版本
+## 七、Phase 4 完成記錄（旭浪 062051129 CodeIgniter）
+
+**改的檔案**：`062051129/application/views/all_head.php`（線上版備份在 `062051129/_backups/all_head.before_seo_xushen_*.php`）
+
+**補上的元素**：
+1. `<link rel="alternate" hreflang="zh-Hant">` + `x-default`
+2. `<link rel="sitemap" type="application/xml">`
+3. `<meta property="og:locale" content="zh_TW">`
+4. `<meta name="twitter:image">`
+5. 3 個 JSON-LD schema：
+   - **WebSite + SearchAction**（給 Google Sitelinks Searchbox；search URL pattern 預設 `/search?q=`，旭浪實際還沒站內搜尋，未來實作 URL 對齊即可）
+   - **LocalBusiness 完整版**：
+     - PostalAddress 完整 5 欄位（streetAddress: 永康區大灣路581號 / addressLocality: 永康區 / addressRegion: 台南市 / postalCode: 710 / addressCountry: TW）
+     - areaServed 3 個 City（台南市 / 高雄市 / 嘉義市）
+     - ContactPoint（phone + email + availableLanguage）
+     - sameAs（FB + LINE）
+     - hasOfferCatalog：8 個 Service offers（從 metakeywords 拆出來：嘉義裝潢清潔、台南裝潢細清、高雄裝潢細清、入住前細清、舊屋翻修清潔、店面開幕前清潔、新成屋交屋清潔、餐廳固定清潔）
+   - **Organization**（給 brand 識別、含 sameAs）
+
+**⚠️ 待用戶確認**：
+- 電話 `07-359-6601` 為硬編碼推測值（062051129 字面不直接對應電話）。**建議用戶 SSH 進去把 `_xl_phone` 改成旭浪正確電話**（all_head.php line ~31）。
+- 旭浪沒有正式 IG，sameAs 只有 FB + LINE。
+- 電話 + email 走 hardcode；未來可以動 metadata model 加欄位、admin 後台可填。
+
+**檔案路徑**：
+```
+/home/u331306067/domains/gomag.com.tw/public_html/062051129/application/views/all_head.php
+```
+
+要改電話用 SSH：
+```bash
+ssh hostinger-gomag
+cd /home/u331306067/domains/gomag.com.tw/public_html/062051129/application/views
+nano all_head.php   # 改 $_xl_phone 那行
+```
+
+## 八、文件版本
 
 | 日期 | 變更 |
 |---|---|
 | 2026-05-16 | 初版（從 Gmail 草稿成品化）|
+| 2026-05-16 | + Phase 4 旭浪 CodeIgniter 改造記錄 |
