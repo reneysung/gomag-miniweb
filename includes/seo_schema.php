@@ -17,16 +17,35 @@ function getCanonicalUrl(string $sub, string $pageKey): string {
 }
 
 /**
- * LocalBusiness Schema（每頁都輸出）
+ * 依 industry 推斷 schema.org @type（LocalBusiness 子型）
+ * 旭森參考：餐飲業用 Restaurant 比 LocalBusiness 對 Google rich result 更友善
  */
-function schemaLocalBusiness(array $client, array $social, array $services): array {
+function localBusinessTypeFor(string $industry): string {
+    $ind = $industry ?: '';
+    if (preg_match('/(餐|食|料理|咖啡|甜點|甜品|烘焙|燒肉|牛排|火鍋|鍋物|壽司|麵|飯|披薩|拉麵|烤|飲料|手搖|茶飲|甜|蛋糕|麵包|食坊|食堂|宵夜)/u', $ind)) return 'Restaurant';
+    if (preg_match('/(美容|美甲|美髮|美睫|紋繡|沙龍)/u', $ind))                                     return 'BeautySalon';
+    if (preg_match('/(美髮|理髮)/u', $ind))                                                       return 'HairSalon';
+    if (preg_match('/(汽車|機車|車體|烤漆|改裝|大燈|輪胎)/u', $ind))                                  return 'AutomotiveBusiness';
+    if (preg_match('/(室內設計|室內裝修|室內裝潢|空間設計|空間規劃|裝潢設計|建築設計|景觀設計|商空設計|店面設計|室內空間)/u', $ind)) return 'HomeAndConstructionBusiness';
+    if (preg_match('/(清潔|搬家|裝潢|防水|抓漏|電器|水電|油漆|害蟲|除蟲|消毒|園藝|綠美化)/u', $ind))    return 'HomeAndConstructionBusiness';
+    return 'LocalBusiness';
+}
+
+/**
+ * LocalBusiness Schema（每頁都輸出）
+ *
+ * @param array|null $menuBlock store_blocks 中 type='menu' 的 data（餐飲業用，含 groups/items）
+ */
+function schemaLocalBusiness(array $client, array $social, array $services, ?array $menuBlock = null): array {
+    $bizType = localBusinessTypeFor($client['industry'] ?? '');
+    $bizUrl  = (IS_LOCAL || IS_STAGING)
+        ? BASE_URL . '/site/index.php?sub=' . ($client['subdomain'] ?? $client['slug'])
+        : 'https://' . ($client['subdomain'] ?? $client['slug']) . '.' . MINISITE_DOMAIN . '/';
     $schema = [
-        '@type'   => 'LocalBusiness',
+        '@type'   => $bizType,
         '@id'     => '#business',
         'name'    => $client['brand_name'],
-        'url'     => (IS_LOCAL || IS_STAGING)
-            ? BASE_URL . '/site/index.php?sub=' . ($client['subdomain'] ?? $client['slug'])
-            : 'https://' . ($client['subdomain'] ?? $client['slug']) . '.' . MINISITE_DOMAIN . '/',
+        'url'     => $bizUrl,
     ];
 
     if (!empty($client['tagline'])) {
@@ -163,6 +182,49 @@ function schemaLocalBusiness(array $client, array $social, array $services): arr
             'name'            => $client['brand_name'] . '服務項目',
             'itemListElement' => $offers,
         ];
+    }
+
+    // ── hasMenu（餐飲業 Restaurant 專屬，schema.org Menu type）──
+    // Google rich result：在 SERP 直接顯示「{店家} 菜單」卡片，含菜名 / 價格
+    if ($bizType === 'Restaurant' && $menuBlock && !empty($menuBlock['groups'])) {
+        $sections = [];
+        foreach ($menuBlock['groups'] as $g) {
+            if (empty($g['items'])) continue;
+            $items = [];
+            foreach ($g['items'] as $it) {
+                if (empty($it['name'])) continue;
+                $menuItem = [
+                    '@type' => 'MenuItem',
+                    'name'  => $it['name'],
+                ];
+                if (!empty($it['desc'])) $menuItem['description'] = $it['desc'];
+                if (!empty($it['price'])) {
+                    $menuItem['offers'] = [
+                        '@type'         => 'Offer',
+                        'price'         => (string)$it['price'],
+                        'priceCurrency' => 'TWD',
+                    ];
+                }
+                if (!empty($it['image'])) {
+                    $menuItem['image'] = (str_starts_with($it['image'], 'http') ? $it['image'] : BASE_URL . '/' . $it['image']);
+                }
+                $items[] = $menuItem;
+            }
+            if ($items) {
+                $sections[] = [
+                    '@type'    => 'MenuSection',
+                    'name'     => $g['name'] ?? '',
+                    'hasMenuItem' => $items,
+                ];
+            }
+        }
+        if ($sections) {
+            $schema['hasMenu'] = [
+                '@type'        => 'Menu',
+                'name'         => $menuBlock['title'] ?? ($client['brand_name'] . '菜單'),
+                'hasMenuSection' => $sections,
+            ];
+        }
     }
 
     return $schema;
@@ -362,8 +424,22 @@ function outputJsonLd(array $site, string $sub, string $pageKey): void {
         $schemas[] = schemaWebSite($client, $sub);
     }
 
-    // 1. LocalBusiness（每頁都有）
-    $biz = schemaLocalBusiness($client, $social, $services);
+    // 餐飲業：撈 modular blocks 中 type='menu' 的資料，給 Restaurant.hasMenu schema 用
+    $menuBlock = null;
+    if (localBusinessTypeFor($client['industry'] ?? '') === 'Restaurant') {
+        try {
+            $_db = getDB();
+            $_st = $_db->prepare("SELECT data FROM store_blocks WHERE client_id=? AND type='menu' AND is_active=1 ORDER BY sort_order LIMIT 1");
+            $_st->execute([(int)$client['id']]);
+            $_row = $_st->fetch(PDO::FETCH_ASSOC);
+            if ($_row && !empty($_row['data'])) {
+                $menuBlock = json_decode($_row['data'], true);
+            }
+        } catch (Exception $e) { /* swallow — menu schema 是 nice-to-have */ }
+    }
+
+    // 1. LocalBusiness（每頁都有；餐飲 client 變 Restaurant 並嵌 Menu schema）
+    $biz = schemaLocalBusiness($client, $social, $services, $menuBlock);
 
     // 加入評價
     $aggRating = schemaAggregateRating($testimonials);
