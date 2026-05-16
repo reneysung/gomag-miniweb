@@ -41,13 +41,75 @@ function schemaLocalBusiness(array $client, array $social, array $services): arr
     if (!empty($client['email'])) {
         $schema['email'] = $client['email'];
     }
-    if (!empty($client['address'])) {
+
+    // ── ContactPoint（schema.org 推薦：把電話/email/聯絡類型包成物件）──
+    if (!empty($client['phone']) || !empty($client['email'])) {
+        $cp = [
+            '@type'       => 'ContactPoint',
+            'contactType' => 'customer service',
+        ];
+        if (!empty($client['phone'])) $cp['telephone'] = $client['phone'];
+        if (!empty($client['email'])) $cp['email']     = $client['email'];
+        $schema['contactPoint'] = $cp;
+    }
+
+    // ── PostalAddress（新欄位優先，舊欄位 fallback）──
+    // 旭森參考：streetAddress + addressLocality（行政區）+ addressRegion（縣市）+ postalCode
+    $hasNewAddr = !empty($client['address_street']) || !empty($client['address_district'])
+        || !empty($client['address_region']) || !empty($client['postal_code']);
+    if ($hasNewAddr) {
+        $addr = ['@type' => 'PostalAddress', 'addressCountry' => 'TW'];
+        if (!empty($client['address_street']))   $addr['streetAddress']   = $client['address_street'];
+        if (!empty($client['address_district'])) $addr['addressLocality'] = $client['address_district'];
+        if (!empty($client['address_region']))   $addr['addressRegion']   = $client['address_region'];
+        if (!empty($client['postal_code']))      $addr['postalCode']      = $client['postal_code'];
+        $schema['address'] = $addr;
+    } elseif (!empty($client['address'])) {
+        // 舊欄位 fallback：把完整字串塞 addressLocality（保留現有行為）
         $schema['address'] = [
-            '@type'          => 'PostalAddress',
-            'addressCountry' => 'TW',
+            '@type'           => 'PostalAddress',
+            'addressCountry'  => 'TW',
             'addressLocality' => $client['address'],
         ];
     }
+
+    // ── GeoCoordinates（有經緯度才出）──
+    if (!empty($client['latitude']) && !empty($client['longitude'])) {
+        $schema['geo'] = [
+            '@type'     => 'GeoCoordinates',
+            'latitude'  => (string)$client['latitude'],
+            'longitude' => (string)$client['longitude'],
+        ];
+    }
+
+    // ── openingHoursSpecification（有 JSON 才出）──
+    // 格式：{"mon":"09:00-18:00","tue":"09:00-18:00","sun":"closed"}
+    if (!empty($client['opening_hours_json'])) {
+        $hours = is_string($client['opening_hours_json'])
+            ? json_decode($client['opening_hours_json'], true)
+            : $client['opening_hours_json'];
+        if (is_array($hours)) {
+            $dayMap = [
+                'mon' => 'Monday',  'tue' => 'Tuesday', 'wed' => 'Wednesday',
+                'thu' => 'Thursday','fri' => 'Friday',  'sat' => 'Saturday', 'sun' => 'Sunday',
+            ];
+            $opens = [];
+            foreach ($hours as $key => $range) {
+                if (!isset($dayMap[$key]) || $range === 'closed' || empty($range)) continue;
+                // "09:00-18:00" → opens/closes
+                if (preg_match('/^(\d{2}:\d{2})-(\d{2}:\d{2})$/', $range, $m)) {
+                    $opens[] = [
+                        '@type'     => 'OpeningHoursSpecification',
+                        'dayOfWeek' => $dayMap[$key],
+                        'opens'     => $m[1],
+                        'closes'    => $m[2],
+                    ];
+                }
+            }
+            if ($opens) $schema['openingHoursSpecification'] = $opens;
+        }
+    }
+
     if (!empty($client['industry'])) {
         $schema['additionalType'] = $client['industry'];
     }
@@ -237,6 +299,33 @@ function schemaServiceList(array $services, array $client): array {
 }
 
 /**
+ * WebSite Schema — 首頁專屬，給 Google Sitelinks Searchbox 用
+ * 旭森參考做法：每個獨立官網都應該有一個 WebSite + SearchAction
+ */
+function schemaWebSite(array $client, string $sub): array {
+    $base = (IS_LOCAL || IS_STAGING)
+        ? BASE_URL . '/site/index.php?sub=' . $sub
+        : 'https://' . $sub . '.' . MINISITE_DOMAIN;
+    return [
+        '@context' => 'https://schema.org',
+        '@type'    => 'WebSite',
+        'url'      => $base . '/',
+        'name'     => $client['brand_name'],
+        'description' => !empty($client['tagline']) ? $client['tagline'] :
+            (!empty($client['about_text']) ? mb_strimwidth(strip_tags($client['about_text']), 0, 200, '…') : ''),
+        // 站內搜尋（mini-site 目前沒做搜尋，先放 placeholder pattern；未來實作站內搜尋時 URL 對齊即可）
+        'potentialAction' => [
+            '@type' => 'SearchAction',
+            'target' => [
+                '@type'       => 'EntryPoint',
+                'urlTemplate' => $base . '/?q={search_term_string}',
+            ],
+            'query-input' => 'required name=search_term_string',
+        ],
+    ];
+}
+
+/**
  * 主輸出函式：根據頁面產生完整的 JSON-LD <script> 標籤
  */
 function outputJsonLd(array $site, string $sub, string $pageKey): void {
@@ -246,6 +335,11 @@ function outputJsonLd(array $site, string $sub, string $pageKey): void {
     $testimonials = $site['testimonials'];
 
     $schemas = [];
+
+    // 0. WebSite + SearchAction（只在首頁輸出，避免重複）
+    if ($pageKey === 'home') {
+        $schemas[] = schemaWebSite($client, $sub);
+    }
 
     // 1. LocalBusiness（每頁都有）
     $biz = schemaLocalBusiness($client, $social, $services);

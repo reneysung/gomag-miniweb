@@ -43,6 +43,13 @@ $_logoIcon   = $_isFood ? '🍝' : '🌊';
 <title><?= h($metaTitle) ?></title>
 <meta name="description" content="<?= h($metaDesc) ?>">
 <link rel="canonical" href="<?= h($canonicalUrl) ?>">
+<link rel="alternate" hreflang="zh-Hant" href="<?= h($canonicalUrl) ?>">
+<link rel="alternate" hreflang="x-default" href="<?= h($canonicalUrl) ?>">
+<?php
+// link rel=sitemap：指向同 host 的 sitemap.xml（sitemap.php 會依 host 過濾，只列本子網域 URL）
+$_siteSitemapHost = (IS_LOCAL || IS_STAGING) ? rtrim(BASE_URL, '/') : 'https://' . $slug . '.' . MINISITE_DOMAIN;
+?>
+<link rel="sitemap" type="application/xml" href="<?= h($_siteSitemapHost) ?>/sitemap.xml" title="Sitemap">
 <meta property="og:title"       content="<?= h($seo['og_title'] ?? $metaTitle) ?>">
 <meta property="og:description" content="<?= h($metaDesc) ?>">
 <meta property="og:type"        content="website">
