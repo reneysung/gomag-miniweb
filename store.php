@@ -12,8 +12,15 @@ if (!$sub || !preg_match('/^[a-z0-9_-]+$/', $sub)) {
 }
 
 // ─── 舊 slug 301 永久轉址（保住 SEO 權重）──────────
+// 比對時 $sub 已 lowercase，所以 key 全部用小寫
 $slug_redirects = [
     'docaroating' => 'docar',  // 鍍卡 Do Car：拼錯修正
+    // ── 重複資料合併（同店多筆）→ 301 到主檔（2026-05-16）──
+    'interiordesign72'   => 'artru',                // 亞筑室內設計（id=99 → 213）
+    'interiordesign214'  => 'lanhung',              // 聯漢室內設計（id=124 → 214）
+    'modifiedcars3'      => 'modifiedcars',         // 光點線專業汽車大燈（id=195 → 46）
+    'gourmetrestaurant1' => 'gourmetrestaurant2',   // 來道好食雞（id=76 → 145）
+    '065957487'          => '062263168',            // 二鍋壽喜燒（id=90 → 13）
 ];
 if (isset($slug_redirects[$sub])) {
     $newSub = $slug_redirects[$sub];

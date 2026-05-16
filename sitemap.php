@@ -8,7 +8,13 @@ require_once __DIR__ . '/includes/front_functions.php';
 header('Content-Type: application/xml; charset=UTF-8');
 
 $db = getDB();
-$clients = $db->query('SELECT subdomain, slug, has_minisite, updated_at FROM clients WHERE is_active=1 ORDER BY id')->fetchAll();
+
+// 排除重複客戶（同店多筆 → 已 301 到主檔）— 同步 store.php $slug_redirects
+$dupSkip = ['Interiordesign72','Interiordesign214','modifiedcars3','gourmetrestaurant1','065957487','docaroating'];
+$ph = implode(',', array_fill(0, count($dupSkip), '?'));
+$stmt = $db->prepare("SELECT subdomain, slug, has_minisite, updated_at FROM clients WHERE is_active=1 AND slug NOT IN ($ph) ORDER BY id");
+$stmt->execute($dupSkip);
+$clients = $stmt->fetchAll();
 $cats = $db->query('SELECT slug FROM categories WHERE is_active=1')->fetchAll();
 
 $baseUrl = (IS_LOCAL || IS_STAGING) ? BASE_URL : 'https://www.gomag.com.tw';
