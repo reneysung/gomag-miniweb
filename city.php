@@ -2,9 +2,14 @@
 // city.php  ─  縣市落地頁 /city/taichung
 require_once __DIR__ . '/includes/config.php';
 require_once __DIR__ . '/includes/helpers.php';
+require_once __DIR__ . '/includes/front_functions.php';
 
 $db = getDB();
 $slug = strtolower(trim($_GET['slug'] ?? ''));
+
+// 重複客戶 slug（已 301 到主檔）— 縣市頁所有店家清單都排除
+$dupSkip = getDuplicateSkipSlugs();
+$dupPh   = implode(',', array_fill(0, count($dupSkip), '?'));
 
 // ─── slug → 縣市中文名 對映 ─────────────────────────────────
 $cityMap = [
@@ -126,9 +131,9 @@ $sql = "
            c.id AS cat_id, c.name AS cat_name, c.icon AS cat_icon, c.slug AS cat_slug
     FROM clients cl
     LEFT JOIN categories c ON cl.category_id = c.id
-    WHERE cl.is_active = 1 AND cl.address LIKE ?
+    WHERE cl.is_active = 1 AND cl.address LIKE ? AND cl.slug NOT IN ($dupPh)
 ";
-$params = [$cityName . '%'];
+$params = array_merge([$cityName . '%'], $dupSkip);
 if ($q !== '') {
     $sql .= " AND (cl.brand_name LIKE ? OR cl.tagline LIKE ? OR c.name LIKE ?)";
     $kw = '%' . $q . '%';
@@ -384,9 +389,9 @@ $hotStmt = $db->prepare("
          cl.address, c.name AS cat_name, c.icon AS cat_icon, c.slug AS cat_slug
   FROM clients cl LEFT JOIN categories c ON cl.category_id=c.id
   WHERE cl.is_active=1 AND COALESCE(cl.is_placeholder,0)=0 AND cl.address LIKE ?
-    AND cl.is_featured=1
+    AND cl.is_featured=1 AND cl.slug NOT IN ($dupPh)
   ORDER BY cl.id DESC LIMIT 4");
-$hotStmt->execute([$cityName . '%']);
+$hotStmt->execute(array_merge([$cityName . '%'], $dupSkip));
 $hotStores = $hotStmt->fetchAll();
 
 $latestStmt = $db->prepare("
@@ -394,16 +399,18 @@ $latestStmt = $db->prepare("
          cl.address, c.name AS cat_name, c.icon AS cat_icon, c.slug AS cat_slug
   FROM clients cl LEFT JOIN categories c ON cl.category_id=c.id
   WHERE cl.is_active=1 AND COALESCE(cl.is_placeholder,0)=0 AND cl.address LIKE ?
+    AND cl.slug NOT IN ($dupPh)
   ORDER BY cl.created_at DESC, cl.id DESC LIMIT 4");
-$latestStmt->execute([$cityName . '%']);
+$latestStmt->execute(array_merge([$cityName . '%'], $dupSkip));
 $latestStores = $latestStmt->fetchAll();
 
 $cityReviewsStmt = $db->prepare("
   SELECT t.reviewer_name, t.rating, t.content, cl.brand_name, cl.subdomain, cl.slug
   FROM testimonials t JOIN clients cl ON t.client_id = cl.id
   WHERE t.is_active=1 AND cl.is_active=1 AND cl.address LIKE ?
+    AND cl.slug NOT IN ($dupPh)
   ORDER BY t.rating DESC, t.id DESC LIMIT 6");
-$cityReviewsStmt->execute([$cityName . '%']);
+$cityReviewsStmt->execute(array_merge([$cityName . '%'], $dupSkip));
 $cityReviews = $cityReviewsStmt->fetchAll();
 
 // 共用 render 卡片 helper

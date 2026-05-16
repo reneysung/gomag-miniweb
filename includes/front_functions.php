@@ -4,6 +4,22 @@
 // ============================================================
 
 /**
+ * 同店多筆 → 已 301 到主檔的 slug。各 listing 頁（sitemap / category /
+ * city / search）排除這些 slug 不再顯示。store.php $slug_redirects 使用
+ * lowercased key 做比對；這裡用 DB 實際的 slug 大小寫。
+ */
+function getDuplicateSkipSlugs(): array {
+    return [
+        'Interiordesign72',   // 亞筑 → artru          (id=99  → 213)
+        'Interiordesign214',  // 聯漢 → lanhung        (id=124 → 214)
+        'modifiedcars3',      // 光點線 → modifiedcars (id=195 → 46)
+        'gourmetrestaurant1', // 來道好食雞 → gourmetrestaurant2 (id=76 → 145)
+        '065957487',          // 二鍋壽喜燒 → 062263168 (id=90 → 13)
+        'docaroating',        // 鍍卡：拼錯修正 → docar
+    ];
+}
+
+/**
  * 偵測目前要顯示哪個客戶的子網域
  *
  * 優先順序：

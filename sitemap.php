@@ -9,8 +9,8 @@ header('Content-Type: application/xml; charset=UTF-8');
 
 $db = getDB();
 
-// 排除重複客戶（同店多筆 → 已 301 到主檔）— 同步 store.php $slug_redirects
-$dupSkip = ['Interiordesign72','Interiordesign214','modifiedcars3','gourmetrestaurant1','065957487','docaroating'];
+// 排除重複客戶（同店多筆 → 已 301 到主檔）— 集中於 getDuplicateSkipSlugs()
+$dupSkip = getDuplicateSkipSlugs();
 $ph = implode(',', array_fill(0, count($dupSkip), '?'));
 $stmt = $db->prepare("SELECT subdomain, slug, has_minisite, updated_at FROM clients WHERE is_active=1 AND slug NOT IN ($ph) ORDER BY id");
 $stmt->execute($dupSkip);

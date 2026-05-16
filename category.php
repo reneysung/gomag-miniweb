@@ -2,21 +2,28 @@
 // category.php  ─  主站分類列表頁 /category?slug=food
 require_once __DIR__ . '/includes/config.php';
 require_once __DIR__ . '/includes/helpers.php';
+require_once __DIR__ . '/includes/front_functions.php';
 
 $db = getDB();
 $slug = strtolower(trim($_GET['slug'] ?? ''));
 
+// 重複客戶 slug（已 301 到主檔）— 各分類列表 / 計數都排除
+$dupSkip = getDuplicateSkipSlugs();
+$dupPh   = implode(',', array_fill(0, count($dupSkip), '?'));
+
 // 模式 A：沒指定分類 → 顯示所有分類入口
 if (!$slug) {
-    $allCats = $db->query("
+    $allCatsStmt = $db->prepare("
         SELECT c.id, c.name, c.slug, c.icon, c.description,
                COUNT(cl.id) AS client_count
         FROM categories c
-        LEFT JOIN clients cl ON cl.category_id = c.id AND cl.is_active = 1
+        LEFT JOIN clients cl ON cl.category_id = c.id AND cl.is_active = 1 AND cl.slug NOT IN ($dupPh)
         WHERE c.is_active = 1
         GROUP BY c.id
         ORDER BY c.sort_order, c.name
-    ")->fetchAll();
+    ");
+    $allCatsStmt->execute($dupSkip);
+    $allCats = $allCatsStmt->fetchAll();
 
     $pageTitle = '所有分類｜店家好口碑';
     $metaDesc  = '瀏覽店家好口碑所有店家分類：餐飲美食、居家服務、美容美髮、教育學習等。';
@@ -62,16 +69,16 @@ if (!$cat) {
     die('分類不存在');
 }
 
-$clients = $db->prepare("
+$clientsStmt = $db->prepare("
     SELECT cl.id, cl.subdomain, cl.slug, cl.brand_name, cl.tagline,
            cl.has_minisite, cl.external_website_url, cl.hero_image_path,
            cl.address, cl.phone
     FROM clients cl
-    WHERE cl.category_id = ? AND cl.is_active = 1
+    WHERE cl.category_id = ? AND cl.is_active = 1 AND cl.slug NOT IN ($dupPh)
     ORDER BY (cl.hero_image_path IS NULL OR cl.hero_image_path = '') ASC, cl.id DESC
 ");
-$clients->execute([$cat['id']]);
-$clients = $clients->fetchAll();
+$clientsStmt->execute(array_merge([$cat['id']], $dupSkip));
+$clients = $clientsStmt->fetchAll();
 
 $pageTitle = $cat['name'] . '｜店家好口碑 台南店家分類';
 $metaDesc  = "瀏覽 {$cat['name']} 分類下的所有台南店家，共 " . count($clients) . " 家。" . ($cat['description'] ?: '');
