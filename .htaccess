@@ -10,6 +10,12 @@ RewriteEngine On
   Require all denied
 </FilesMatch>
 
+# ── Force www（non-www → www）── SEO canonical 集中
+# 必須放在所有其他 rewrite 之前
+# 子網域不受影響（regex 嚴格 match root domain）
+RewriteCond %{HTTP_HOST} ^gomag\.com\.tw$ [NC]
+RewriteRule ^(.*)$ https://www.gomag.com.tw/$1 [R=301,L]
+
 # ── xusen.gomag.com.tw → 062051129.gomag.com.tw 301 ──
 # 同店：新系統 demo（xusen）撤下，全部 301 到舊系統獨立官網（062051129）
 # 必須放在 mini-site rewrite 之前，否則會先 match 進 site/index.php
