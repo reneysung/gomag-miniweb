@@ -157,6 +157,12 @@ $canonical = IS_LOCAL
     ? BASE_URL . '/store.php?sub=' . urlencode($sub)
     : 'https://www.gomag.com.tw/store/' . urlencode($sub);
 
+// ── 有啟用 mini-site 的客戶：canonical 指向 mini-site，集中 SEO 權重 ──
+// 避免主站 /store/{sub} 與 {sub}.gomag.com.tw duplicate content 內耗
+if ($miniSiteUrl) {
+    $canonical = $miniSiteUrl;
+}
+
 // 如果用新 blocks 系統，載 gomag.css 樣式
 if ($useBlocks) {
     $extraCss = [BASE_URL . '/assets/css/gomag.css'];

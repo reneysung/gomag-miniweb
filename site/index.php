@@ -4,10 +4,8 @@ require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/front_functions.php';
 
-// Phase F redesign 期間：強制 CDN 不 cache（避免 stale）
-header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
-header('Pragma: no-cache');
-header('Expires: 0');
+// CDN cache 5 分鐘，平衡新鮮度（後台更新後可見）跟 Core Web Vitals（TTFB）
+header('Cache-Control: public, max-age=300, must-revalidate');
 
 $sub = getSubdomain();
 if (!$sub) { http_response_code(404); die('找不到網站'); }

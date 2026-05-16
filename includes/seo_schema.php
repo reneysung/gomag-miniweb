@@ -51,8 +51,16 @@ function schemaLocalBusiness(array $client, array $social, array $services): arr
     if (!empty($client['industry'])) {
         $schema['additionalType'] = $client['industry'];
     }
+    // Schema.org LocalBusiness：
+    //   - logo 走品牌 logo（向量/方形小圖）
+    //   - image 走實景照片優先（hero / 店面），fallback 到 logo
+    //   Google rich result 要的是「能識別店家的代表性圖片」，logo 通常不夠資訊量
     if (!empty($client['logo_path'])) {
         $schema['logo'] = BASE_URL . '/' . $client['logo_path'];
+    }
+    if (!empty($client['hero_image_path'])) {
+        $schema['image'] = BASE_URL . '/' . $client['hero_image_path'];
+    } elseif (!empty($client['logo_path'])) {
         $schema['image'] = BASE_URL . '/' . $client['logo_path'];
     }
 

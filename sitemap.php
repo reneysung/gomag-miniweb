@@ -9,13 +9,30 @@ header('Content-Type: application/xml; charset=UTF-8');
 
 $db = getDB();
 
+// ── 判斷是否為 mini-site 子網域訪問（非 www / 非主站）──
+// 子網域訪問 → sitemap 只列該子網域自己的 URL（避免 cross-host sitemap）
+$host = $_SERVER['HTTP_HOST'] ?? '';
+$subOnly = null;
+if (preg_match('/^([a-z0-9-]+)\.gomag\.com\.tw$/i', $host, $m) && strtolower($m[1]) !== 'www') {
+    $subOnly = strtolower($m[1]);
+}
+
 // 排除重複客戶（同店多筆 → 已 301 到主檔）— 集中於 getDuplicateSkipSlugs()
 $dupSkip = getDuplicateSkipSlugs();
-$ph = implode(',', array_fill(0, count($dupSkip), '?'));
-$stmt = $db->prepare("SELECT subdomain, slug, has_minisite, updated_at FROM clients WHERE is_active=1 AND slug NOT IN ($ph) ORDER BY id");
-$stmt->execute($dupSkip);
-$clients = $stmt->fetchAll();
-$cats = $db->query('SELECT slug FROM categories WHERE is_active=1')->fetchAll();
+if ($subOnly) {
+    // 子網域模式：只撈該 sub 的 client（且必須啟用且有 mini-site）
+    $stmt = $db->prepare("SELECT subdomain, slug, has_minisite, updated_at FROM clients WHERE is_active=1 AND has_minisite=1 AND (subdomain=? OR slug=?) LIMIT 1");
+    $stmt->execute([$subOnly, $subOnly]);
+    $clients = $stmt->fetchAll();
+    $cats = [];
+} else {
+    // 主站模式：撈所有啟用 client + 排除重複
+    $ph = implode(',', array_fill(0, count($dupSkip), '?'));
+    $stmt = $db->prepare("SELECT subdomain, slug, has_minisite, updated_at FROM clients WHERE is_active=1 AND slug NOT IN ($ph) ORDER BY id");
+    $stmt->execute($dupSkip);
+    $clients = $stmt->fetchAll();
+    $cats = $db->query('SELECT slug FROM categories WHERE is_active=1')->fetchAll();
+}
 
 $baseUrl = (IS_LOCAL || IS_STAGING) ? BASE_URL : 'https://www.gomag.com.tw';
 $today = date('Y-m-d');
@@ -23,6 +40,8 @@ $today = date('Y-m-d');
 echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
 ?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+<?php if (!$subOnly): /* 主站專屬區段：子網域 sitemap 不列 cross-host URL */ ?>
 
   <!-- 主站首頁 -->
   <url>
@@ -101,6 +120,8 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
     <priority>0.9</priority>
   </url>
   <?php endforeach; ?>
+
+<?php endif; /* !$subOnly */ ?>
 
   <!-- 啟用 mini-site 的客戶才列子網域頁面 -->
   <?php foreach ($clients as $cl):
