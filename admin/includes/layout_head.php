@@ -462,6 +462,11 @@ textarea.form-control { resize: vertical; min-height: 90px; }
        href="<?= BASE_URL ?>/admin/pages/testimonials.php">
       <span class="icon">⭐</span> 客戶評價
     </a>
+    <a class="nav-item <?= in_array($currentPage, ['articles', 'article_edit']) ? 'active' : '' ?>"
+       href="<?= BASE_URL ?>/admin/pages/articles.php">
+      <span class="icon">📝</span> 專欄文章
+      <span style="margin-left:auto; background:#FF5A36; color:#fff; font-size:.6rem; font-weight:800; padding:1px 6px; border-radius:20px;">NEW</span>
+    </a>
 
     <a class="nav-item <?= $currentPage === 'leads' ? 'active' : '' ?>"
        href="<?= BASE_URL ?>/admin/pages/leads.php">

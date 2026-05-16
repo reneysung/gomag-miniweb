@@ -8,12 +8,19 @@
  * 產生該頁面的 Canonical URL
  */
 function getCanonicalUrl(string $sub, string $pageKey): string {
+    // IS_LOCAL/STAGING 走 query 模式 → 直接用 pageKey 對應 site/{pageKey}.php
     if (IS_LOCAL || IS_STAGING) {
         return siteUrl($sub, $pageKey === 'home' ? '' : $pageKey);
     }
+    // PROD 走 pretty URL：articles 對應 /column 路徑（對齊旭森風格）
+    $prodPathMap = [
+        'home'         => '',
+        'articles'     => 'column',
+    ];
+    $path = $prodPathMap[$pageKey] ?? $pageKey;
     $base = 'https://' . $sub . '.' . MINISITE_DOMAIN;
-    if ($pageKey === 'home') return $base . '/';
-    return $base . '/' . $pageKey;
+    if ($path === '') return $base . '/';
+    return $base . '/' . $path;
 }
 
 /**
@@ -317,15 +324,18 @@ function schemaBreadcrumb(string $sub, string $pageKey, string $brandName, ?arra
         'cases'        => '施工案例',
         'testimonials' => '客戶評價',
         'contact'      => '聯絡我們',
+        'articles'     => '專欄',
         // detail 頁 — 第二層連回列表
         'service_detail' => '服務項目',
         'case_detail'    => '施工案例',
+        'article_detail' => '專欄',
     ];
 
     // detail 頁第二層用列表頁 URL
     $listKey = $pageKey;
     if ($pageKey === 'service_detail') $listKey = 'services';
     if ($pageKey === 'case_detail')    $listKey = 'cases';
+    if ($pageKey === 'article_detail') $listKey = 'articles';
 
     if ($pageKey !== 'home' && isset($pageNames[$pageKey])) {
         $items[] = [
@@ -468,6 +478,12 @@ function outputJsonLd(array $site, string $sub, string $pageKey): void {
                 'name' => $c['title'] ?? $c['name'] ?? '',
                 'url'  => getCanonicalUrl($sub, 'cases') . '/' . rawurlencode($c['slug'] ?? ''),
             ];
+        } elseif ($pageKey === 'article_detail' && !empty($site['_current_article'])) {
+            $a = $site['_current_article'];
+            $extra = [
+                'name' => $a['title'] ?? '',
+                'url'  => getCanonicalUrl($sub, 'articles') . '/' . rawurlencode($a['slug'] ?? ''),
+            ];
         }
         $schemas[] = schemaBreadcrumb($sub, $pageKey, $client['brand_name'], $extra);
     }
@@ -566,6 +582,47 @@ function outputJsonLd(array $site, string $sub, string $pageKey): void {
             $artSchema['about'] = $c['svc_name'];
         }
         $schemas[] = $artSchema;
+    }
+
+    // 2.7 BlogPosting schema — 專欄文章詳細頁（Phase 7）
+    if ($pageKey === 'article_detail' && !empty($site['_current_article'])) {
+        $a = $site['_current_article'];
+        $articleUrl = (IS_LOCAL || IS_STAGING)
+            ? BASE_URL . '/site/article_detail.php?sub=' . urlencode($sub) . '&slug=' . urlencode($a['slug'])
+            : 'https://' . $sub . '.' . MINISITE_DOMAIN . '/column/' . rawurlencode($a['slug']);
+        $blogSchema = [
+            '@context'  => 'https://schema.org',
+            '@type'     => 'BlogPosting',
+            'headline'  => $a['title'] ?? '',
+            'mainEntityOfPage' => $articleUrl,
+            'author'    => ['@type' => 'Organization', 'name' => $client['brand_name']],
+            'publisher' => ['@type' => 'Organization', 'name' => $client['brand_name']],
+        ];
+        if (!empty($a['summary'])) $blogSchema['description'] = $a['summary'];
+        if (!empty($a['cover_image'])) $blogSchema['image'] = BASE_URL . '/' . $a['cover_image'];
+        elseif (!empty($client['hero_image_path'])) $blogSchema['image'] = BASE_URL . '/' . $client['hero_image_path'];
+        $publishDate = $a['published_at'] ?? $a['created_at'] ?? null;
+        if ($publishDate) {
+            $blogSchema['datePublished'] = date('c', strtotime($publishDate));
+            $blogSchema['dateModified']  = date('c', strtotime($a['updated_at'] ?? $publishDate));
+        }
+        if (!empty($client['logo_path'])) {
+            $blogSchema['publisher']['logo'] = [
+                '@type' => 'ImageObject',
+                'url'   => BASE_URL . '/' . $client['logo_path'],
+            ];
+        }
+        if (!empty($a['category'])) {
+            $blogSchema['articleSection'] = $a['category'];
+        }
+        // tags → keywords
+        if (!empty($a['tags_json'])) {
+            $tags = is_string($a['tags_json']) ? json_decode($a['tags_json'], true) : $a['tags_json'];
+            if (is_array($tags) && $tags) {
+                $blogSchema['keywords'] = implode(', ', $tags);
+            }
+        }
+        $schemas[] = $blogSchema;
     }
 
     // 3. FAQPage（首頁 + 服務頁）

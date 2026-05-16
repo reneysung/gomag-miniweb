@@ -35,6 +35,19 @@ $_isFood = (bool)preg_match('/(餐|食|料理|咖啡|甜點|甜品|烘焙|燒肉
 $_casesLabel = $_isFood ? '料理作品' : '施工案例';
 $_casesIcon  = $_isFood ? '🍽️' : '📸';
 $_logoIcon   = $_isFood ? '🍝' : '🌊';
+
+// 該客戶是否有發過專欄文章（決定是否顯示「專欄」nav）
+$_hasArticles = false;
+try {
+    $_artCheck = getDB()->prepare("SELECT 1 FROM articles WHERE client_id=? AND is_active=1 LIMIT 1");
+    $_artCheck->execute([(int)$client['id']]);
+    $_hasArticles = (bool)$_artCheck->fetch();
+} catch (Exception $e) { /* articles 表可能還沒建 */ }
+
+// 專欄列表 URL（prod 用 /column 對齊旭森；staging 用 articles.php?sub=）
+$_columnUrl = (IS_LOCAL || IS_STAGING)
+    ? BASE_URL . '/site/articles.php?sub=' . urlencode($slug)
+    : 'https://' . $slug . '.' . MINISITE_DOMAIN . '/column';
 ?>
 <!DOCTYPE html>
 <html lang="zh-Hant-TW">
@@ -233,6 +246,9 @@ img{max-width:100%;display:block}
       <a href="<?= siteUrl($slug) ?>"             class="<?= $pageKey==='home'?'active':'' ?>">首頁</a>
       <a href="<?= siteUrl($slug,'services') ?>"  class="<?= $pageKey==='services'?'active':'' ?>">服務項目</a>
       <a href="<?= siteUrl($slug,'cases') ?>"     class="<?= $pageKey==='cases'?'active':'' ?>"><?= $_casesLabel ?></a>
+      <?php if ($_hasArticles): ?>
+        <a href="<?= h($_columnUrl) ?>" class="<?= in_array($pageKey,['articles','article_detail'])?'active':'' ?>">專欄</a>
+      <?php endif; ?>
       <a href="<?= siteUrl($slug,'testimonials') ?>" class="<?= $pageKey==='testimonials'?'active':'' ?>">客戶好評</a>
       <?php if ($phone): ?>
         <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$phone)) ?>" class="btn-contact">📞 <?= h($phone) ?></a>
@@ -246,6 +262,9 @@ img{max-width:100%;display:block}
     <a href="<?= siteUrl($slug) ?>"            onclick="closeMobileMenu()">🏠 首頁</a>
     <a href="<?= siteUrl($slug,'services') ?>" onclick="closeMobileMenu()">🛠️ 服務項目</a>
     <a href="<?= siteUrl($slug,'cases') ?>"    onclick="closeMobileMenu()"><?= $_casesIcon ?> <?= $_casesLabel ?></a>
+    <?php if ($_hasArticles): ?>
+      <a href="<?= h($_columnUrl) ?>" onclick="closeMobileMenu()">📝 專欄</a>
+    <?php endif; ?>
     <a href="<?= siteUrl($slug,'testimonials') ?>" onclick="closeMobileMenu()">⭐ 客戶好評</a>
     <?php if ($phone): ?>
       <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$phone)) ?>" class="highlight">📞 <?= h($phone) ?></a>

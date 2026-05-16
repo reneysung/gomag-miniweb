@@ -186,7 +186,40 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
     <changefreq>monthly</changefreq>
     <priority>0.65</priority>
   </url>
-  <?php } } ?>
+  <?php }
+      // 專欄文章（Phase 7：/column/{slug}）
+      try {
+          $artStmt = $db->prepare("SELECT slug, COALESCE(updated_at, created_at) AS modified FROM articles WHERE client_id=? AND is_active=1 AND slug IS NOT NULL AND slug!='' ORDER BY id");
+          $artStmt->execute([$cidRow['id']]);
+          $artRows = $artStmt->fetchAll();
+      } catch (PDOException $e) { $artRows = []; /* articles 表可能還沒建 */ }
+      if ($artRows) {
+          // 專欄列表頁
+          $colListUrl = (IS_LOCAL || IS_STAGING)
+              ? $miniBase . '/articles.php?sub=' . urlencode($sub)
+              : $miniBase . '/column';
+  ?>
+  <url>
+    <loc><?= htmlspecialchars($colListUrl) ?></loc>
+    <lastmod><?= $lastmod ?></lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <?php
+          // 各文章
+          foreach ($artRows as $a) {
+              $aMod = date('Y-m-d', strtotime($a['modified']));
+              $aUrl = (IS_LOCAL || IS_STAGING)
+                  ? $miniBase . '/article_detail.php?sub=' . urlencode($sub) . '&slug=' . urlencode($a['slug'])
+                  : $miniBase . '/column/' . rawurlencode($a['slug']);
+  ?>
+  <url>
+    <loc><?= htmlspecialchars($aUrl) ?></loc>
+    <lastmod><?= $aMod ?></lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.55</priority>
+  </url>
+  <?php } } } ?>
   <?php endforeach; ?>
 
 </urlset>
