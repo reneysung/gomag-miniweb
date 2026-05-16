@@ -1,28 +1,42 @@
 # 店家好口碑（gomag.com.tw）— Claude Code Handoff
 
-> **最後更新**：2026-05-02（Phase A + B + C + D Day 1+2+3+3.1 完成）
+> **最後更新**：2026-05-16（Phase 1-6B 旭森風 SEO 全面改造完成）
 
 ## 專案概觀
 
-PHP 主站 + miniweb 子網域 + 後台管理。207 家在地客戶。Hostinger Premium + MariaDB。
+PHP 主站 + mini-site 子網域 + 後台管理。207 家在地客戶。Hostinger Premium + MariaDB。
 
 - **本機開發**：`/Users/songmingwei/Sites/localhost/miniweb/`
 - **MAMP**：`/Applications/MAMP/htdocs/miniweb` → symlink 到上面
-- **Production (staging)**：`https://aqua-elephant-856571.hostingersite.com`
-- **正式網域**（DNS 切換後）：`www.gomag.com.tw`
-- **目前還在 demo 階段，尚未掛正式網域**
+- **Staging**：`https://aqua-elephant-856571.hostingersite.com`（aqua-elephant docroot）
+- **Production**：`https://www.gomag.com.tw`（gomag.com.tw 獨立 docroot，**已正式上線**）
+- **GSC**：Domain Property `gomag.com.tw` 已驗證（TXT token `I70v7Z8E_1A7n_K5KqI1UVBBK4Fpy-GeDIxGwn09Dbc`），涵蓋所有子網域
 
 ## SSH / Production 操作
 
+SSH 用 key auth（config alias `hostinger-gomag` 已設定在 `~/.ssh/config`）：
+
 ```
-Host: 145.79.14.161
-Port: 65002
-User: u331306067
-Pass: !fX5vlQhlt9jIgi1   ← Reney 設的，做完事後建議 reset
-Web root: /home/u331306067/domains/aqua-elephant-856571.hostingersite.com/public_html
+Host hostinger-gomag
+  HostName 145.79.14.161
+  Port 65002
+  User u331306067
+  IdentityFile ~/.ssh/id_ed25519_hostinger
 ```
 
-部署用 rsync 即可。Backups 自動存在 `_backups/` 子目錄。
+**主機上有 3 個獨立 docroot**：
+1. `/home/u331306067/domains/gomag.com.tw/public_html/`  ← 正式 prod ⭐
+2. `/home/u331306067/domains/aqua-elephant-856571.hostingersite.com/public_html/`  ← staging
+3. `/home/u331306067/domains/writer.wmf.com.tw/public_html/`  ← 其他
+
+**DB 是兩 docroot 共享**（u331306067_miniweb / `Mw2026_K8sP3zXq!`）。
+**部署流程**：先 rsync staging 驗證 → 再 rsync prod docroot → 兩 docroot 都備份在 `_backups/`。
+
+### 內嵌 docroot：062051129/
+
+主 docroot 底下有 `062051129/`（CodeIgniter 子系統）= 旭浪清潔舊官網，
+被 wildcard subdomain `062051129.gomag.com.tw` 路由到。完全獨立的 CI 框架，
+不走 mini-site 系統。已有 SEO schema 強化（Phase 4）。
 
 ## 環境變數判斷
 
@@ -33,21 +47,8 @@ Web root: /home/u331306067/domains/aqua-elephant-856571.hostingersite.com/public
 
 ## Git 狀態
 
-```
-9 commits 已上：
-08c89e2 feat: Similar stores + 多 testimonials + 舊 admin deprecated banner
-c1b5600 feat: Sticky sidebar 聯絡卡 + Reviews summary 五星分布條
-3eda95c fix: CSS cache busting (?v={mtime})
-3d59ec3 Demo Polish: 4 個示範店家頁完整對齊新設計
-526724f Phase B Polish: 圖片上傳 + 示範客戶 + 城市後台
-48f2252 Phase B 後台: Modular Blocks Admin UI
-8b106a4 Phase B: Modular Blocks 後端架構升級
-06c7b4c docs: Phase A completion report + production screenshots
-c7cf5e3 Initial commit + Phase A: gomag design system foundation
-```
-
-**GitHub**：`reneysung/gomag-miniweb`（private）— `git push origin {branch}`
-- main 分支可能落後當前工作分支，要看 `claude/sleepy-diffie-87db30` 才有最新
+`git log --oneline -20` 看最新。**GitHub**：`reneysung/gomag-miniweb`（private）— `git push origin {branch}`。
+main 分支可能落後當前工作分支，看 `claude/*` 系列才是最新。
 
 ## 重要架構
 
@@ -105,24 +106,33 @@ c7cf5e3 Initial commit + Phase A: gomag design system foundation
 ## DB 架構
 
 ### 主表（207 客戶）
-- `clients` — 既有，沿用為 stores（不另建表）
+- `clients` — 既有，沿用為 stores
+  - **2026-05-16 新增 7 欄**（SEO schema）：`latitude`, `longitude`, `address_street`, `address_district`, `address_region`, `postal_code`, `opening_hours_json`
 - `categories` — 12 分類
-- `testimonials` — 評價（4 demo 共 20 筆）
+- `testimonials` — 評價
+- `services` — 服務（每個 client N 個）⭐ 含 `slug` 欄位（2026-05-16 回填中文 slug）
+- `cases` — 案例 ⭐ 含 `slug` 欄位（2026-05-16 加 migration 014）
+- `service_faqs` — 服務 FAQ
+- `client_social` — 社群（FB/IG/YT/LINE）
 
-### 新增表（Phase B）
+### Modular Blocks 系統表
 - `store_blocks` — 通用區塊（5 type ENUM + JSON data + sort_order）
 - `category_block_suggestions` — 12 分類 → block 建議對映 (31 條)
 - `cities` — 4 城 SEO 文案（取代 city.php 寫死 array）
 
-### 4 個示範客戶（已遷移到 blocks）
-| ID | Slug | 分類 | Blocks |
-|---|---|---|---|
-| 1 | xusen | 居家服務 | service + faq |
-| 3 | 062281421 | 美容美髮 | service + pricing + faq |
-| 10 | happysteakcyi | 餐飲美食 | menu + faq |
-| 18 | carbeauty2 | 汽車服務 | service + portfolio + pricing + faq |
+### 5 個 demo 客戶（has_minisite=1，2026-05-16 現況）
+| ID  | Slug          | 品牌                  | 分類       | 資料源 |
+|---  |---            |---                    |---        |---     |
+| 210 | fulldemo      | 展示清潔工坊          | 居家服務   | services(3) + cases(2) |
+| 211 | fooddemo      | 築炎日式燒肉酒場      | 餐飲美食   | services(3) + cases(2) |
+| 212 | designdemo    | 衡作室內設計事務所    | 室內設計   | services(4) + cases(2) |
+| 213 | artru         | 亞筑室內設計有限公司  | 室內設計   | services(4) + cases(2) |
+| 214 | lanhung       | 聯漢室內設計工作室    | 室內設計   | services(6) + cases(2) |
 
-其他 203 家走舊 services/cases/faqs fallback，視覺不變。
+加 happysteakcyi (id=10) 還在運作 has_minisite=1，但走 modular blocks（menu + faq blocks，不是 services 表）。
+
+**xusen (id=1) 已 2026-05-16 撤下**：`is_active=0`、`has_minisite=0`、加進 `getDuplicateSkipSlugs()`。
+xusen.gomag.com.tw 與 /store/xusen 都 301 到 062051129.gomag.com.tw（旭浪舊系統）。
 
 ## SEO 縣市落地頁（Phase A 完成）
 
@@ -181,39 +191,66 @@ taoyuan / taitung / pingtung / hsinchu / yilan / hualien
 | D Day 2 | city.php hero 600px + 依分類探索 cards + 分類 anchor | git da15ffb |
 | D Day 3 | sticky 分類 nav + hero 搜尋列 + ?q= 過濾 + 滾動 active pill | git d432b4a |
 | D Day 3.1 | 應用層搜尋日誌 + analytics endpoint + GitHub repo + 週分析 routine | git 076e84c |
+| **SEO 1** | **xusen 撤下 + 5 項 SEO 必修**（duplicate canonical / cache / sitemap-by-host / schema image / force www） | `99ab085` `a4ccd70` `5655169` `fddd5c9` |
+| **SEO 1.5** | **Admin UI + Migration 012 (lat/lng/PostalAddress 4 欄/opening_hours_json)** | `085a261` |
+| **SEO 2** | **Mini-site `/services/{slug}` × 20 頁** (Service schema + 3 層 Breadcrumb) | `a304373` |
+| **SEO 3** | **Mini-site `/cases/{slug}` × 10 頁** (Article schema, migration 014 加 cases.slug) | `8d29d97` |
+| **SEO 4** | **旭浪 062051129 CodeIgniter schema 升級** (WebSite/LocalBusiness 完整/Organization) | `36b0681`（doc）+ 直接改 062051129/application/views/all_head.php |
+| **SEO 5** | **主站 Organization + WebSite SearchAction + /search pretty URL** | `16bd2c1` |
+| **SEO 6B** | **餐飲 Restaurant + Menu schema + 全 client 自動換 schema 子型** | `2a4014f` |
+
+📖 詳細 SOP：[`docs/SEO_XUSEN_REFERENCE.md`](docs/SEO_XUSEN_REFERENCE.md)
+
+## SEO 架構（2026-05-16 後）
+
+### URL pattern（per mini-site 子網域）
+- `https://{sub}.gomag.com.tw/`         首頁（WebSite + SearchAction schema）
+- `https://{sub}.gomag.com.tw/services`  服務列表
+- `https://{sub}.gomag.com.tw/services/{slug}` ⭐ 服務詳細頁（Service + FAQPage schema）
+- `https://{sub}.gomag.com.tw/cases`     案例列表
+- `https://{sub}.gomag.com.tw/cases/{slug}`    ⭐ 案例詳細頁（Article schema）
+- `https://{sub}.gomag.com.tw/testimonials`    客戶評價
+- `https://{sub}.gomag.com.tw/sitemap.xml`     子網域專屬 sitemap（只列該子網域 URL）
+- `https://{sub}.gomag.com.tw/robots.txt`      指向同 host sitemap
+
+### Schema 自動換子型（依 industry 推斷）
+| industry 含關鍵字 | @type |
+|---|---|
+| 餐 / 食 / 料理 / 牛排 / 火鍋 / 咖啡 | **Restaurant** + hasMenu |
+| 美容 / 美甲 / 紋繡 | BeautySalon |
+| 美髮 / 理髮 | HairSalon |
+| 汽車 / 機車 / 烤漆 | AutomotiveBusiness |
+| 室內設計 / 裝潢 / 清潔 / 水電 | HomeAndConstructionBusiness |
+| 其他 | LocalBusiness |
+
+### 主站
+- 首頁：Organization + WebSite SearchAction（target `/search?q=`）
+- 非首頁：Organization
+- `/store/{slug}` 對 has_minisite=1 客戶 → canonical 指向 mini-site（避免 duplicate content）
+
+### .htaccess routing 順序（重要）
+1. Force www（non-www → www 301）
+2. xusen.gomag.com.tw → 062051129 301
+3. Mini-site 子網域路由（排除 www / 062051129 / xusen）
+   - `/services/{slug}` → site/service_detail.php
+   - `/cases/{slug}` → site/case_detail.php
+   - `/services|cases|testimonials|contact` → site/{$1}.php
+4. 主站 pretty URL（/store /category /city /search /sitemap.xml /robots.txt）
 
 ## 對齊 mockup 進度
 
-`docs/gomag-store-detail.html` 的元素：
-- ✅ Hero
-- ✅ 5 種 Modular Blocks
-- ✅ Sticky sidebar 聯絡卡
-- ✅ Reviews Summary + 五星分布
-- ✅ Similar Stores
-- ✅ Photo gallery 5 格 (Phase C)
-- ✅ Owner block (Phase C)
+`docs/gomag-store-detail.html` 的元素 100% 完成。
 
-**整體對齊度 100%**（store 頁）／ city 頁約 98%（含 hero 大圖、依分類探索、本週熱門、最新加入、真實口碑）
-
-## 待辦（明天可選）
-
-按時間從少到多排：
+## 待辦（下次 session 可挑）
 
 | 工程 | 時間 | 備註 |
 |---|---|---|
-| Drag-drop 排序（admin block list 用 SortableJS）| 1-2 hr | UX 加分 |
-| Block 即時預覽 iframe（編輯不用儲存就能看效果）| 4-6 hr | 高 UX |
-| 人工遷移更多客戶到 blocks | per-client 5-15 min | 增加 demo |
-| 把 main 分支推進到工作分支 | 5 min | 目前 main 落後（沒走 PR review 流程，可直接 merge） |
-| 全站搜尋（跨城市）`/search.php?q=` | 1 天 | 現在只有城市內搜尋，全站搜尋是自然延伸 |
+| 確認旭浪電話、改 `062051129/application/views/all_head.php` 的 `$_xl_phone` | 5 min | hardcode 07-359-6601 待修 |
+| 進 admin 幫 5 個 demo 填細欄位（lat/lng/街道/區/postal_code/opening_hours） | per client 5 min | 讓 PostalAddress / Geo / Hours schema 真正顯示 |
+| Phase 7：部落格/專欄 `/column/{slug}` (旭森有) | 1.5-2 hr 架構 + 內容投資 | 內容型 SEO，長期戰略 |
+| 旭浪 062051129 加 admin metadata model 欄位（電話/地址動態化） | 1 hr | 不再 hardcode，讓老闆能後台改 |
+| Drag-drop 排序 / Block 即時預覽 | 1-6 hr | UX 加分 |
 | 熱門搜尋詞變 SEO 著陸頁 | 視 routine 報告 | 等累積數週 data 再評估 |
-| 完全沒結果關鍵字 → redirect 到分類頁 | 視 routine 報告 | 同上 |
-| Phase 6 DNS 切換到 gomag.com.tw | 視旭浪而定 | 等你決定時機 |
-
-### 風險低的小事
-- 標 `services.php`/`cases.php`/`faqs.php` 從 sidebar 隱藏（讓內勤一定走新 admin）
-- Sitemap 新增 `/store/{slug}` 個別 URL
-- Reviews summary 標 demo 資料（在 testimonials.source='demo' 那筆顯示「Demo 範例」）
 
 ## Hostinger File Manager API（備援部署用）
 
@@ -231,10 +268,23 @@ fetch(prefix + '/api/resources/public_html/{path}?override=true', {
 
 ## 慣用工作流
 
-- **DB 修補/一次性 script** → migrations/00X_*.php，PHP CLI 跑或 web URL（含 `?key=` 防誤觸）
-- **新功能開發** → 本機 MAMP 測 + 截圖驗證 + Production rsync 部署
+- **DB 修補/一次性 script** → migrations/00X_*.php 或 .sql，PHP CLI 跑（PHP CLI 模式需要塞 `$_SERVER['HTTP_HOST']` 才能讓 config.php 走對的環境分支）
+- **新功能開發** → 本機 MAMP 測 + 截圖驗證 → rsync staging（aqua-elephant）驗證 → rsync prod（gomag.com.tw）
+- **兩 docroot 同步部署**：`rsync -avR ./{paths} hostinger-gomag:/home/u331306067/domains/{domain}/public_html/`
 - **Cache 問題** → 已自動加 `?v={mtime}` 到 extraCss link，不用手動處理
-- **Deploy 前** → 自動備份至 `_backups/{name}_YYYYMMDD-HHMMSS/`
+- **Deploy 前** → mkdir _backups/{name}_YYYYMMDD-HHMMSS/ + cp 受影響檔案
+
+### PHP CLI 跑 migration / 驗證 pattern
+
+```php
+<?php
+$_SERVER['HTTP_HOST'] = 'www.gomag.com.tw';   // 或 '{sub}.gomag.com.tw' 測 mini-site
+chdir('/home/u331306067/domains/gomag.com.tw/public_html');
+require 'includes/config.php';
+require 'includes/helpers.php';
+$db = getDB();
+// ...
+```
 
 ## 風格慣例
 
