@@ -21,6 +21,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'business_hours'         => trim($_POST['business_hours'] ?? ''),
         'email'                  => trim($_POST['email'] ?? ''),
         'address'                => trim($_POST['address'] ?? ''),
+        // SEO schema 細欄位（旭森風格 — 拆 PostalAddress + geo + opening hours）
+        'address_street'         => trim($_POST['address_street'] ?? '') ?: null,
+        'address_district'       => trim($_POST['address_district'] ?? '') ?: null,
+        'address_region'         => trim($_POST['address_region'] ?? '') ?: null,
+        'postal_code'            => trim($_POST['postal_code'] ?? '') ?: null,
+        'latitude'               => !empty($_POST['latitude']) ? (float)$_POST['latitude'] : null,
+        'longitude'              => !empty($_POST['longitude']) ? (float)$_POST['longitude'] : null,
+        'opening_hours_json'     => trim($_POST['opening_hours_json'] ?? '') ?: null,
         'external_website_url'   => trim($_POST['external_website_url'] ?? ''),
         'about_text'             => trim($_POST['about_text'] ?? ''),
         'landing_extra_content'  => trim($_POST['landing_extra_content'] ?? ''),
@@ -253,9 +261,72 @@ require_once __DIR__ . '/../includes/layout_head.php';
                value="<?= h($client['email']) ?>">
       </div>
       <div class="form-group-admin">
-        <label>地址</label>
+        <label>地址（顯示用，完整字串）</label>
         <input type="text" name="address" class="form-control"
-               value="<?= h($client['address']) ?>">
+               value="<?= h($client['address']) ?>"
+               placeholder="例：嘉義市西區中山路一段 123 號">
+        <div class="hint">前台直接顯示用。下面 SEO 細欄位選填，填了 schema.org PostalAddress 才完整、有助 Google 本地搜尋。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEO Local Business 細欄位 -->
+  <div class="card">
+    <div class="card-header"><h2>📍 SEO 本地商家欄位（schema.org）</h2></div>
+    <div class="card-body">
+      <div class="hint" style="margin-bottom:16px;">
+        填了下面欄位，JSON-LD 會輸出完整 <code>PostalAddress</code> + <code>GeoCoordinates</code> + <code>OpeningHoursSpecification</code>。
+        Google 本地搜尋、知識面板、Maps 連動會更完整。沒填則沿用上方「地址」單一字串。
+      </div>
+      <div class="grid-2">
+        <div class="form-group-admin">
+          <label>街道地址</label>
+          <input type="text" name="address_street" class="form-control"
+                 value="<?= h($client['address_street'] ?? '') ?>"
+                 placeholder="例：中山路一段 123 號">
+          <div class="hint">不含縣市/區，只填街道+號</div>
+        </div>
+        <div class="form-group-admin">
+          <label>郵遞區號</label>
+          <input type="text" name="postal_code" class="form-control"
+                 value="<?= h($client['postal_code'] ?? '') ?>"
+                 placeholder="例：600" maxlength="10">
+        </div>
+        <div class="form-group-admin">
+          <label>行政區</label>
+          <input type="text" name="address_district" class="form-control"
+                 value="<?= h($client['address_district'] ?? '') ?>"
+                 placeholder="例：西區 / 永康區">
+        </div>
+        <div class="form-group-admin">
+          <label>縣市</label>
+          <input type="text" name="address_region" class="form-control"
+                 value="<?= h($client['address_region'] ?? '') ?>"
+                 placeholder="例：嘉義市 / 台南市">
+        </div>
+        <div class="form-group-admin">
+          <label>緯度 (Latitude)</label>
+          <input type="text" name="latitude" class="form-control"
+                 value="<?= h($client['latitude'] ?? '') ?>"
+                 placeholder="例：23.4810">
+          <div class="hint">Google Maps 點店家 → 分享 → 從 URL 抽 @23.481,120.456 的第一個數字</div>
+        </div>
+        <div class="form-group-admin">
+          <label>經度 (Longitude)</label>
+          <input type="text" name="longitude" class="form-control"
+                 value="<?= h($client['longitude'] ?? '') ?>"
+                 placeholder="例：120.4496">
+        </div>
+      </div>
+      <div class="form-group-admin">
+        <label>營業時間（JSON）</label>
+        <textarea name="opening_hours_json" class="form-control" rows="3"
+                  placeholder='{"mon":"09:00-18:00","tue":"09:00-18:00","wed":"09:00-18:00","thu":"09:00-18:00","fri":"09:00-18:00","sat":"09:00-18:00","sun":"closed"}'><?= h($client['opening_hours_json'] ?? '') ?></textarea>
+        <div class="hint">
+          格式：<code>{"mon":"09:00-18:00","sun":"closed"}</code>。
+          7 天 key 用 mon/tue/wed/thu/fri/sat/sun，值用 <code>09:00-18:00</code> 或 <code>closed</code>。
+          <a href="javascript:void(0)" onclick="document.querySelector('[name=opening_hours_json]').value='{&quot;mon&quot;:&quot;09:00-18:00&quot;,&quot;tue&quot;:&quot;09:00-18:00&quot;,&quot;wed&quot;:&quot;09:00-18:00&quot;,&quot;thu&quot;:&quot;09:00-18:00&quot;,&quot;fri&quot;:&quot;09:00-18:00&quot;,&quot;sat&quot;:&quot;09:00-18:00&quot;,&quot;sun&quot;:&quot;closed&quot;}'">套用週一到六 9-18、週日公休</a>
+        </div>
       </div>
     </div>
   </div>
