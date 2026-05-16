@@ -146,6 +146,32 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
     <changefreq><?= $freq ?></changefreq>
     <priority><?= $prio ?></priority>
   </url>
-  <?php endforeach; endforeach; ?>
+  <?php endforeach; ?>
+
+  <?php
+  // 該客戶的服務詳細頁（旭森風 /services/{slug}）— 每服務獨立 URL
+  $svcStmt = $db->prepare("SELECT slug FROM services WHERE client_id=? AND is_active=1 AND slug IS NOT NULL AND slug!='' ORDER BY sort_order,id");
+  $svcStmt->execute([$cl['id'] ?? 0]);
+  // 注意 $clients query 沒撈 id（只撈 subdomain/slug/has_minisite/updated_at），改撈 by slug 對應
+  $cidStmt = $db->prepare("SELECT id FROM clients WHERE subdomain=? OR slug=? LIMIT 1");
+  $cidStmt->execute([$sub, $sub]);
+  $cidRow = $cidStmt->fetch();
+  if ($cidRow) {
+      $svcStmt = $db->prepare("SELECT slug FROM services WHERE client_id=? AND is_active=1 AND slug IS NOT NULL AND slug!='' ORDER BY sort_order,id");
+      $svcStmt->execute([$cidRow['id']]);
+      foreach ($svcStmt->fetchAll() as $svcRow) {
+          $svcSlug = $svcRow['slug'];
+          $detailUrl = (IS_LOCAL || IS_STAGING)
+              ? $miniBase . '/service_detail.php?sub=' . urlencode($sub) . '&svc_slug=' . urlencode($svcSlug)
+              : $miniBase . '/services/' . rawurlencode($svcSlug);
+  ?>
+  <url>
+    <loc><?= htmlspecialchars($detailUrl) ?></loc>
+    <lastmod><?= $lastmod ?></lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <?php } } ?>
+  <?php endforeach; ?>
 
 </urlset>

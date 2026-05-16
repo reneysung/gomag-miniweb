@@ -242,8 +242,10 @@ function schemaFAQ(array $services): ?array {
 
 /**
  * BreadcrumbList Schema
+ *
+ * @param array|null $extra 第三層麵包屑（用於 detail 頁），形如 ['name'=>'服務名','url'=>'...']
  */
-function schemaBreadcrumb(string $sub, string $pageKey, string $brandName): array {
+function schemaBreadcrumb(string $sub, string $pageKey, string $brandName, ?array $extra = null): array {
     $items = [
         ['@type' => 'ListItem', 'position' => 1, 'name' => '首頁', 'item' => getCanonicalUrl($sub, 'home')],
     ];
@@ -253,15 +255,34 @@ function schemaBreadcrumb(string $sub, string $pageKey, string $brandName): arra
         'cases'        => '施工案例',
         'testimonials' => '客戶評價',
         'contact'      => '聯絡我們',
+        // detail 頁 — 第二層連回列表
+        'service_detail' => '服務項目',
+        'case_detail'    => '施工案例',
     ];
+
+    // detail 頁第二層用列表頁 URL
+    $listKey = $pageKey;
+    if ($pageKey === 'service_detail') $listKey = 'services';
+    if ($pageKey === 'case_detail')    $listKey = 'cases';
 
     if ($pageKey !== 'home' && isset($pageNames[$pageKey])) {
         $items[] = [
             '@type'    => 'ListItem',
             'position' => 2,
             'name'     => $pageNames[$pageKey],
-            'item'     => getCanonicalUrl($sub, $pageKey),
+            'item'     => getCanonicalUrl($sub, $listKey),
         ];
+    }
+
+    // 第三層（detail 頁的服務/案例名稱）
+    if ($extra && !empty($extra['name'])) {
+        $item = [
+            '@type'    => 'ListItem',
+            'position' => 3,
+            'name'     => $extra['name'],
+        ];
+        if (!empty($extra['url'])) $item['item'] = $extra['url'];
+        $items[] = $item;
     }
 
     return [
@@ -357,7 +378,69 @@ function outputJsonLd(array $site, string $sub, string $pageKey): void {
 
     // 2. BreadcrumbList（非首頁才有）
     if ($pageKey !== 'home') {
-        $schemas[] = schemaBreadcrumb($sub, $pageKey, $client['brand_name']);
+        // detail 頁第三層用 $site['_current_service'] / _current_case
+        $extra = null;
+        if ($pageKey === 'service_detail' && !empty($site['_current_service'])) {
+            $svc = $site['_current_service'];
+            $extra = [
+                'name' => $svc['name'],
+                'url'  => getCanonicalUrl($sub, 'services') . '/' . rawurlencode($svc['slug'] ?? ''),
+            ];
+        } elseif ($pageKey === 'case_detail' && !empty($site['_current_case'])) {
+            $c = $site['_current_case'];
+            $extra = [
+                'name' => $c['title'] ?? $c['name'] ?? '',
+                'url'  => getCanonicalUrl($sub, 'cases') . '/' . rawurlencode($c['slug'] ?? ''),
+            ];
+        }
+        $schemas[] = schemaBreadcrumb($sub, $pageKey, $client['brand_name'], $extra);
+    }
+
+    // 2.5 Service schema — 服務詳細頁專屬
+    if ($pageKey === 'service_detail' && !empty($site['_current_service'])) {
+        $svc = $site['_current_service'];
+        $svcSchema = [
+            '@context'   => 'https://schema.org',
+            '@type'      => 'Service',
+            'name'       => $svc['name'],
+            'provider'   => [
+                '@type' => 'LocalBusiness',
+                'name'  => $client['brand_name'],
+                '@id'   => '#business',
+            ],
+        ];
+        if (!empty($svc['short_desc'])) $svcSchema['description'] = $svc['short_desc'];
+        elseif (!empty($svc['full_desc'])) $svcSchema['description'] = mb_strimwidth(strip_tags($svc['full_desc']), 0, 300, '…');
+        if (!empty($svc['image_path'])) $svcSchema['image'] = BASE_URL . '/' . $svc['image_path'];
+        if (!empty($svc['price_text'])) {
+            $svcSchema['offers'] = [
+                '@type'         => 'Offer',
+                'priceCurrency' => 'TWD',
+                'description'   => $svc['price_text'],
+            ];
+        }
+        // 服務區域：用 client address_region 優先
+        if (!empty($client['address_region'])) {
+            $svcSchema['areaServed'] = ['@type' => 'City', 'name' => $client['address_region']];
+        }
+        // 該服務的 FAQ → mainEntityOfPage FAQPage（避免跟首頁 FAQPage 重複，用 hasPart）
+        if (!empty($svc['faqs'])) {
+            $faqs = [];
+            foreach ($svc['faqs'] as $faq) {
+                $faqs[] = [
+                    '@type'          => 'Question',
+                    'name'           => $faq['question'],
+                    'acceptedAnswer' => ['@type' => 'Answer', 'text' => $faq['answer']],
+                ];
+            }
+            // 獨立輸出 FAQPage 給該服務（service detail 頁專屬）
+            $schemas[] = [
+                '@context'   => 'https://schema.org',
+                '@type'      => 'FAQPage',
+                'mainEntity' => $faqs,
+            ];
+        }
+        $schemas[] = $svcSchema;
     }
 
     // 3. FAQPage（首頁 + 服務頁）

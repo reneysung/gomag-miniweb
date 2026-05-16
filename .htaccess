@@ -38,6 +38,14 @@ RewriteCond %{HTTP_HOST} !^062051129\.gomag\.com\.tw$ [NC]
 RewriteCond %{HTTP_HOST} !^xusen\.gomag\.com\.tw$ [NC]
 RewriteRule ^(services|cases|testimonials|contact)/?$ site/$1.php?sub=%1 [L,QSA]
 
+# ── Mini-site 服務詳細頁：/services/{slug} → site/service_detail.php?sub=%1&svc_slug=$1 ──
+# 旭森風格：每服務獨立 URL（長尾詞 SEO）。slug 可能含中文字符。
+RewriteCond %{HTTP_HOST} ^([a-z0-9-]+)\.gomag\.com\.tw$ [NC]
+RewriteCond %{HTTP_HOST} !^www\.gomag\.com\.tw$ [NC]
+RewriteCond %{HTTP_HOST} !^062051129\.gomag\.com\.tw$ [NC]
+RewriteCond %{HTTP_HOST} !^xusen\.gomag\.com\.tw$ [NC]
+RewriteRule ^services/([^/?]+)/?$ site/service_detail.php?sub=%1&svc_slug=$1 [L,QSA,B]
+
 # Pretty URL
 RewriteRule ^store/([A-Za-z0-9_-]+)/?$ store.php?sub=$1 [L,QSA]
 RewriteRule ^category/([a-z0-9-]+)/?$ category.php?slug=$1 [L,QSA]

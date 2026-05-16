@@ -57,8 +57,20 @@ require __DIR__ . '/layout_head.php';
         <span class="prosvc-card-num"><?= str_pad((string)($i+1), 2, '0', STR_PAD_LEFT) ?></span>
       </div>
       <div class="prosvc-card-meta">
-        <h3 class="prosvc-card-name"><?= h($svc['name']) ?></h3>
+        <?php $svcDetailUrl = !empty($svc['slug']) ? (siteUrl($sub, 'services') . '/' . rawurlencode($svc['slug'])) : null; ?>
+        <h3 class="prosvc-card-name">
+          <?php if ($svcDetailUrl): ?>
+            <a href="<?= h($svcDetailUrl) ?>" style="color:inherit;text-decoration:none"><?= h($svc['name']) ?></a>
+          <?php else: ?>
+            <?= h($svc['name']) ?>
+          <?php endif; ?>
+        </h3>
         <p class="prosvc-card-desc"><?= h($svc['short_desc'] ?? '') ?></p>
+        <?php if ($svcDetailUrl): ?>
+        <a href="<?= h($svcDetailUrl) ?>" class="prosvc-card-link" style="margin-bottom:8px">
+          了解更多 <span>→</span>
+        </a>
+        <?php endif; ?>
         <?php if($lineUrl): ?>
         <a href="<?= h($lineUrl) ?>" class="prosvc-card-link" target="_blank">
           詢問報價 <span>→</span>
