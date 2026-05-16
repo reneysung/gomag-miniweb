@@ -222,9 +222,9 @@ require_once __DIR__ . '/../includes/layout_head.php';
 
       <div class="form-group-admin">
         <label>主文 <span style="color:#c00">*</span></label>
-        <textarea name="content" rows="14" class="form-control" required
-                  placeholder="支援 HTML。可放標題 <h2>、段落 <p>、列表 <ul><li>、圖片 <img>、引用 <blockquote> 等。"><?= h($item['content'] ?? '') ?></textarea>
-        <div class="hint">建議至少 800-1500 字，避免 thin content。可貼 HTML 或 Quill 編輯器輸出。</div>
+        <textarea name="content" rows="14" class="form-control wysiwyg" required
+                  placeholder="輸入文章主文..."><?= h($item['content'] ?? '') ?></textarea>
+        <div class="hint">建議至少 800-1500 字（避免 thin content）。富文字編輯器，支援標題、清單、圖片、引用等。</div>
       </div>
 
       <div class="grid-3" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
