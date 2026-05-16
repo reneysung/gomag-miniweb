@@ -91,6 +91,7 @@ try {
 
 $pageTitle = getPlatformSetting('main_meta_title', '店家好口碑｜全台在地店家平台');
 $metaDesc  = "匯集 {$totalClients}+ 家全台優質店家：餐飲美食、居家服務、美容美髮、專業服務 — 一站式店家平台。";
+$isHomepage = true;  // 觸發 main/layout_head.php 的 WebSite + SearchAction schema
 
 require_once __DIR__ . '/main/layout_head.php';
 ?>
