@@ -149,14 +149,13 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
   <?php endforeach; ?>
 
   <?php
-  // 該客戶的服務詳細頁（旭森風 /services/{slug}）— 每服務獨立 URL
-  $svcStmt = $db->prepare("SELECT slug FROM services WHERE client_id=? AND is_active=1 AND slug IS NOT NULL AND slug!='' ORDER BY sort_order,id");
-  $svcStmt->execute([$cl['id'] ?? 0]);
+  // 該客戶的服務詳細頁 + 案例詳細頁（旭森風 detail URL）— 每筆獨立
   // 注意 $clients query 沒撈 id（只撈 subdomain/slug/has_minisite/updated_at），改撈 by slug 對應
   $cidStmt = $db->prepare("SELECT id FROM clients WHERE subdomain=? OR slug=? LIMIT 1");
   $cidStmt->execute([$sub, $sub]);
   $cidRow = $cidStmt->fetch();
   if ($cidRow) {
+      // 服務詳細頁
       $svcStmt = $db->prepare("SELECT slug FROM services WHERE client_id=? AND is_active=1 AND slug IS NOT NULL AND slug!='' ORDER BY sort_order,id");
       $svcStmt->execute([$cidRow['id']]);
       foreach ($svcStmt->fetchAll() as $svcRow) {
@@ -170,6 +169,22 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
     <lastmod><?= $lastmod ?></lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
+  </url>
+  <?php }
+      // 案例詳細頁
+      $caseStmt = $db->prepare("SELECT slug FROM cases WHERE client_id=? AND is_active=1 AND slug IS NOT NULL AND slug!='' ORDER BY sort_order,id");
+      $caseStmt->execute([$cidRow['id']]);
+      foreach ($caseStmt->fetchAll() as $caseRow) {
+          $caseSlug = $caseRow['slug'];
+          $caseUrl = (IS_LOCAL || IS_STAGING)
+              ? $miniBase . '/case_detail.php?sub=' . urlencode($sub) . '&case_slug=' . urlencode($caseSlug)
+              : $miniBase . '/cases/' . rawurlencode($caseSlug);
+  ?>
+  <url>
+    <loc><?= htmlspecialchars($caseUrl) ?></loc>
+    <lastmod><?= $lastmod ?></lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.65</priority>
   </url>
   <?php } } ?>
   <?php endforeach; ?>

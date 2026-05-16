@@ -19,6 +19,7 @@ if (!empty($cases)) {
             'area' => $c['area_sqm'] ?? '',
             'before' => $before,
             'after' => $after,
+            'slug' => $c['slug'] ?? '',  // 給 detail 連結用
         ];
     }, array_slice($cases, 0, 9));
 } else {
@@ -123,7 +124,11 @@ require __DIR__ . '/layout_head.php';
         </div>
       </div>
       <div class="proCase-card-meta">
-        <h3 class="proCase-card-title"><?= h($c['title']) ?></h3>
+        <?php $caseDetailUrl = !empty($c['slug']) ? (siteUrl($sub, 'cases') . '/' . rawurlencode($c['slug'])) : null; ?>
+        <h3 class="proCase-card-title">
+          <?php if ($caseDetailUrl): ?><a href="<?= h($caseDetailUrl) ?>" style="color:inherit;text-decoration:none"><?= h($c['title']) ?></a>
+          <?php else: ?><?= h($c['title']) ?><?php endif; ?>
+        </h3>
         <?php if ($c['desc']): ?>
         <p class="proCase-card-desc"><?= h($c['desc']) ?></p>
         <?php endif; ?>
@@ -132,6 +137,9 @@ require __DIR__ . '/layout_head.php';
           <?php if ($c['location']): ?><span>📍 <?= h($c['location']) ?></span><?php endif; ?>
           <?php if ($c['area']): ?><span>📐 <?= h($c['area']) ?> 坪</span><?php endif; ?>
         </div>
+        <?php endif; ?>
+        <?php if ($caseDetailUrl): ?>
+          <div style="margin-top:10px"><a href="<?= h($caseDetailUrl) ?>" style="font-size:.85rem;color:var(--g-accent);text-decoration:none;font-weight:700">查看案例 →</a></div>
         <?php endif; ?>
       </div>
     </article>

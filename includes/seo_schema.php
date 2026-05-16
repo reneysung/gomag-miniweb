@@ -443,6 +443,55 @@ function outputJsonLd(array $site, string $sub, string $pageKey): void {
         $schemas[] = $svcSchema;
     }
 
+    // 2.6 Article schema — 案例詳細頁專屬
+    if ($pageKey === 'case_detail' && !empty($site['_current_case'])) {
+        $c = $site['_current_case'];
+        $caseUrl = getCanonicalUrl($sub, 'cases') . '/' . rawurlencode($c['slug'] ?? '');
+        $artSchema = [
+            '@context'  => 'https://schema.org',
+            '@type'     => 'Article',
+            'headline'  => $c['title'] ?? '',
+            'mainEntityOfPage' => $caseUrl,
+            'author'    => [
+                '@type' => 'Organization',
+                'name'  => $client['brand_name'],
+            ],
+            'publisher' => [
+                '@type' => 'Organization',
+                'name'  => $client['brand_name'],
+            ],
+        ];
+        if (!empty($c['description'])) {
+            $artSchema['description'] = mb_strimwidth(strip_tags($c['description']), 0, 300, '…');
+        }
+        // image：after > before > client hero
+        $imgPath = $c['after_image'] ?? ($c['before_image'] ?? null);
+        if ($imgPath) {
+            // 若 caseThumb 函式可用就用，否則直接拼
+            $thumbed = function_exists('caseThumb') ? caseThumb($imgPath) : $imgPath;
+            $artSchema['image'] = BASE_URL . '/' . $thumbed;
+        } elseif (!empty($client['hero_image_path'])) {
+            $artSchema['image'] = BASE_URL . '/' . $client['hero_image_path'];
+        }
+        // 出版/修改時間
+        if (!empty($c['created_at'])) {
+            $artSchema['datePublished'] = date('c', strtotime($c['created_at']));
+            $artSchema['dateModified']  = date('c', strtotime($c['created_at']));
+        }
+        // logo 給 publisher（Google Article rich result 要 publisher.logo）
+        if (!empty($client['logo_path'])) {
+            $artSchema['publisher']['logo'] = [
+                '@type' => 'ImageObject',
+                'url'   => BASE_URL . '/' . $client['logo_path'],
+            ];
+        }
+        // about：關聯的服務名稱
+        if (!empty($c['svc_name'])) {
+            $artSchema['about'] = $c['svc_name'];
+        }
+        $schemas[] = $artSchema;
+    }
+
     // 3. FAQPage（首頁 + 服務頁）
     if (in_array($pageKey, ['home', 'services'])) {
         $faq = schemaFAQ($services);

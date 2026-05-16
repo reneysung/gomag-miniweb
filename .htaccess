@@ -46,6 +46,13 @@ RewriteCond %{HTTP_HOST} !^062051129\.gomag\.com\.tw$ [NC]
 RewriteCond %{HTTP_HOST} !^xusen\.gomag\.com\.tw$ [NC]
 RewriteRule ^services/([^/?]+)/?$ site/service_detail.php?sub=%1&svc_slug=$1 [L,QSA,B]
 
+# ── Mini-site 案例詳細頁：/cases/{slug} → site/case_detail.php?sub=%1&case_slug=$1 ──
+RewriteCond %{HTTP_HOST} ^([a-z0-9-]+)\.gomag\.com\.tw$ [NC]
+RewriteCond %{HTTP_HOST} !^www\.gomag\.com\.tw$ [NC]
+RewriteCond %{HTTP_HOST} !^062051129\.gomag\.com\.tw$ [NC]
+RewriteCond %{HTTP_HOST} !^xusen\.gomag\.com\.tw$ [NC]
+RewriteRule ^cases/([^/?]+)/?$ site/case_detail.php?sub=%1&case_slug=$1 [L,QSA,B]
+
 # Pretty URL
 RewriteRule ^store/([A-Za-z0-9_-]+)/?$ store.php?sub=$1 [L,QSA]
 RewriteRule ^category/([a-z0-9-]+)/?$ category.php?slug=$1 [L,QSA]
