@@ -403,19 +403,15 @@ textarea.form-control { resize: vertical; min-height: 90px; }
   <?php endif; ?>
 
   <nav>
+    <!-- ═══════ 總覽 ═══════ -->
     <div class="nav-section">總覽</div>
     <a class="nav-item <?= $currentPage === 'index' ? 'active' : '' ?>"
        href="<?= BASE_URL ?>/admin/index.php">
       <span class="icon">📊</span> Dashboard
     </a>
-    <?php if (currentAdmin()['role'] === 'super'): ?>
-    <a class="nav-item <?= $currentPage === 'new_client' ? 'active' : '' ?>"
-       href="<?= BASE_URL ?>/admin/pages/new_client.php">
-      <span class="icon">➕</span> 新增客戶
-    </a>
-    <?php endif; ?>
 
-    <div class="nav-section">網站設定</div>
+    <!-- ═══════ 🛒 基本資料（共用：mini-site + 行銷頁都用）═══════ -->
+    <div class="nav-section">🛒 基本資料</div>
     <a class="nav-item <?= $currentPage === 'settings' ? 'active' : '' ?>"
        href="<?= BASE_URL ?>/admin/pages/settings.php">
       <span class="icon">⚙️</span> 基本資訊
@@ -428,31 +424,13 @@ textarea.form-control { resize: vertical; min-height: 90px; }
        href="<?= BASE_URL ?>/admin/pages/social.php">
       <span class="icon">📱</span> 社群連結
     </a>
-    <a class="nav-item <?= $currentPage === 'seo' ? 'active' : '' ?>"
-       href="<?= BASE_URL ?>/admin/pages/seo.php">
-      <span class="icon">🔍</span> SEO 設定
-    </a>
 
-    <div class="nav-section">內容管理</div>
+    <!-- ═══════ 🌐 小官網內容（mini-site 專屬：{sub}.gomag.com.tw）═══════ -->
+    <div class="nav-section">🌐 小官網內容</div>
     <a class="nav-item <?= in_array($currentPage, ['store_blocks', 'store_block_edit']) ? 'active' : '' ?>"
        href="<?= BASE_URL ?>/admin/pages/store_blocks.php">
       <span class="icon">📦</span> 區塊管理
       <span style="margin-left:auto; background:#FF5A36; color:#fff; font-size:.6rem; font-weight:800; padding:1px 6px; border-radius:20px;">NEW</span>
-    </a>
-    <?php if (($admin['role'] ?? '') === 'super'): ?>
-    <a class="nav-item <?= $currentPage === 'cities' ? 'active' : '' ?>"
-       href="<?= BASE_URL ?>/admin/pages/cities.php">
-      <span class="icon">🌏</span> 城市管理
-      <span style="margin-left:auto; background:#FF5A36; color:#fff; font-size:.6rem; font-weight:800; padding:1px 6px; border-radius:20px;">NEW</span>
-    </a>
-    <?php endif; ?>
-    <a class="nav-item <?= in_array($currentPage, ['services', 'service_edit']) ? 'active' : '' ?>"
-       href="<?= BASE_URL ?>/admin/pages/services.php">
-      <span class="icon">🛠️</span> 服務項目（舊）
-    </a>
-    <a class="nav-item <?= $currentPage === 'faqs' ? 'active' : '' ?>"
-       href="<?= BASE_URL ?>/admin/pages/faqs.php">
-      <span class="icon">❓</span> FAQ 管理
     </a>
     <a class="nav-item <?= in_array($currentPage, ['cases', 'case_edit']) ? 'active' : '' ?>"
        href="<?= BASE_URL ?>/admin/pages/cases.php">
@@ -468,11 +446,19 @@ textarea.form-control { resize: vertical; min-height: 90px; }
       <span style="margin-left:auto; background:#FF5A36; color:#fff; font-size:.6rem; font-weight:800; padding:1px 6px; border-radius:20px;">NEW</span>
     </a>
 
+    <!-- ═══════ 📢 行銷頁設定（主站 /store/{slug}）═══════ -->
+    <div class="nav-section">📢 行銷頁</div>
+    <a class="nav-item <?= $currentPage === 'seo' ? 'active' : '' ?>"
+       href="<?= BASE_URL ?>/admin/pages/seo.php">
+      <span class="icon">🔍</span> SEO 設定
+    </a>
+
+    <!-- ═══════ 📬 客戶互動 ═══════ -->
+    <div class="nav-section">📬 客戶互動</div>
     <a class="nav-item <?= $currentPage === 'leads' ? 'active' : '' ?>"
        href="<?= BASE_URL ?>/admin/pages/leads.php">
       <span class="icon">📬</span> 客戶詢問
       <?php
-      // 未讀詢問 badge
       if ($clientId) {
         try {
           $db2 = getDB();
@@ -487,7 +473,33 @@ textarea.form-control { resize: vertical; min-height: 90px; }
     </a>
 
     <?php if (currentAdmin()['role'] === 'super'): ?>
-    <div class="nav-section">系統管理</div>
+    <!-- ═══════ 🔧 系統管理（super only）═══════ -->
+    <div class="nav-section">🔧 系統管理</div>
+    <a class="nav-item <?= $currentPage === 'new_client' ? 'active' : '' ?>"
+       href="<?= BASE_URL ?>/admin/pages/new_client.php">
+      <span class="icon">➕</span> 新增客戶
+    </a>
+    <a class="nav-item <?= $currentPage === 'cities' ? 'active' : '' ?>"
+       href="<?= BASE_URL ?>/admin/pages/cities.php">
+      <span class="icon">🌏</span> 城市管理
+    </a>
+
+    <!-- ═══════ 📦 舊系統（super only / 已停用、保留資料但建議走「區塊管理」）═══════ -->
+    <details style="margin-top:14px;padding:0 12px">
+      <summary style="cursor:pointer;color:#888;font-size:.72rem;letter-spacing:.04em;padding:6px 0;text-transform:uppercase">📦 舊系統（已停用）</summary>
+      <a class="nav-item <?= in_array($currentPage, ['services', 'service_edit']) ? 'active' : '' ?>"
+         href="<?= BASE_URL ?>/admin/pages/services.php" style="opacity:.6;font-size:.85rem">
+        <span class="icon">🛠️</span> 服務項目（舊）
+      </a>
+      <a class="nav-item <?= $currentPage === 'faqs' ? 'active' : '' ?>"
+         href="<?= BASE_URL ?>/admin/pages/faqs.php" style="opacity:.6;font-size:.85rem">
+        <span class="icon">❓</span> FAQ 管理（舊）
+      </a>
+    </details>
+    <?php endif; ?>
+
+    <?php if (currentAdmin()['role'] === 'super'): ?>
+    <div class="nav-section">🌏 平台級（主站）</div>
     <a class="nav-item <?= $currentPage === 'clients' ? 'active' : '' ?>"
        href="<?= BASE_URL ?>/admin/pages/clients.php">
       <span class="icon">🏪</span> 所有客戶
