@@ -118,9 +118,12 @@ require_once __DIR__ . '/includes/layout_head.php';
     <a href="https://hpanel.hostinger.com/" target="_blank" style="background:#fff;border:1px solid #ffb74d;color:#e65100;padding:6px 14px;border-radius:6px;text-decoration:none;font-size:.85rem;font-weight:700">🔗 開 hPanel</a>
   </div>
   <div style="font-size:.85rem;color:#5d4037;margin-bottom:14px;line-height:1.6">
-    以下客戶已啟用小官網（has_minisite=1）但 hPanel 還沒登記子網域 → 訪問
-    <code>{slug}.gomag.com.tw</code> 會 403 看不到。完成 hPanel 設定後請進該客戶
-    settings 勾「hPanel 子網域已設定」確認。
+    <strong>💡 最簡流程</strong>：
+    <ol style="margin:6px 0 0 18px;line-height:1.7">
+      <li>Chrome 登入 <a href="https://hpanel.hostinger.com/" target="_blank">Hostinger hPanel</a>（保持 Claude extension 連線）</li>
+      <li>跟 Claude 說「幫我建 {slug} 子網域」</li>
+      <li>Claude 5 分鐘自動完成（hPanel 點選 + SSH symlink + DB 標記）</li>
+    </ol>
   </div>
   <div style="background:#fff;border-radius:8px;overflow:hidden;border:1px solid #ffe0b2">
     <table style="width:100%;font-size:.88rem;border-collapse:collapse">
@@ -152,17 +155,21 @@ require_once __DIR__ . '/includes/layout_head.php';
     </table>
   </div>
   <details style="margin-top:14px;font-size:.85rem">
-    <summary style="cursor:pointer;color:#5d4037;font-weight:700">📖 hPanel 設定 SOP（點開看步驟）</summary>
+    <summary style="cursor:pointer;color:#5d4037;font-weight:700">📖 手動 SOP（Claude 不在或想自己做時用）</summary>
     <ol style="margin-top:10px;padding-left:24px;line-height:1.9;color:#5d4037">
-      <li>登入 Hostinger hPanel：<a href="https://hpanel.hostinger.com/" target="_blank">https://hpanel.hostinger.com/</a></li>
-      <li>左側選單 <strong>Domains</strong> → 找 <code>gomag.com.tw</code></li>
-      <li>分頁 <strong>Subdomains</strong> → 點 <strong>Create subdomain</strong></li>
-      <li>Subdomain name 填上方表格的 slug（複製按鈕用）</li>
-      <li><strong>⚠️ Document Root 改成 <code>public_html</code></strong>（去掉預設的 <code>/{slug}</code> 後綴）</li>
-      <li>勾 <strong>Force HTTPS</strong> + <strong>Auto Let's Encrypt SSL</strong></li>
-      <li>等 5-10 分鐘 SSL 自動簽好</li>
+      <li>登入 <a href="https://hpanel.hostinger.com/websites" target="_blank">hPanel Websites</a></li>
+      <li>右上紫色「<strong>新增網站</strong>」→ 選「<strong>客製化 PHP/HTML 網站</strong>」</li>
+      <li>輸入完整子網域（例 <code>{slug}.gomag.com.tw</code>）→ dropdown 點「<strong>Use it</strong>」→「<strong>下一個</strong>」</li>
+      <li>跑出「將您的網域指向 Hostinger」改 NS 頁 → <strong>⚠️ 直接點右上 X 關掉</strong>（不要改 NS）</li>
+      <li>SSH 進主機，把 website docroot 改 symlink：
+        <pre style="margin:6px 0;padding:10px;background:#fff8e1;border-radius:4px;font-size:.82em;overflow-x:auto;">SUB={slug}
+mv ~/domains/$SUB.gomag.com.tw/public_html ~/domains/$SUB.gomag.com.tw/public_html.bak
+ln -s ~/domains/gomag.com.tw/public_html ~/domains/$SUB.gomag.com.tw/public_html</pre>
+      </li>
+      <li>等 5-10 分鐘 Let's Encrypt SSL 自動簽好</li>
       <li>瀏覽器訪問 <code>https://{slug}.gomag.com.tw/</code> 看到 mini-site → 回該客戶 settings 勾「hPanel 子網域已設定」</li>
     </ol>
+    <p style="margin-top:8px;color:#888;font-size:.82em">📖 詳細 SOP：<code>docs/HPANEL_SUBDOMAIN_SOP.md</code></p>
   </details>
 </div>
 <?php endif; ?>
