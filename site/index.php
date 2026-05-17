@@ -787,6 +787,12 @@ if($featured): ?>
 </section>
 <?php endif; ?>
 
+<!-- ══ 5.3 經營者介紹（partial） ═══════════════════════ -->
+<?php require __DIR__ . '/_partial_owner_block.php'; ?>
+
+<!-- ══ 5.4 店家相簿（partial） ═══════════════════════ -->
+<?php require __DIR__ . '/_partial_photos_gallery.php'; ?>
+
 <!-- ══ 5.5 最新專欄 preview（partial）═══════════════════════ -->
 <?php require __DIR__ . '/_partial_column_preview.php'; ?>
 

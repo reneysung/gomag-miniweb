@@ -37,11 +37,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'legacy_store_id'        => trim($_POST['legacy_store_id'] ?? ''),
         'google_maps_embed'      => trim($_POST['google_maps_embed'] ?? ''),
         'google_place_id'        => trim($_POST['google_place_id'] ?? ''),
-        // SEO 欄位
+        // SEO 欄位 — 主站行銷頁 store.php 用
         'store_meta_title'       => trim($_POST['store_meta_title'] ?? ''),
         'store_meta_desc'        => trim($_POST['store_meta_desc'] ?? ''),
         'store_keywords'         => trim($_POST['store_keywords'] ?? ''),
         'store_og_image'         => trim($_POST['store_og_image'] ?? ''),
+        // Mini-site SEO 欄位 — {sub}.gomag.com.tw 用（migration 017）
+        'minisite_meta_title'    => trim($_POST['minisite_meta_title'] ?? '') ?: null,
+        'minisite_meta_desc'     => trim($_POST['minisite_meta_desc'] ?? '') ?: null,
+        'minisite_og_image'      => trim($_POST['minisite_og_image'] ?? '') ?: null,
         // Phase C: Owner block
         'owner_name'             => trim($_POST['owner_name'] ?? ''),
         'owner_intro'            => trim($_POST['owner_intro'] ?? ''),
@@ -476,9 +480,12 @@ while (count($currentTags) < 4) $currentTags[] = '';
 
 <!-- Phase C: 經營者 Owner Block -->
 <div class="card" style="margin-bottom:20px; border:1.5px solid #FF5A36;">
-  <div class="card-header"><h2>👤 經營者資訊（Owner Block）</h2></div>
+  <div class="card-header">
+    <h2>👤 經營者資訊（Owner Block）</h2>
+    <span style="display:inline-block;margin-left:8px;background:#fff3e0;color:#e65100;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:20px">📢 兩邊都顯示</span>
+  </div>
   <div class="card-body">
-    <p class="hint" style="margin-bottom:14px;">顯示在新版店家頁「關於」上方，含圓形頭像 + 名字 + 一行介紹。</p>
+    <p class="hint" style="margin-bottom:14px;">顯示在主站行銷頁 <strong>/store/{slug}</strong> 的「關於」上方，以及 mini-site 首頁。</p>
     <div style="display:grid; grid-template-columns: 100px 1fr; gap:16px; align-items:start;">
       <div>
         <?php if (!empty($client['owner_avatar'])): ?>
@@ -625,12 +632,47 @@ modeRich.addEventListener('click', () => {
 });
 </script>
 
-<!-- ═══════ SEO 設定（行銷頁專用）═══════ -->
-<div class="card" style="margin-bottom:20px; border-left:4px solid #16a34a;">
-  <div class="card-header"><h2>🔍 行銷頁 SEO 設定</h2></div>
+<!-- ═══════ Mini-site SEO 設定（{sub}.gomag.com.tw 專用）═══════ -->
+<?php if (!empty($client['has_minisite'])): ?>
+<div class="card" style="margin-bottom:20px; border-left:4px solid #2563eb;">
+  <div class="card-header"><h2>🌐 Mini-site SEO 設定</h2></div>
   <div class="card-body">
     <p style="font-size:.85rem; color:var(--muted); margin-bottom:14px;">
-      這些設定影響此店家在 Google 搜尋的呈現。留空則自動產生。
+      影響子網域 <code><?= h($client['subdomain'] ?: $client['slug']) ?>.gomag.com.tw</code> 的 Google 呈現。<strong>留空 = 自動用品牌名 + tagline / about_text</strong>。
+    </p>
+
+    <div class="form-group-admin">
+      <label>Meta Title（自訂搜尋標題）</label>
+      <input type="text" name="minisite_meta_title" class="form-control" maxlength="60"
+             placeholder="<?= h($client['brand_name'] ?? '') ?>｜<?= h($client['tagline'] ?? '一句話標語') ?>"
+             value="<?= h($client['minisite_meta_title'] ?? '') ?>">
+      <div class="hint">建議 50-60 字。留空 = 自動「{品牌}｜{tagline}」</div>
+    </div>
+
+    <div class="form-group-admin">
+      <label>Meta Description</label>
+      <textarea name="minisite_meta_desc" class="form-control" rows="2" maxlength="300"
+                placeholder="一句話介紹此 mini-site（120-160 字）"><?= h($client['minisite_meta_desc'] ?? '') ?></textarea>
+      <div class="hint">建議 120-160 字。留空 = 自動用 about_text 前 120 字</div>
+    </div>
+
+    <div class="form-group-admin">
+      <label>Mini-site 社群分享圖 URL</label>
+      <input type="text" name="minisite_og_image" class="form-control"
+             placeholder="https://... 或 uploads/brand/xxx.jpg"
+             value="<?= h($client['minisite_og_image'] ?? '') ?>">
+      <div class="hint">建議 1200×630 px。留空 = 用 Hero 圖</div>
+    </div>
+  </div>
+</div>
+<?php endif; ?>
+
+<!-- ═══════ SEO 設定（行銷頁 /store/{slug} 專用）═══════ -->
+<div class="card" style="margin-bottom:20px; border-left:4px solid #16a34a;">
+  <div class="card-header"><h2>📢 行銷頁 SEO 設定（主站 /store/<?= h($client['slug'] ?? '') ?>）</h2></div>
+  <div class="card-body">
+    <p style="font-size:.85rem; color:var(--muted); margin-bottom:14px;">
+      <strong>⚠️ 只影響主站 <code>/store/<?= h($client['slug'] ?? '') ?></code></strong>，不影響 mini-site 子網域。
     </p>
 
     <div class="form-group-admin">

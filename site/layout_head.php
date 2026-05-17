@@ -12,11 +12,15 @@ $social   = $site['social'];
 $services = $site['services'];
 $seo      = getSeo($site, $pageKey);
 
-$metaTitle = $seo['meta_title'] ?? ($client['brand_name'] . '｜' . ($client['tagline'] ?? ''));
-$metaDesc  = $seo['meta_desc']  ?? ($client['about_text'] ? mb_strimwidth(strip_tags($client['about_text']), 0, 120, '…') : '');
+// Mini-site SEO 優先級：頁面 SEO（service_detail 等預設）> client 自訂 minisite_meta_* > 自動組
+$metaTitle = $seo['meta_title']
+    ?? (!empty($client['minisite_meta_title']) ? $client['minisite_meta_title'] : ($client['brand_name'] . '｜' . ($client['tagline'] ?? '')));
+$metaDesc  = $seo['meta_desc']
+    ?? (!empty($client['minisite_meta_desc']) ? $client['minisite_meta_desc'] : ($client['about_text'] ? mb_strimwidth(strip_tags($client['about_text']), 0, 120, '…') : ''));
 // canonical：呼叫者可預先設定（如 service_detail.php），否則由 pageKey 自動算
 $canonicalUrl = $canonicalUrl ?? getCanonicalUrl($slug, $pageKey);
-$ogImage   = $seo['og_image'] ?? ($client['hero_image_path'] ? BASE_URL . '/' . $client['hero_image_path'] : '');
+$ogImage   = $seo['og_image']
+    ?? (!empty($client['minisite_og_image']) ? (str_starts_with($client['minisite_og_image'], 'http') ? $client['minisite_og_image'] : BASE_URL . '/' . $client['minisite_og_image']) : ($client['hero_image_path'] ? BASE_URL . '/' . $client['hero_image_path'] : ''));
 // LINE URL：line_url 直填 > line_id 自動組 > 沒設則 ''（templates 用 if 判斷）
 $lineUrl = '';
 if (!empty($social['line_url']) && filter_var($social['line_url'], FILTER_VALIDATE_URL)) {
