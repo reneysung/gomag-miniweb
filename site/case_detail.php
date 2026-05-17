@@ -114,13 +114,13 @@ require __DIR__ . '/layout_head.php';
     <div class="grid-2" style="gap:24px">
       <?php if ($beforeImg): ?>
       <figure style="margin:0;border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.1)">
-        <img src="<?= BASE_URL . '/' . h($beforeImg) ?>" alt="施作前" style="width:100%;height:auto;display:block">
+        <img src="<?= BASE_URL . '/' . h($beforeImg) ?>" alt="<?= h($case['title']) ?>・施作前" style="width:100%;height:auto;display:block">
         <figcaption style="padding:12px 16px;background:#fff;font-weight:700;color:var(--g-ink);text-align:center">📷 施作前</figcaption>
       </figure>
       <?php endif; ?>
       <?php if ($afterImg): ?>
       <figure style="margin:0;border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(var(--g-accent-rgb),.2)">
-        <img src="<?= BASE_URL . '/' . h($afterImg) ?>" alt="施作後" style="width:100%;height:auto;display:block">
+        <img src="<?= BASE_URL . '/' . h($afterImg) ?>" alt="<?= h($case['title']) ?>・施作後" style="width:100%;height:auto;display:block">
         <figcaption style="padding:12px 16px;background:var(--g-accent);color:#fff;font-weight:700;text-align:center">✨ 施作後</figcaption>
       </figure>
       <?php endif; ?>
