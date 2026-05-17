@@ -139,6 +139,10 @@ if (IS_PROD) {
     $previewMiniUrl = BASE_URL . '/site/index.php?sub=' . urlencode($previewSub);
 }
 
+// Tab 切換：basic（共用基本） / store（行銷頁專屬） / minisite（小官網專屬）
+$tab = $_GET['tab'] ?? 'basic';
+if (!in_array($tab, ['basic', 'store', 'minisite'])) $tab = 'basic';
+
 require_once __DIR__ . '/../includes/layout_head.php';
 ?>
 
@@ -180,11 +184,44 @@ require_once __DIR__ . '/../includes/layout_head.php';
 </div>
 <?php endif; ?>
 
+<!-- ═══════ Tab 切換 ═══════ -->
+<div style="display:flex;gap:4px;margin-bottom:20px;background:#fff;border-radius:10px;padding:6px;border:1px solid #e5e5e5;box-shadow:0 1px 3px rgba(0,0,0,.04)">
+  <a href="?tab=basic"
+     style="flex:1;text-align:center;padding:11px 16px;border-radius:7px;text-decoration:none;font-weight:700;font-size:.92rem;<?= $tab==='basic'?'background:#0f766e;color:#fff':'color:#666' ?>">
+    🛒 基本資料
+    <div style="font-size:.7rem;opacity:.7;font-weight:500;margin-top:2px"><?= $tab==='basic'?'品牌 / 圖片 / Owner / 相簿 / 關於 / 地址 / 時間':'兩邊共用' ?></div>
+  </a>
+  <a href="?tab=store"
+     style="flex:1;text-align:center;padding:11px 16px;border-radius:7px;text-decoration:none;font-weight:700;font-size:.92rem;<?= $tab==='store'?'background:#16a34a;color:#fff':'color:#666' ?>">
+    📢 行銷頁 SEO
+    <div style="font-size:.7rem;opacity:.7;font-weight:500;margin-top:2px"><?= $tab==='store'?'主站 /store/'.h($client['slug'] ?? '').' 專屬':'主站專屬' ?></div>
+  </a>
+  <?php if (!empty($client['has_minisite'])): ?>
+  <a href="?tab=minisite"
+     style="flex:1;text-align:center;padding:11px 16px;border-radius:7px;text-decoration:none;font-weight:700;font-size:.92rem;<?= $tab==='minisite'?'background:#2563eb;color:#fff':'color:#666' ?>">
+    🌐 小官網 SEO
+    <div style="font-size:.7rem;opacity:.7;font-weight:500;margin-top:2px"><?= $tab==='minisite'?h($client['subdomain'] ?? $client['slug'] ?? '').'.gomag.com.tw 專屬':'小官網專屬' ?></div>
+  </a>
+  <?php endif; ?>
+</div>
+
+<style>
+/* Tab 切換：用 CSS 隱藏不對應 tab 的 cards */
+body[data-current-tab="basic"]    .tab-section[data-tab="store"],
+body[data-current-tab="basic"]    .tab-section[data-tab="minisite"] { display:none; }
+body[data-current-tab="store"]    .tab-section[data-tab="basic"],
+body[data-current-tab="store"]    .tab-section[data-tab="minisite"] { display:none; }
+body[data-current-tab="minisite"] .tab-section[data-tab="basic"],
+body[data-current-tab="minisite"] .tab-section[data-tab="store"] { display:none; }
+</style>
+<script>document.body.setAttribute('data-current-tab', '<?= h($tab) ?>');</script>
+
 <form method="POST" enctype="multipart/form-data">
 <input type="hidden" name="_token" value="<?= csrfToken() ?>">
+<input type="hidden" name="_tab" value="<?= h($tab) ?>">
 
 <!-- ═══════ 平台設定（主站分類、小官網開關、外部官網）═══════ -->
-<div class="card" style="margin-bottom:20px;border-left:4px solid var(--accent);">
+<div class="card tab-section" data-tab="basic" style="margin-bottom:20px;border-left:4px solid var(--accent);">
   <div class="card-header">
     <h2>🌐 平台設定（主站列表 & 子網域）</h2>
   </div>
@@ -280,7 +317,7 @@ require_once __DIR__ . '/../includes/layout_head.php';
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
 
   <!-- 基本資料 -->
-  <div class="card">
+  <div class="card tab-section" data-tab="basic">
     <div class="card-header"><h2>🏢 品牌資料</h2></div>
     <div class="card-body">
       <div class="form-group-admin">
@@ -319,7 +356,7 @@ require_once __DIR__ . '/../includes/layout_head.php';
   </div>
 
   <!-- SEO Local Business 細欄位 -->
-  <div class="card">
+  <div class="card tab-section" data-tab="minisite">
     <div class="card-header"><h2>📍 SEO 本地商家欄位（schema.org）</h2></div>
     <div class="card-body">
       <div class="hint" style="margin-bottom:16px;">
@@ -380,7 +417,7 @@ require_once __DIR__ . '/../includes/layout_head.php';
   </div>
 
   <!-- 圖片上傳 -->
-  <div class="card">
+  <div class="card tab-section" data-tab="basic">
     <div class="card-header"><h2>🖼️ 品牌圖片</h2></div>
     <div class="card-body">
       <div class="form-group-admin">
@@ -425,7 +462,7 @@ while (count($currentStats) < 4) $currentStats[] = ['value'=>'','label'=>''];
 $currentTags = !empty($client['about_tags']) ? json_decode($client['about_tags'], true) : ['','','',''];
 while (count($currentTags) < 4) $currentTags[] = '';
 ?>
-<div class="card" style="margin-bottom:20px;">
+<div class="card tab-section" data-tab="basic" style="margin-bottom:20px;">
   <div class="card-header"><h2>📊 首頁 Hero 統計數字</h2></div>
   <div class="card-body">
     <p style="font-size:.85rem;color:var(--muted);margin-bottom:16px">
@@ -451,7 +488,7 @@ while (count($currentTags) < 4) $currentTags[] = '';
 </div>
 
 <!-- 關於我們標籤 -->
-<div class="card" style="margin-bottom:20px;">
+<div class="card tab-section" data-tab="basic" style="margin-bottom:20px;">
   <div class="card-header"><h2>🏷️ 關於我們 — 亮點標籤</h2></div>
   <div class="card-body">
     <p style="font-size:.85rem;color:var(--muted);margin-bottom:16px">
@@ -467,7 +504,7 @@ while (count($currentTags) < 4) $currentTags[] = '';
 </div>
 
 <!-- 營業時間 -->
-<div class="card" style="margin-bottom:20px;">
+<div class="card tab-section" data-tab="basic" style="margin-bottom:20px;">
   <div class="card-header"><h2>🕐 營業時間</h2></div>
   <div class="card-body">
     <div class="form-group-admin">
@@ -479,7 +516,7 @@ while (count($currentTags) < 4) $currentTags[] = '';
 </div>
 
 <!-- Phase C: 經營者 Owner Block -->
-<div class="card" style="margin-bottom:20px; border:1.5px solid #FF5A36;">
+<div class="card tab-section" data-tab="basic" style="margin-bottom:20px; border:1.5px solid #FF5A36;">
   <div class="card-header">
     <h2>👤 經營者資訊（Owner Block）</h2>
     <span style="display:inline-block;margin-left:8px;background:#fff3e0;color:#e65100;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:20px">📢 兩邊都顯示</span>
@@ -515,7 +552,7 @@ while (count($currentTags) < 4) $currentTags[] = '';
 
 <!-- Phase C: Photo Gallery -->
 <?php $existingPhotos = !empty($client['photos']) ? (json_decode($client['photos'], true) ?: []) : []; ?>
-<div class="card" style="margin-bottom:20px; border:1.5px solid #FF5A36;">
+<div class="card tab-section" data-tab="basic" style="margin-bottom:20px; border:1.5px solid #FF5A36;">
   <div class="card-header"><h2>📷 照片集（Photo Gallery）</h2></div>
   <div class="card-body">
     <p class="hint" style="margin-bottom:14px;">顯示在新版店家頁 Hero 之後，最多前 5 張會以 Airbnb 樣式 grid 呈現。</p>
@@ -537,7 +574,7 @@ while (count($currentTags) < 4) $currentTags[] = '';
 </div>
 
 <!-- 關於我們 -->
-<div class="card" style="margin-bottom:20px;">
+<div class="card tab-section" data-tab="basic" style="margin-bottom:20px;">
   <div class="card-header"><h2>📝 關於我們</h2></div>
   <div class="card-body">
     <div class="form-group-admin">
@@ -549,7 +586,7 @@ while (count($currentTags) < 4) $currentTags[] = '';
 </div>
 
 <!-- 主站行銷頁延伸內容 -->
-<div class="card" style="margin-bottom:20px;border-left:4px solid var(--accent);">
+<div class="card tab-section" data-tab="store" style="margin-bottom:20px;border-left:4px solid var(--accent);">
   <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
     <h2>🎯 主站行銷頁延伸內容（一頁式）</h2>
     <div style="display:inline-flex;gap:0;border:1.5px solid var(--border);border-radius:8px;overflow:hidden">
@@ -634,7 +671,7 @@ modeRich.addEventListener('click', () => {
 
 <!-- ═══════ Mini-site SEO 設定（{sub}.gomag.com.tw 專用）═══════ -->
 <?php if (!empty($client['has_minisite'])): ?>
-<div class="card" style="margin-bottom:20px; border-left:4px solid #2563eb;">
+<div class="card tab-section" data-tab="minisite" style="margin-bottom:20px; border-left:4px solid #2563eb;">
   <div class="card-header"><h2>🌐 Mini-site SEO 設定</h2></div>
   <div class="card-body">
     <p style="font-size:.85rem; color:var(--muted); margin-bottom:14px;">
@@ -668,7 +705,7 @@ modeRich.addEventListener('click', () => {
 <?php endif; ?>
 
 <!-- ═══════ SEO 設定（行銷頁 /store/{slug} 專用）═══════ -->
-<div class="card" style="margin-bottom:20px; border-left:4px solid #16a34a;">
+<div class="card tab-section" data-tab="store" style="margin-bottom:20px; border-left:4px solid #16a34a;">
   <div class="card-header"><h2>📢 行銷頁 SEO 設定（主站 /store/<?= h($client['slug'] ?? '') ?>）</h2></div>
   <div class="card-body">
     <p style="font-size:.85rem; color:var(--muted); margin-bottom:14px;">
@@ -709,7 +746,7 @@ modeRich.addEventListener('click', () => {
 </div>
 
 <!-- Google 地圖 -->
-<div class="card" style="margin-bottom:20px;">
+<div class="card tab-section" data-tab="basic" style="margin-bottom:20px;">
   <div class="card-header"><h2>🗺️ Google 地圖嵌入</h2></div>
   <div class="card-body">
     <div class="form-group-admin">
@@ -731,7 +768,7 @@ modeRich.addEventListener('click', () => {
 </div>
 
 <!-- Google 評價串接 -->
-<div class="card" style="margin-bottom:20px; border-left:4px solid var(--accent);">
+<div class="card tab-section" data-tab="basic" style="margin-bottom:20px; border-left:4px solid var(--accent);">
   <div class="card-header"><h2>🌟 Google 評價</h2></div>
   <div class="card-body">
     <div class="form-group-admin">

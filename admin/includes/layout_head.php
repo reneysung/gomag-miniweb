@@ -410,10 +410,10 @@ textarea.form-control { resize: vertical; min-height: 90px; }
       <span class="icon">📊</span> Dashboard
     </a>
 
-    <!-- ═══════ 🛒 基本資料（共用：mini-site + 行銷頁都用）═══════ -->
-    <div class="nav-section">🛒 基本資料</div>
-    <a class="nav-item <?= $currentPage === 'settings' ? 'active' : '' ?>"
-       href="<?= BASE_URL ?>/admin/pages/settings.php">
+    <!-- ═══════ 🛒 基本資料（共用）═══════ -->
+    <div class="nav-section">🛒 基本資料（兩邊共用）</div>
+    <a class="nav-item <?= ($currentPage === 'settings' && ($_GET['tab'] ?? 'basic') === 'basic') ? 'active' : '' ?>"
+       href="<?= BASE_URL ?>/admin/pages/settings.php?tab=basic">
       <span class="icon">⚙️</span> 基本資訊
     </a>
     <a class="nav-item <?= $currentPage === 'themes' ? 'active' : '' ?>"
@@ -426,7 +426,11 @@ textarea.form-control { resize: vertical; min-height: 90px; }
     </a>
 
     <!-- ═══════ 🌐 小官網內容（mini-site 專屬：{sub}.gomag.com.tw）═══════ -->
-    <div class="nav-section">🌐 小官網內容</div>
+    <div class="nav-section">🌐 小官網（子網域）</div>
+    <a class="nav-item <?= ($currentPage === 'settings' && ($_GET['tab'] ?? '') === 'minisite') ? 'active' : '' ?>"
+       href="<?= BASE_URL ?>/admin/pages/settings.php?tab=minisite">
+      <span class="icon">🌐</span> 小官網 SEO 設定
+    </a>
     <a class="nav-item <?= in_array($currentPage, ['store_blocks', 'store_block_edit']) ? 'active' : '' ?>"
        href="<?= BASE_URL ?>/admin/pages/store_blocks.php">
       <span class="icon">📦</span> 區塊管理
@@ -447,10 +451,14 @@ textarea.form-control { resize: vertical; min-height: 90px; }
     </a>
 
     <!-- ═══════ 📢 行銷頁設定（主站 /store/{slug}）═══════ -->
-    <div class="nav-section">📢 行銷頁</div>
+    <div class="nav-section">📢 行銷頁（主站）</div>
+    <a class="nav-item <?= ($currentPage === 'settings' && ($_GET['tab'] ?? '') === 'store') ? 'active' : '' ?>"
+       href="<?= BASE_URL ?>/admin/pages/settings.php?tab=store">
+      <span class="icon">📢</span> 行銷頁 SEO + 內容
+    </a>
     <a class="nav-item <?= $currentPage === 'seo' ? 'active' : '' ?>"
        href="<?= BASE_URL ?>/admin/pages/seo.php">
-      <span class="icon">🔍</span> SEO 設定
+      <span class="icon">🔍</span> 進階 SEO（per page）
     </a>
 
     <!-- ═══════ 📬 客戶互動 ═══════ -->
