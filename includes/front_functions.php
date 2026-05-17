@@ -68,6 +68,33 @@ function siteUrl(string $sub, string $page = ''): string {
 }
 
 /**
+ * 客戶公開 URL：依 has_minisite / external_website_url 決定卡片連結目的地
+ * 主站列表頁（index / category / city）的客戶卡片用這個 helper 統一邏輯：
+ *   1. has_minisite=1 → mini-site 首頁（直接連，省一跳，PageRank 直接傳遞）
+ *   2. external_website_url 設了 → 外部官網
+ *   3. fallback → 主站 /store/{sub}（has_minisite=0 客戶用）
+ *
+ * @param array $cl clients 表 row（需 has_minisite / external_website_url / subdomain / slug）
+ */
+function clientPublicUrl(array $cl): string {
+    $sub = $cl['subdomain'] ?: $cl['slug'];
+    // 1. mini-site 優先
+    if (!empty($cl['has_minisite'])) {
+        return (IS_LOCAL || IS_STAGING)
+            ? BASE_URL . '/site/index.php?sub=' . urlencode($sub)
+            : 'https://' . $sub . '.' . MINISITE_DOMAIN . '/';
+    }
+    // 2. 外部官網
+    if (!empty($cl['external_website_url']) && filter_var($cl['external_website_url'], FILTER_VALIDATE_URL)) {
+        return $cl['external_website_url'];
+    }
+    // 3. 主站 store.php
+    return (IS_LOCAL || IS_STAGING)
+        ? BASE_URL . '/store.php?sub=' . urlencode($sub)
+        : 'https://www.gomag.com.tw/store/' . urlencode($sub);
+}
+
+/**
  * 依子網域載入完整前台資料
  * 查 clients.subdomain 欄位（新架構）
  * 如果找不到則 fallback 到 clients.slug（相容舊資料）
@@ -123,7 +150,7 @@ function loadSiteData(string $sub): array {
     $cases = $ca->fetchAll();
 
     // 評價
-    $te = $db->prepare('SELECT t.*, s.name AS svc_name FROM testimonials t LEFT JOIN services s ON t.service_id=s.id WHERE t.client_id=? AND t.is_active=1 ORDER BY t.sort_order,t.id');
+    $te = $db->prepare('SELECT t.*, s.name AS svc_name, s.slug AS svc_slug FROM testimonials t LEFT JOIN services s ON t.service_id=s.id WHERE t.client_id=? AND t.is_active=1 ORDER BY t.sort_order,t.id');
     $te->execute([$cid]);
     $testimonials = $te->fetchAll();
 

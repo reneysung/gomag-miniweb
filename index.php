@@ -2,6 +2,7 @@
 // index.php  ─  主站 www.gomag.com.tw 首頁
 require_once __DIR__ . '/includes/config.php';
 require_once __DIR__ . '/includes/helpers.php';
+require_once __DIR__ . '/includes/front_functions.php';
 
 $db = getDB();
 
@@ -247,7 +248,7 @@ require_once __DIR__ . '/main/layout_head.php';
   <div class="g-store-grid">
     <?php foreach ($featuredClients as $cl):
       $heroImg = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
-      $linkUrl = BASE_URL . '/store.php?sub=' . urlencode($cl['subdomain'] ?? $cl['slug']);
+      $linkUrl = clientPublicUrl($cl);
     ?>
     <a class="g-store-card" href="<?= $linkUrl ?>">
       <div class="g-store-img" <?= $heroImg ? 'style="background-image:url(\''.$heroImg.'\')"' : '' ?>>
@@ -283,7 +284,7 @@ require_once __DIR__ . '/main/layout_head.php';
   <div class="g-store-grid">
     <?php foreach ($newThisMonth as $cl):
       $heroImg = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
-      $linkUrl = BASE_URL . '/store.php?sub=' . urlencode($cl['subdomain'] ?? $cl['slug']);
+      $linkUrl = clientPublicUrl($cl);
       $daysAgo = (int)((time() - strtotime($cl['created_at'])) / 86400);
       $timeLabel = $daysAgo == 0 ? '今天' : ($daysAgo == 1 ? '昨天' : "{$daysAgo} 天前");
     ?>

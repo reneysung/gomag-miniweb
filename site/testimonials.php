@@ -111,7 +111,13 @@ require __DIR__ . '/layout_head.php';
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
               <div style="color:#f4a611;font-size:.95rem;letter-spacing:1px"><?= str_repeat('★', (int)($t['rating'] ?? 5)) ?></div>
               <?php if($t['svc_name']): ?>
-                <span style="background:rgba(var(--g-ink-rgb),.08);color:var(--g-ink);font-size:.7rem;font-weight:700;padding:2px 10px;border-radius:12px"><?= h($t['svc_name']) ?></span>
+                <?php if (!empty($t['svc_slug'])): $_svcUrl = siteUrl($sub, 'services') . '/' . rawurlencode($t['svc_slug']); ?>
+                  <a href="<?= h($_svcUrl) ?>" style="background:rgba(var(--g-ink-rgb),.08);color:var(--g-ink);font-size:.7rem;font-weight:700;padding:2px 10px;border-radius:12px;text-decoration:none;transition:background .2s"
+                     onmouseover="this.style.background='rgba(var(--g-accent-rgb),.15)'"
+                     onmouseout="this.style.background='rgba(var(--g-ink-rgb),.08)'"><?= h($t['svc_name']) ?> →</a>
+                <?php else: ?>
+                  <span style="background:rgba(var(--g-ink-rgb),.08);color:var(--g-ink);font-size:.7rem;font-weight:700;padding:2px 10px;border-radius:12px"><?= h($t['svc_name']) ?></span>
+                <?php endif; ?>
               <?php endif; ?>
             </div>
 
