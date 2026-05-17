@@ -100,8 +100,13 @@ require __DIR__ . '/layout_head.php';
         <div class="proRev-card-avatar"><?= h(mb_substr($t['reviewer_name'], 0, 1)) ?></div>
         <div>
           <div class="proRev-card-name"><?= h($t['reviewer_name']) ?></div>
-          <?php if (!empty($t['service_name'])): ?>
-          <div class="proRev-card-svc"><?= h($t['service_name']) ?></div>
+          <?php $_svcName = $t['svc_name'] ?? $t['service_name'] ?? ''; ?>
+          <?php if ($_svcName): ?>
+            <?php if (!empty($t['svc_slug'])): $_svcUrl = siteUrl($sub ?? $slug, 'services') . '/' . rawurlencode($t['svc_slug']); ?>
+              <div class="proRev-card-svc"><a href="<?= h($_svcUrl) ?>" style="color:inherit;text-decoration:none;border-bottom:1px dashed currentColor"><?= h($_svcName) ?></a></div>
+            <?php else: ?>
+              <div class="proRev-card-svc"><?= h($_svcName) ?></div>
+            <?php endif; ?>
           <?php endif; ?>
         </div>
       </div>
