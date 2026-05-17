@@ -8,52 +8,11 @@
  */
 $photos = foodPhotoSet();
 
-// DB 沒 services 就用業種預設菜單（4 個分類 × 3-4 道菜，無價格）
+// 不再 hardcode 假菜單 — DB 空 → 顯示「整理中」
+$menu = [];
 if (!empty($services)) {
-    // DB 有 → 全部歸到「主廚精選」一類
     $menu = [
         ['title' => '主廚精選', 'subtitle' => 'Chef\'s Selection', 'cover' => $photos['fire'], 'items' => array_map(fn($s) => ['name' => $s['name'], 'desc' => $s['short_desc'] ?? ''], $services)],
-    ];
-} else {
-    // 預設牛排館式菜單
-    $menu = [
-        [
-            'title' => '開胃前菜', 'subtitle' => 'STARTERS',
-            'cover' => $photos['table'],
-            'items' => [
-                ['name' => '酥皮巧達濃湯', 'desc' => '濃郁香純，手工酥皮現烤，紮實食材一碗到底'],
-                ['name' => '凱薩沙拉', 'desc' => '羅曼生菜・帕馬森起司・酥脆麵包丁・自製凱薩醬'],
-                ['name' => '香蒜法式麵包', 'desc' => '法國麵包 × 大蒜奶油 × 義式香料，烤至金黃酥脆'],
-            ],
-        ],
-        [
-            'title' => '招牌主餐', 'subtitle' => 'SIGNATURES',
-            'cover' => $photos['fire'],
-            'items' => [
-                ['name' => '招牌沙朗牛排', 'desc' => '美國 Choice 級頂級沙朗，炭火直烤鎖住肉汁'],
-                ['name' => '菲力牛排', 'desc' => '嫩到入口即化的牛肉精華，搭配主廚特製醬汁'],
-                ['name' => '海陸雙拼', 'desc' => '頂級牛排 + 鮮蝦組合，附湯 / 沙拉吧 / 飲料'],
-                ['name' => '炭烤豬肋排', 'desc' => '慢烤 8 小時，BBQ 醬汁刷烤，骨肉一拉就分離'],
-            ],
-        ],
-        [
-            'title' => '配餐附餐', 'subtitle' => 'SIDES',
-            'cover' => $photos['meat'],
-            'items' => [
-                ['name' => '松露薯泥', 'desc' => '北海道馬鈴薯 × 黑松露油，綿密香氣四溢'],
-                ['name' => '炙烤季節時蔬', 'desc' => '當季新鮮蔬菜，淋橄欖油與海鹽輕烤'],
-                ['name' => '奶油菠菜', 'desc' => '法式奶油醬汁慢燉，清甜滑順'],
-            ],
-        ],
-        [
-            'title' => '甜點 · 飲品', 'subtitle' => 'DESSERTS & DRINKS',
-            'cover' => $photos['wine'],
-            'items' => [
-                ['name' => '經典提拉米蘇', 'desc' => '義式手指餅乾浸濃縮咖啡，馬斯卡彭起司層疊'],
-                ['name' => '熔岩巧克力蛋糕', 'desc' => '比利時 70% 巧克力，刀劃開巧克力醬流瀉而出'],
-                ['name' => '紅酒 · 雞尾酒', 'desc' => '專業侍酒師選酒，搭配每道料理的最佳組合'],
-            ],
-        ],
     ];
 }
 
@@ -110,6 +69,20 @@ $heroImg = !empty($client['hero_image_path']) ? BASE_URL . '/' . h($client['hero
     <?php endforeach; ?>
   </div>
 </nav>
+<?php endif; ?>
+
+<!-- 空狀態：menu 空時顯示「整理中」 -->
+<?php if (empty($menu)): ?>
+<section style="padding:80px 20px;background:#0f0c0a;color:rgba(245,230,200,.7)">
+  <div style="max-width:600px;margin:0 auto;padding:48px 24px;text-align:center;background:rgba(245,230,200,.04);border:1px solid rgba(245,230,200,.15);border-radius:14px">
+    <div style="font-size:3rem;margin-bottom:14px">🍽️</div>
+    <h3 style="font-size:1.2rem;font-weight:600;color:#f5e6c8;margin-bottom:8px;font-family:'Cormorant Garamond',serif">菜單整理中</h3>
+    <p style="color:rgba(245,230,200,.6);font-size:.95rem;margin-bottom:24px">最新菜單與套餐優惠正在製作中，歡迎來電訂位諮詢。</p>
+    <?php if (!empty($client['phone'])): ?>
+      <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$client['phone'])) ?>" style="display:inline-block;padding:12px 28px;background:#f5e6c8;color:#0f0c0a;border-radius:0;text-decoration:none;font-weight:600;letter-spacing:.1em">📞 訂位 <?= h($client['phone']) ?></a>
+    <?php endif; ?>
+  </div>
+</section>
 <?php endif; ?>
 
 <!-- ══ Menu Categories ═══════════════════════════════════════════════ -->

@@ -8,18 +8,7 @@
  */
 $photos = foodPhotoSet();
 $ts = $site['testimonials'] ?? [];
-
-// DB 沒 testimonials 就用業種預設食客評價
-if (empty($ts)) {
-    $ts = [
-        ['reviewer_name' => '陳小姐', 'rating' => 5, 'content' => '從早餐到宵夜，每次來都不踩雷！主廚的招牌沙朗真的太誘人，肉質、火候都到位。', 'service_name' => null],
-        ['reviewer_name' => '王先生', 'rating' => 5, 'content' => '帶長輩來慶生，環境氣氛、服務都讓人感到放鬆。父親特別喜歡那道松露薯泥。', 'service_name' => null],
-        ['reviewer_name' => 'Linda',  'rating' => 5, 'content' => '提拉米蘇是這幾年吃過最好的版本！咖啡香氣與起司層次都很完美。', 'service_name' => null],
-        ['reviewer_name' => '李同學', 'rating' => 5, 'content' => '價格實在、份量誠意十足，吃飽吃好不負擔。學生族群推薦的必吃。', 'service_name' => null],
-        ['reviewer_name' => '林經理', 'rating' => 5, 'content' => '商業午餐選擇，品項齊全又上菜快速，談公事也不用擔心冷場。', 'service_name' => null],
-        ['reviewer_name' => '黃太太', 'rating' => 5, 'content' => '帶小朋友來不用擔心吵到別桌，員工對小孩很友善。會再回訪。', 'service_name' => null],
-    ];
-}
+// 不再 hardcode 假評價 — DB 空 → 顯示「整理中」
 
 require __DIR__ . '/layout_head.php';
 ?>
@@ -59,6 +48,19 @@ body { background: var(--dine-bg); color: var(--dine-cream); }
     <p class="dinetes-tagline">真實食客的味蕾記憶</p>
   </div>
 </section>
+
+<?php if (empty($ts)): ?>
+<section style="padding:80px 20px;background:#0f0c0a;color:rgba(245,230,200,.7)">
+  <div style="max-width:600px;margin:0 auto;padding:48px 24px;text-align:center;background:rgba(245,230,200,.04);border:1px solid rgba(245,230,200,.15);border-radius:14px">
+    <div style="font-size:3rem;margin-bottom:14px">⭐</div>
+    <h3 style="font-size:1.2rem;font-weight:600;color:#f5e6c8;margin-bottom:8px;font-family:'Cormorant Garamond',serif">食客之聲整理中</h3>
+    <p style="color:rgba(245,230,200,.6);font-size:.95rem;margin-bottom:24px">期待與您共享美好餐桌。</p>
+    <?php if (!empty($client['phone'])): ?>
+      <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$client['phone'])) ?>" style="display:inline-block;padding:12px 28px;background:#f5e6c8;color:#0f0c0a;border-radius:0;text-decoration:none;font-weight:600;letter-spacing:.1em">📞 訂位 <?= h($client['phone']) ?></a>
+    <?php endif; ?>
+  </div>
+</section>
+<?php endif; ?>
 
 <!-- ══ 2. 大引言 Featured Quote ════════════════════════════════════ -->
 <?php $headline = $ts[0] ?? null; if ($headline): ?>
