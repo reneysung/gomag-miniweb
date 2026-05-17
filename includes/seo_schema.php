@@ -160,36 +160,14 @@ function schemaLocalBusiness(array $client, array $social, array $services, ?arr
     if (!empty($social['line_url']))     $sameAs[] = $social['line_url'];
     if ($sameAs) $schema['sameAs'] = $sameAs;
 
-    // 服務項目（hasOfferCatalog）
-    if ($services) {
-        $offers = [];
-        foreach ($services as $svc) {
-            $offer = [
-                '@type'       => 'Offer',
-                'itemOffered' => [
-                    '@type'       => 'Service',
-                    'name'        => $svc['name'],
-                    'description' => $svc['short_desc'] ?? '',
-                ],
-            ];
-            if (!empty($svc['price_text'])) {
-                $offer['itemOffered']['offers'] = [
-                    '@type'         => 'Offer',
-                    'priceSpecification' => [
-                        '@type' => 'UnitPriceSpecification',
-                        'priceCurrency' => 'TWD',
-                        'description'   => $svc['price_text'],
-                    ],
-                ];
-            }
-            $offers[] = $offer;
-        }
-        $schema['hasOfferCatalog'] = [
-            '@type'           => 'OfferCatalog',
-            'name'            => $client['brand_name'] . '服務項目',
-            'itemListElement' => $offers,
-        ];
-    }
+    // ── 服務項目 hasOfferCatalog 已移除 ──
+    // 原因：LocalBusiness 同時帶 offers + review + aggregateRating 會觸發
+    // Google 的 Product schema 嚴格規則檢查（self-serving review 警告）。
+    // 拿掉 hasOfferCatalog 後不會少 SEO 信號 — 服務清單已在：
+    //   1. services 頁的 ItemList schema（schemaServiceList()）
+    //   2. service detail 頁的 Service schema（schemaServiceDetail()）
+    // GSC 報告 wnc_10030260 對應的 review/aggregateRating 警告由此解。
+    // 餐飲 Restaurant 的 hasMenu 保留 — Menu schema 不算 offers、不觸發 Product 規則。
 
     // ── hasMenu（餐飲業 Restaurant 專屬，schema.org Menu type）──
     // Google rich result：在 SERP 直接顯示「{店家} 菜單」卡片，含菜名 / 價格
