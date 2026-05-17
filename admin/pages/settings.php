@@ -33,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'about_text'             => trim($_POST['about_text'] ?? ''),
         'landing_extra_content'  => trim($_POST['landing_extra_content'] ?? ''),
         'has_minisite'           => isset($_POST['has_minisite']) ? 1 : 0,
+        'subdomain_provisioned'  => isset($_POST['subdomain_provisioned']) ? 1 : 0,
         'legacy_store_id'        => trim($_POST['legacy_store_id'] ?? ''),
         'google_maps_embed'      => trim($_POST['google_maps_embed'] ?? ''),
         'google_place_id'        => trim($_POST['google_place_id'] ?? ''),
@@ -97,6 +98,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($aboutTags) {
         $fields['about_tags'] = json_encode($aboutTags, JSON_UNESCAPED_UNICODE);
+    }
+
+    // 偵測 subdomain_provisioned 從 0 → 1 的時刻，記錄 provisioned_at
+    $oldProvisioned = (int)$db->query("SELECT subdomain_provisioned FROM clients WHERE id=" . (int)$clientId)->fetchColumn();
+    if ($fields['subdomain_provisioned'] == 1 && $oldProvisioned == 0) {
+        $fields['subdomain_provisioned_at'] = date('Y-m-d H:i:s');
     }
 
     $sets = implode(', ', array_map(fn($k) => "`$k` = :$k", array_keys($fields)));
@@ -217,6 +224,43 @@ require_once __DIR__ . '/../includes/layout_head.php';
         ☐ 不啟用 → 子網域自動跳到外部官網或主站行銷頁
       </div>
     </div>
+
+    <!-- hPanel 子網域已設定旗標 -->
+    <?php if (!empty($client['has_minisite'])): ?>
+    <div class="form-group-admin" style="background:<?= !empty($client['subdomain_provisioned']) ? '#e8f5e9' : '#fff3e0' ?>;padding:14px;border-radius:8px;border:1.5px solid <?= !empty($client['subdomain_provisioned']) ? '#a5d6a7' : '#ffcc80' ?>;margin-top:10px;">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;">
+        <input type="checkbox" name="subdomain_provisioned" value="1"
+               <?= !empty($client['subdomain_provisioned']) ? 'checked' : '' ?>
+               style="width:20px;height:20px;cursor:pointer;">
+        <span><?= !empty($client['subdomain_provisioned']) ? '✅ hPanel 子網域已設定 + SSL 已簽' : '⚠️ Hostinger hPanel 子網域 + SSL 尚未設定' ?></span>
+      </label>
+      <?php if (empty($client['subdomain_provisioned'])):
+        $_sub = $client['subdomain'] ?: $client['slug'];
+      ?>
+      <div class="hint" style="margin-top:10px;margin-left:30px;line-height:1.7;">
+        <strong>子網域尚未設定 → 訪問 <code><?= h($_sub) ?>.gomag.com.tw</code> 會 403 看不到 mini-site</strong>
+        <ol style="margin-top:8px;padding-left:20px;">
+          <li>登入 <a href="https://hpanel.hostinger.com/" target="_blank">Hostinger hPanel</a></li>
+          <li>左側選單 <strong>Domains</strong> → 找 gomag.com.tw</li>
+          <li>分頁 <strong>Subdomains</strong> → 點 <strong>Create subdomain</strong></li>
+          <li>Subdomain 填 <code><?= h($_sub) ?></code></li>
+          <li>Document Root 改成 <code>public_html</code>（去掉預設的 /<?= h($_sub) ?> 後綴）</li>
+          <li>勾 <strong>Force HTTPS</strong> + <strong>Auto Let's Encrypt SSL</strong></li>
+          <li>等 5-10 分鐘 SSL 自動簽好</li>
+          <li>訪問 <code>https://<?= h($_sub) ?>.gomag.com.tw/</code> 確認 OK 後 ☑ 勾上面打勾框並儲存</li>
+        </ol>
+        <button type="button" onclick="navigator.clipboard.writeText('<?= h($_sub) ?>').then(()=>this.textContent='✓ 已複製')" style="margin-top:8px;padding:6px 14px;background:#fff;border:1px solid #ccc;border-radius:6px;cursor:pointer;font-size:.85rem">📋 複製子網域字串「<?= h($_sub) ?>」</button>
+      </div>
+      <?php else: ?>
+      <div class="hint" style="margin-top:6px;margin-left:30px;">
+        子網域已上線：<a href="https://<?= h($client['subdomain'] ?: $client['slug']) ?>.gomag.com.tw/" target="_blank">https://<?= h($client['subdomain'] ?: $client['slug']) ?>.gomag.com.tw/</a>
+        <?php if (!empty($client['subdomain_provisioned_at'])): ?>
+          <br><span style="color:#666;font-size:.85rem">設定日期：<?= date('Y/m/d', strtotime($client['subdomain_provisioned_at'])) ?></span>
+        <?php endif; ?>
+      </div>
+      <?php endif; ?>
+    </div>
+    <?php endif; ?>
 
     <!-- 外部官網 -->
     <div class="form-group-admin" style="margin-top:10px;">
