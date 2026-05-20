@@ -95,6 +95,20 @@ function clientPublicUrl(array $cl): string {
 }
 
 /**
+ * 主站行銷頁 URL（always /store/{slug}）— 給 directory 卡片用
+ * 設計策略：主站目錄 / 縣市頁 / 分類頁 / 搜尋頁的卡片連結，永遠指向行銷頁。
+ * 小官網（mini-site）是獨立品牌入口，只有打網址或從 Google 進來的人才會看到。
+ *
+ * 跟 clientPublicUrl 的差別：本 helper 不管 has_minisite 一律回 /store/{slug}。
+ */
+function clientStoreUrl(array $cl): string {
+    $sub = $cl['subdomain'] ?: $cl['slug'];
+    return (IS_LOCAL || IS_STAGING)
+        ? BASE_URL . '/store.php?sub=' . urlencode($sub)
+        : 'https://www.gomag.com.tw/store/' . urlencode($sub);
+}
+
+/**
  * 依子網域載入完整前台資料
  * 查 clients.subdomain 欄位（新架構）
  * 如果找不到則 fallback 到 clients.slug（相容舊資料）
@@ -292,4 +306,41 @@ function caseThumb(string $path): string {
         return $imgs ? $path . '/' . basename($imgs[0]) : '';
     }
     return $path;
+}
+
+/**
+ * 案例地區頁對映 — mini-site /cases/{region} 用
+ * key = URL slug；prefix = case.location 開頭字串（DB 統一用「台」不用「臺」）
+ * 加新地區：這裡加一筆 + .htaccess 的 (taichung|changhua) allowlist 同步加。
+ */
+function caseRegionMap(): array {
+    return [
+        'taichung' => ['label' => '台中', 'prefix' => '台中'],
+        'changhua' => ['label' => '彰化', 'prefix' => '彰化'],
+    ];
+}
+
+/** 從 case location 推斷地區 slug；無對映回 '' */
+function caseRegionSlug(string $location): string {
+    $location = trim($location);
+    if ($location === '') return '';
+    foreach (caseRegionMap() as $slug => $r) {
+        if (mb_strpos($location, $r['prefix']) === 0) return $slug;
+    }
+    return '';
+}
+
+/**
+ * 一組案例中實際出現的地區 slug（依 caseRegionMap 順序），給切換列 / sitemap 用
+ * @param array $cases loadSiteData()['cases']
+ * @return string[] 例 ['taichung','changhua']
+ */
+function caseRegionsPresent(array $cases): array {
+    $present = [];
+    foreach ($cases as $c) {
+        $r = caseRegionSlug($c['location'] ?? '');
+        if ($r && !in_array($r, $present, true)) $present[] = $r;
+    }
+    // 依 caseRegionMap 宣告順序排序
+    return array_values(array_filter(array_keys(caseRegionMap()), fn($s) => in_array($s, $present, true)));
 }

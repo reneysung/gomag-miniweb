@@ -25,6 +25,48 @@ if (!empty($social['line_url']) && filter_var($social['line_url'], FILTER_VALIDA
     if (preg_match('/^[a-zA-Z0-9_\-]+$/', $rawId)) $lineUrl = 'https://line.me/R/ti/p/@' . $rawId;
 }
 
+// ── 地區案例頁 /cases/{region}（台中 / 彰化 SEO 著陸頁）────────────────
+// 由 .htaccess 規則帶入 ?region=taichung|changhua。下游模板共用 $site['cases']。
+$caseAllRegions  = caseRegionsPresent($site['cases'] ?? []);  // 過濾前的全部地區（給切換列）
+$caseRegion      = strtolower(trim($_GET['region'] ?? ''));
+$caseRegionLabel = '';                 // 模板判斷是否地區模式：'' = 全部案例
+$caseHeroTitle   = '';                 // 地區模式 hero H1（給 cases_service.php 用）
+$caseHeroSub     = '';
+if ($caseRegion !== '') {
+    $regionMap = caseRegionMap();
+    if (!isset($regionMap[$caseRegion])) { http_response_code(404); die('找不到該地區'); }
+    $caseRegionLabel = $regionMap[$caseRegion]['label'];
+
+    // 只留該地區案例
+    $site['cases'] = array_values(array_filter(
+        $site['cases'] ?? [],
+        fn($c) => caseRegionSlug($c['location'] ?? '') === $caseRegion
+    ));
+
+    // 業務名詞：清潔公司 → 清潔（去掉法人/組織尾綴）
+    $bizNoun = preg_replace('/(股份有限公司|有限公司|公司|工作室|事務所|工坊|團隊|商行|企業社)$/u', '', (string)($client['industry'] ?? ''));
+    if ($bizNoun === '') $bizNoun = '清潔';
+    $brand = $client['brand_name'] ?? '';
+
+    // SEO 覆寫（layout_head 透過 getSeo($site,'cases') 讀）
+    $seoTitle = "{$caseRegionLabel}{$bizNoun}案例｜{$brand}";
+    $seoDesc  = "{$brand}{$caseRegionLabel}地區{$bizNoun}施工實績：裝潢細清、石材晶化、地毯清洗、地板打蠟保養，真實 Before／After 對比案例參考。免費到府估價。";
+    $site['seo']['cases'] = [
+        'meta_title' => $seoTitle,
+        'meta_desc'  => $seoDesc,
+        'og_title'   => $seoTitle,
+        'og_image'   => $site['seo']['cases']['og_image'] ?? '',
+    ];
+
+    // canonical 指向地區頁本身
+    $canonicalUrl = (IS_LOCAL || IS_STAGING)
+        ? BASE_URL . '/site/cases.php?sub=' . urlencode($sub) . '&region=' . urlencode($caseRegion)
+        : siteUrl($sub, 'cases') . '/' . $caseRegion;
+
+    $caseHeroTitle = "{$caseRegionLabel}{$bizNoun}案例";
+    $caseHeroSub   = "{$brand} · {$caseRegionLabel}地區施工實績，真實 Before／After";
+}
+
 $ind = $client['industry'] ?? '';
 $isFood = (bool)preg_match('/(餐|食|料理|咖啡|甜點|甜品|烘焙|燒肉|牛排|火鍋|鍋物|壽司|麵|飯|披薩|拉麵|烤|飲料|手搖|茶飲|甜|蛋糕|麵包|食坊|食堂|宵夜)/u', $ind);
 $isDesign = !$isFood && (bool)preg_match('/(室內設計|室內裝修|室內裝潢|空間設計|空間規劃|裝潢設計|建築設計|景觀設計|商空設計|店面設計|室內空間)/u', $ind);

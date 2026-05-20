@@ -46,6 +46,14 @@ RewriteCond %{HTTP_HOST} !^062051129\.gomag\.com\.tw$ [NC]
 RewriteCond %{HTTP_HOST} !^xusen\.gomag\.com\.tw$ [NC]
 RewriteRule ^services/([^/?]+)/?$ site/service_detail.php?sub=%1&svc_slug=$1 [L,QSA,B]
 
+# ── Mini-site 案例地區頁：/cases/taichung|changhua → site/cases.php?sub=%1&region=$1 ──
+# 必須放在下方 /cases/{slug} 規則之前，否則 taichung/changhua 會被當成 case slug 進 case_detail
+RewriteCond %{HTTP_HOST} ^([a-z0-9-]+)\.gomag\.com\.tw$ [NC]
+RewriteCond %{HTTP_HOST} !^www\.gomag\.com\.tw$ [NC]
+RewriteCond %{HTTP_HOST} !^062051129\.gomag\.com\.tw$ [NC]
+RewriteCond %{HTTP_HOST} !^xusen\.gomag\.com\.tw$ [NC]
+RewriteRule ^cases/(taichung|changhua)/?$ site/cases.php?sub=%1&region=$1 [L,QSA]
+
 # ── Mini-site 案例詳細頁：/cases/{slug} → site/case_detail.php?sub=%1&case_slug=$1 ──
 RewriteCond %{HTTP_HOST} ^([a-z0-9-]+)\.gomag\.com\.tw$ [NC]
 RewriteCond %{HTTP_HOST} !^www\.gomag\.com\.tw$ [NC]

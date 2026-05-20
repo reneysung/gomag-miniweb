@@ -108,7 +108,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
   </url>
   <?php endforeach; ?>
 
-  <!-- 各客戶行銷頁（所有客戶都有）-->
+  <!-- 各客戶行銷頁（所有客戶都有；有 mini-site 的客戶 mini-site 在下方獨立列） -->
   <?php foreach ($clients as $cl):
       $sub = $cl['subdomain'] ?: $cl['slug'];
       $lastmod = date('Y-m-d', strtotime($cl['updated_at']));
@@ -187,6 +187,25 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
     <priority>0.65</priority>
   </url>
   <?php }
+      // 案例地區頁（/cases/taichung|changhua）— 只在案例橫跨 2+ 地區時收錄，避免與 /cases 重複
+      $caseLocStmt = $db->prepare("SELECT location FROM cases WHERE client_id=? AND is_active=1");
+      $caseLocStmt->execute([$cidRow['id']]);
+      $caseLocs = array_map(fn($r) => ['location' => $r['location']], $caseLocStmt->fetchAll());
+      $caseRegions = caseRegionsPresent($caseLocs);
+      if (count($caseRegions) > 1) {
+          foreach ($caseRegions as $rSlug) {
+              $regionUrl = (IS_LOCAL || IS_STAGING)
+                  ? $miniBase . '/cases.php?sub=' . urlencode($sub) . '&region=' . urlencode($rSlug)
+                  : $miniBase . '/cases/' . $rSlug;
+  ?>
+  <url>
+    <loc><?= htmlspecialchars($regionUrl) ?></loc>
+    <lastmod><?= $lastmod ?></lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <?php     }
+      }
       // 專欄文章（Phase 7：/column/{slug}）
       try {
           $artStmt = $db->prepare("SELECT slug, COALESCE(updated_at, created_at) AS modified FROM articles WHERE client_id=? AND is_active=1 AND slug IS NOT NULL AND slug!='' ORDER BY id");
