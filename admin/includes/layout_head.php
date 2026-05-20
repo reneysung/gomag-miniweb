@@ -521,6 +521,10 @@ textarea.form-control { resize: vertical; min-height: 90px; }
        href="<?= BASE_URL ?>/admin/pages/categories.php">
       <span class="icon">📂</span> 分類管理
     </a>
+    <a class="nav-item <?= $currentPage === 'geo_category' ? 'active' : '' ?>"
+       href="<?= BASE_URL ?>/admin/pages/geo_category.php">
+      <span class="icon">🧭</span> 交叉頁內容
+    </a>
     <a class="nav-item <?= $currentPage === 'banners' ? 'active' : '' ?>"
        href="<?= BASE_URL ?>/admin/pages/banners.php">
       <span class="icon">🎴</span> 首頁 Banner
