@@ -135,9 +135,7 @@ function schemaReviews(array $testimonials): array {
             ],
             'reviewBody'   => $t['content'],
         ];
-        if (!empty($t['source'])) {
-            $review['publisher'] = ['@type' => 'Organization', 'name' => ucfirst($t['source'])];
-        }
+        // 不標 publisher：站內 testimonials 非來自第三方平台，謊報來源（如 Google）違反 Google 評論政策
         $reviews[] = $review;
     }
     return $reviews;
