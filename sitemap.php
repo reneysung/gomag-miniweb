@@ -103,6 +103,32 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
   </url>
   <?php endforeach; ?>
 
+  <!-- 城市×產業 交叉頁（索引條件：≥3 真實店 或 有 geo 內容）-->
+  <?php
+    $catIdToSlug = [];
+    foreach ($db->query("SELECT id, slug FROM categories WHERE is_active=1") as $cc) $catIdToSlug[(int)$cc['id']] = $cc['slug'];
+    $geoCells = [];
+    try {
+        foreach ($db->query("SELECT city_slug, category_id FROM geo_category_pages WHERE is_active=1") as $g)
+            $geoCells[$g['city_slug'] . '|' . (int)$g['category_id']] = true;
+    } catch (\Throwable $e) { /* 表未建時略過 */ }
+    $dupPhCross = implode(',', array_fill(0, count($dupSkip), '?'));
+    $cellStmt = $db->prepare("SELECT category_id, SUM(COALESCE(is_placeholder,0)=0) AS rc FROM clients WHERE is_active=1 AND address LIKE ? AND slug NOT IN ($dupPhCross) AND category_id IS NOT NULL GROUP BY category_id");
+    foreach (getCityMap() as $cSlug => $cName):
+        $cellStmt->execute(array_merge([$cName . '%'], $dupSkip));
+        $counts = [];
+        foreach ($cellStmt->fetchAll() as $r) $counts[(int)$r['category_id']] = (int)$r['rc'];
+        foreach ($catIdToSlug as $cid => $catSlugX):
+            if ((($counts[$cid] ?? 0) < 3) && !isset($geoCells[$cSlug . '|' . $cid])) continue;
+  ?>
+  <url>
+    <loc><?= htmlspecialchars($baseUrl) ?>/city/<?= htmlspecialchars($cSlug) ?>/<?= htmlspecialchars($catSlugX) ?></loc>
+    <lastmod><?= $today ?></lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <?php endforeach; endforeach; ?>
+
   <!-- 各客戶行銷頁（所有客戶都有；有 mini-site 的客戶 mini-site 在下方獨立列） -->
   <?php foreach ($clients as $cl):
       $sub = $cl['subdomain'] ?: $cl['slug'];

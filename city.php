@@ -436,7 +436,8 @@ function renderCityStoreCard(array $cl): void {
         $catIcon = $first['cat_icon'] ?? '🏪';
         $cover = $catCovers[$catName] ?? '';
         $coverUrl = $cover ? BASE_URL . '/' . $cover : '';
-        $anchor = $catSlug ? '#cat-' . $catSlug : '#';
+        // 升級成交叉頁真連結 /city/{city}/{cat}（第 4 步）；無 cat_slug 才退回頁內錨點
+        $anchor = $catSlug ? BASE_URL . '/city/' . urlencode($slug) . '/' . urlencode($catSlug) : '#';
     ?>
     <a class="g-explore-card" href="<?= h($anchor) ?>">
       <?php if ($coverUrl): ?>
