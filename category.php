@@ -164,7 +164,7 @@ require_once __DIR__ . '/main/layout_head.php';
       <?php foreach ($clients as $cl): ?>
       <?php
         $heroImg = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
-        $linkUrl = BASE_URL . '/store.php?sub=' . urlencode($cl['subdomain'] ?? $cl['slug']);
+        $linkUrl = clientStoreUrl($cl);
       ?>
       <a class="m-store-card" href="<?= $linkUrl ?>">
         <div class="cover" <?= $heroImg ? 'style="background-image:url(\''.$heroImg.'\')"' : '' ?>>

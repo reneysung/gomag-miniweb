@@ -36,6 +36,10 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
 <meta name="keywords" content="<?= h($metaKeywords) ?>">
 <?php endif; ?>
 <link rel="canonical" href="<?= h($canonical) ?>">
+<link rel="alternate" hreflang="zh-Hant" href="<?= h($canonical) ?>">
+<link rel="alternate" hreflang="x-default" href="<?= h($canonical) ?>">
+<?php $_mainSitemap = (IS_LOCAL || IS_STAGING) ? BASE_URL . '/sitemap.xml' : 'https://www.gomag.com.tw/sitemap.xml'; ?>
+<link rel="sitemap" type="application/xml" href="<?= h($_mainSitemap) ?>" title="Sitemap">
 <meta property="og:title"       content="<?= h($pageTitle) ?>">
 <meta property="og:description" content="<?= h($metaDesc) ?>">
 <meta property="og:type"        content="website">
@@ -44,6 +48,48 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
 <meta name="twitter:card"       content="summary_large_image">
 <link rel="icon" type="image/svg+xml" href="<?= BASE_URL ?>/favicon.svg">
 <link rel="apple-touch-icon" href="<?= BASE_URL ?>/favicon.svg">
+
+<?php
+// ── 主站平台 schema（每頁固定輸出 Organization；首頁加 WebSite + SearchAction）──
+// 呼叫者可預先設 $isHomepage = true 來啟用 WebSite schema
+$_mainBaseUrl = (IS_LOCAL || IS_STAGING) ? BASE_URL : 'https://www.gomag.com.tw';
+$_mainOrg = [
+    '@context' => 'https://schema.org',
+    '@type'    => 'Organization',
+    '@id'      => $_mainBaseUrl . '/#organization',
+    'name'     => '店家好口碑',
+    'alternateName' => 'gomag',
+    'url'      => $_mainBaseUrl . '/',
+    'logo'     => $_mainBaseUrl . '/favicon.svg',
+    'description' => '全台在地店家平台 — 餐飲美食、居家服務、美容美髮、汽車服務、室內設計，一站匯集真實口碑與店家資訊。',
+];
+?>
+<script type="application/ld+json">
+<?= json_encode($_mainOrg, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) ?>
+</script>
+
+<?php if (!empty($isHomepage)): ?>
+<script type="application/ld+json">
+<?= json_encode([
+    '@context'    => 'https://schema.org',
+    '@type'       => 'WebSite',
+    '@id'         => $_mainBaseUrl . '/#website',
+    'url'         => $_mainBaseUrl . '/',
+    'name'        => '店家好口碑',
+    'description' => '全台在地店家平台 — 一站找好店家、真實口碑、營業資訊',
+    'publisher'   => ['@id' => $_mainBaseUrl . '/#organization'],
+    'potentialAction' => [
+        '@type'       => 'SearchAction',
+        'target'      => [
+            '@type'       => 'EntryPoint',
+            'urlTemplate' => $_mainBaseUrl . '/search?q={search_term_string}',
+        ],
+        'query-input' => 'required name=search_term_string',
+    ],
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) ?>
+</script>
+<?php endif; ?>
+
 <?php if ($gscVerification): ?>
 <meta name="google-site-verification" content="<?= h($gscVerification) ?>">
 <?php endif; ?>

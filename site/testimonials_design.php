@@ -168,6 +168,13 @@ $sourceLabels = [
       <div class="stars"><?= str_repeat('★', (int)$t['rating']) . str_repeat('☆', 5 - (int)$t['rating']) ?></div>
       <p class="quote">「<?= h($t['content']) ?>」</p>
       <div class="author">— <?= h($t['reviewer_name']) ?></div>
+      <?php if (!empty($t['svc_name'])): ?>
+        <?php if (!empty($t['svc_slug'])): $_svcUrl = siteUrl($sub ?? $slug, 'services') . '/' . rawurlencode($t['svc_slug']); ?>
+          <div class="meta"><a href="<?= h($_svcUrl) ?>" style="color:#c8a57a;text-decoration:none;font-weight:600">服務：<?= h($t['svc_name']) ?> →</a></div>
+        <?php else: ?>
+          <div class="meta">服務：<?= h($t['svc_name']) ?></div>
+        <?php endif; ?>
+      <?php endif; ?>
       <?php if ($sourceLabel): ?>
       <div class="meta">via <?= h($sourceLabel) ?></div>
       <?php endif; ?>

@@ -9,13 +9,30 @@ header('Content-Type: application/xml; charset=UTF-8');
 
 $db = getDB();
 
+// ── 判斷是否為 mini-site 子網域訪問（非 www / 非主站）──
+// 子網域訪問 → sitemap 只列該子網域自己的 URL（避免 cross-host sitemap）
+$host = $_SERVER['HTTP_HOST'] ?? '';
+$subOnly = null;
+if (preg_match('/^([a-z0-9-]+)\.gomag\.com\.tw$/i', $host, $m) && strtolower($m[1]) !== 'www') {
+    $subOnly = strtolower($m[1]);
+}
+
 // 排除重複客戶（同店多筆 → 已 301 到主檔）— 集中於 getDuplicateSkipSlugs()
 $dupSkip = getDuplicateSkipSlugs();
-$ph = implode(',', array_fill(0, count($dupSkip), '?'));
-$stmt = $db->prepare("SELECT subdomain, slug, has_minisite, updated_at FROM clients WHERE is_active=1 AND COALESCE(is_placeholder, 0) = 0 AND slug NOT IN ($ph) ORDER BY id");
-$stmt->execute($dupSkip);
-$clients = $stmt->fetchAll();
-$cats = $db->query('SELECT slug FROM categories WHERE is_active=1')->fetchAll();
+if ($subOnly) {
+    // 子網域模式：只撈該 sub 的 client（且必須啟用且有 mini-site）
+    $stmt = $db->prepare("SELECT subdomain, slug, has_minisite, updated_at FROM clients WHERE is_active=1 AND has_minisite=1 AND (subdomain=? OR slug=?) LIMIT 1");
+    $stmt->execute([$subOnly, $subOnly]);
+    $clients = $stmt->fetchAll();
+    $cats = [];
+} else {
+    // 主站模式：撈所有啟用 client + 排除重複 + 排除 placeholder（薄頁不進 sitemap）
+    $ph = implode(',', array_fill(0, count($dupSkip), '?'));
+    $stmt = $db->prepare("SELECT subdomain, slug, has_minisite, updated_at FROM clients WHERE is_active=1 AND COALESCE(is_placeholder, 0) = 0 AND slug NOT IN ($ph) ORDER BY id");
+    $stmt->execute($dupSkip);
+    $clients = $stmt->fetchAll();
+    $cats = $db->query('SELECT slug FROM categories WHERE is_active=1')->fetchAll();
+}
 
 $baseUrl = (IS_LOCAL || IS_STAGING) ? BASE_URL : 'https://www.gomag.com.tw';
 $today = date('Y-m-d');
@@ -23,6 +40,8 @@ $today = date('Y-m-d');
 echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
 ?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+<?php if (!$subOnly): /* 主站專屬區段：子網域 sitemap 不列 cross-host URL */ ?>
 
   <!-- 主站首頁 -->
   <url>
@@ -84,7 +103,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
   </url>
   <?php endforeach; ?>
 
-  <!-- 各客戶行銷頁（所有客戶都有）-->
+  <!-- 各客戶行銷頁（所有客戶都有；有 mini-site 的客戶 mini-site 在下方獨立列） -->
   <?php foreach ($clients as $cl):
       $sub = $cl['subdomain'] ?: $cl['slug'];
       $lastmod = date('Y-m-d', strtotime($cl['updated_at']));
@@ -96,6 +115,8 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
     <priority>0.9</priority>
   </url>
   <?php endforeach; ?>
+
+<?php endif; /* !$subOnly */ ?>
 
   <!-- 啟用 mini-site 的客戶才列子網域頁面 -->
   <?php foreach ($clients as $cl):
@@ -120,6 +141,99 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
     <changefreq><?= $freq ?></changefreq>
     <priority><?= $prio ?></priority>
   </url>
-  <?php endforeach; endforeach; ?>
+  <?php endforeach; ?>
+
+  <?php
+  // 該客戶的服務詳細頁 + 案例詳細頁（旭森風 detail URL）— 每筆獨立
+  // 注意 $clients query 沒撈 id（只撈 subdomain/slug/has_minisite/updated_at），改撈 by slug 對應
+  $cidStmt = $db->prepare("SELECT id FROM clients WHERE subdomain=? OR slug=? LIMIT 1");
+  $cidStmt->execute([$sub, $sub]);
+  $cidRow = $cidStmt->fetch();
+  if ($cidRow) {
+      // 服務詳細頁
+      $svcStmt = $db->prepare("SELECT slug FROM services WHERE client_id=? AND is_active=1 AND slug IS NOT NULL AND slug!='' ORDER BY sort_order,id");
+      $svcStmt->execute([$cidRow['id']]);
+      foreach ($svcStmt->fetchAll() as $svcRow) {
+          $svcSlug = $svcRow['slug'];
+          $detailUrl = (IS_LOCAL || IS_STAGING)
+              ? $miniBase . '/service_detail.php?sub=' . urlencode($sub) . '&svc_slug=' . urlencode($svcSlug)
+              : $miniBase . '/services/' . rawurlencode($svcSlug);
+  ?>
+  <url>
+    <loc><?= htmlspecialchars($detailUrl) ?></loc>
+    <lastmod><?= $lastmod ?></lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.75</priority>
+  </url>
+  <?php }
+      // 案例詳細頁
+      $caseStmt = $db->prepare("SELECT slug FROM cases WHERE client_id=? AND is_active=1 AND slug IS NOT NULL AND slug!='' ORDER BY sort_order,id");
+      $caseStmt->execute([$cidRow['id']]);
+      foreach ($caseStmt->fetchAll() as $caseRow) {
+          $caseSlug = $caseRow['slug'];
+          $caseUrl = (IS_LOCAL || IS_STAGING)
+              ? $miniBase . '/case_detail.php?sub=' . urlencode($sub) . '&case_slug=' . urlencode($caseSlug)
+              : $miniBase . '/cases/' . rawurlencode($caseSlug);
+  ?>
+  <url>
+    <loc><?= htmlspecialchars($caseUrl) ?></loc>
+    <lastmod><?= $lastmod ?></lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.65</priority>
+  </url>
+  <?php }
+      // 案例地區頁（/cases/taichung|changhua）— 只在案例橫跨 2+ 地區時收錄，避免與 /cases 重複
+      $caseLocStmt = $db->prepare("SELECT location FROM cases WHERE client_id=? AND is_active=1");
+      $caseLocStmt->execute([$cidRow['id']]);
+      $caseLocs = array_map(fn($r) => ['location' => $r['location']], $caseLocStmt->fetchAll());
+      $caseRegions = caseRegionsPresent($caseLocs);
+      if (count($caseRegions) > 1) {
+          foreach ($caseRegions as $rSlug) {
+              $regionUrl = (IS_LOCAL || IS_STAGING)
+                  ? $miniBase . '/cases.php?sub=' . urlencode($sub) . '&region=' . urlencode($rSlug)
+                  : $miniBase . '/cases/' . $rSlug;
+  ?>
+  <url>
+    <loc><?= htmlspecialchars($regionUrl) ?></loc>
+    <lastmod><?= $lastmod ?></lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <?php     }
+      }
+      // 專欄文章（Phase 7：/column/{slug}）
+      try {
+          $artStmt = $db->prepare("SELECT slug, COALESCE(updated_at, created_at) AS modified FROM articles WHERE client_id=? AND is_active=1 AND slug IS NOT NULL AND slug!='' ORDER BY id");
+          $artStmt->execute([$cidRow['id']]);
+          $artRows = $artStmt->fetchAll();
+      } catch (PDOException $e) { $artRows = []; /* articles 表可能還沒建 */ }
+      if ($artRows) {
+          // 專欄列表頁
+          $colListUrl = (IS_LOCAL || IS_STAGING)
+              ? $miniBase . '/articles.php?sub=' . urlencode($sub)
+              : $miniBase . '/column';
+  ?>
+  <url>
+    <loc><?= htmlspecialchars($colListUrl) ?></loc>
+    <lastmod><?= $lastmod ?></lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <?php
+          // 各文章
+          foreach ($artRows as $a) {
+              $aMod = date('Y-m-d', strtotime($a['modified']));
+              $aUrl = (IS_LOCAL || IS_STAGING)
+                  ? $miniBase . '/article_detail.php?sub=' . urlencode($sub) . '&slug=' . urlencode($a['slug'])
+                  : $miniBase . '/column/' . rawurlencode($a['slug']);
+  ?>
+  <url>
+    <loc><?= htmlspecialchars($aUrl) ?></loc>
+    <lastmod><?= $aMod ?></lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.55</priority>
+  </url>
+  <?php } } } ?>
+  <?php endforeach; ?>
 
 </urlset>

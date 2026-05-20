@@ -14,6 +14,11 @@ $editId = (int)($_GET['id'] ?? 0);
 // ── DELETE ────────────────────────────────────────────────
 if ($action === 'delete' && $editId) {
     verifyCsrf();
+    // 刪除前先撈圖片路徑，刪 row 後一起清檔
+    $row = $db->prepare('SELECT image_path FROM services WHERE id=? AND client_id=?');
+    $row->execute([$editId, $clientId]);
+    $r = $row->fetch();
+    if ($r && !empty($r['image_path'])) deleteImage($r['image_path']);
     $db->prepare('DELETE FROM services WHERE id=? AND client_id=?')->execute([$editId, $clientId]);
     setFlash('success', '服務項目已刪除。');
     redirect(BASE_URL . '/admin/pages/services.php');
@@ -40,6 +45,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'sort_order'  => (int)($_POST['sort_order'] ?? 0),
     ];
 
+    $saveId = (int)($_POST['edit_id'] ?? 0);
+
+    // 撈舊圖路徑（替換 / 移除時要刪檔）
+    $oldImagePath = '';
+    if ($saveId) {
+        $ex = $db->prepare('SELECT image_path FROM services WHERE id=? AND client_id=?');
+        $ex->execute([$saveId, $clientId]);
+        $oldImagePath = $ex->fetchColumn() ?: '';
+    }
+
     // ── 圖片上傳處理 ──
     $uploadDir = dirname(__DIR__, 2) . '/uploads/services/';
     if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
@@ -51,15 +66,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $filename = 'svc-' . $clientId . '-' . time() . '-' . mt_rand(100,999) . '.' . $ext;
             if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadDir . $filename)) {
                 $data['image_path'] = 'uploads/services/' . $filename;
+                // 上傳成功 → 刪舊檔
+                if ($oldImagePath && $oldImagePath !== $data['image_path']) {
+                    deleteImage($oldImagePath);
+                }
             }
         }
     }
-    // 如果勾選刪除圖片
+    // 如果勾選刪除圖片 → 從硬碟刪
     if (!empty($_POST['remove_image'])) {
+        if ($oldImagePath) deleteImage($oldImagePath);
         $data['image_path'] = '';
     }
-
-    $saveId = (int)($_POST['edit_id'] ?? 0);
     if ($saveId) {
         // UPDATE
         $sets = implode(',', array_map(fn($k) => "`$k`=:$k", array_keys($data)));

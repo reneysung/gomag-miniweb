@@ -274,6 +274,15 @@ $portfolios = $cases ?? [];
 </section>
 <?php endif; ?>
 
+<!-- 經營者介紹（partial）-->
+<?php require __DIR__ . '/_partial_owner_block.php'; ?>
+
+<!-- 店家相簿（partial）-->
+<?php require __DIR__ . '/_partial_photos_gallery.php'; ?>
+
+<!-- 最新專欄 preview（partial）-->
+<?php require __DIR__ . '/_partial_column_preview.php'; ?>
+
 <!-- ═════ CONTACT ═════ -->
 <section class="ed-contact animate-in">
   <div class="ed-contact-inner">

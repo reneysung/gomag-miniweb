@@ -7,7 +7,8 @@
 $photos = servicePhotoSet();
 $cases = $site['cases'] ?? [];
 
-// DB 沒 cases 就用業種預設施工案例
+// DB 有 cases 才 render — 不再 hardcode 假案例（避免 admin 找不到資料源）
+$works = [];
 if (!empty($cases)) {
     $works = array_map(function($c) use ($photos) {
         $before = !empty($c['before_image']) ? BASE_URL . '/' . $c['before_image'] : $photos['before'];
@@ -19,17 +20,9 @@ if (!empty($cases)) {
             'area' => $c['area_sqm'] ?? '',
             'before' => $before,
             'after' => $after,
+            'slug' => $c['slug'] ?? '',
         ];
     }, array_slice($cases, 0, 9));
-} else {
-    $works = [
-        ['title' => '永康區 25 坪新成屋細清', 'desc' => '裝潢完工後的全屋細清，去除粉塵與矽利康殘膠，地板保護膜完整撕除。', 'location' => '台南永康', 'area' => '25', 'before' => $photos['before'], 'after' => $photos['after']],
-        ['title' => '東區 40 坪居家深度清潔', 'desc' => '針對廚房油垢、衛浴水垢、窗軌積塵深層處理，一次到位。', 'location' => '台南東區', 'area' => '40', 'before' => $photos['before'], 'after' => $photos['kitchen']],
-        ['title' => '中西區套房搬遷清潔', 'desc' => '退租前全屋清潔，確保乾淨完整交接押金順利退還。', 'location' => '台南中西', 'area' => '12', 'before' => $photos['before'], 'after' => $photos['living']],
-        ['title' => '北區透天 4 樓玻璃外窗', 'desc' => '4 樓高度玻璃外窗、紗窗、軌道一次清洗到底。', 'location' => '台南北區', 'area' => '60', 'before' => $photos['before'], 'after' => $photos['window']],
-        ['title' => '安南區三房廚房深清', 'desc' => '抽油煙機、瓦斯爐、磁磚牆面、流理台積垢全面去除。', 'location' => '台南安南', 'area' => '8', 'before' => $photos['before'], 'after' => $photos['kitchen']],
-        ['title' => '仁德新屋裝潢後細清', 'desc' => '木作、油漆、矽利康殘膠精細處理，地板上蠟保養。', 'location' => '台南仁德', 'area' => '32', 'before' => $photos['before'], 'after' => $photos['after']],
-    ];
 }
 
 $featured = $works[0] ?? null;
@@ -45,12 +38,45 @@ require __DIR__ . '/layout_head.php';
   <div class="prosvc-hero-content">
     <div class="prosvc-tag">
       <span class="prosvc-tag-dot"></span>
-      施工案例
+      <?= !empty($caseRegionLabel) ? h($caseRegionLabel) . '施工案例' : '施工案例' ?>
     </div>
-    <h1 class="prosvc-hero-title">真實 Before / After</h1>
-    <p class="prosvc-hero-sub">每個案例都是我們的驕傲，讓成果說話</p>
+    <h1 class="prosvc-hero-title"><?= !empty($caseHeroTitle) ? h($caseHeroTitle) : '真實 Before / After' ?></h1>
+    <p class="prosvc-hero-sub"><?= !empty($caseHeroSub) ? h($caseHeroSub) : '每個案例都是我們的驕傲，讓成果說話' ?></p>
   </div>
 </section>
+
+<!-- ══ 地區切換列（台中 / 彰化）— 內部連結 + UX ════════════════════════ -->
+<?php if (!empty($caseAllRegions) && count($caseAllRegions) > 1):
+  $regionMap = caseRegionMap();
+  $allCasesUrl = siteUrl($sub, 'cases');
+?>
+<nav class="proCase-region-nav" aria-label="依地區瀏覽案例">
+  <a href="<?= h($allCasesUrl) ?>" class="proCase-region-link <?= empty($caseRegionLabel) ? 'is-active' : '' ?>">全部</a>
+  <?php foreach ($caseAllRegions as $rSlug): ?>
+    <a href="<?= h($allCasesUrl . '/' . $rSlug) ?>"
+       class="proCase-region-link <?= ($caseRegion ?? '') === $rSlug ? 'is-active' : '' ?>">
+      <?= h($regionMap[$rSlug]['label']) ?>
+    </a>
+  <?php endforeach; ?>
+</nav>
+<?php endif; ?>
+
+<!-- 空狀態：DB 沒 cases 顯示「整理中」訊息（避免假資料） -->
+<?php if (empty($works)): ?>
+<section style="padding:80px 20px">
+  <div style="max-width:600px;margin:0 auto;padding:48px 24px;text-align:center;background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.06)">
+    <div style="font-size:3rem;margin-bottom:14px">📸</div>
+    <h3 style="font-size:1.2rem;font-weight:800;color:var(--g-ink);margin-bottom:8px">施工案例整理中</h3>
+    <p style="color:#888;font-size:.95rem;margin-bottom:24px">歡迎來電或 LINE 諮詢，我們將提供合適的服務說明與案例參考。</p>
+    <?php if (!empty($client['phone'])): ?>
+      <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$client['phone'])) ?>" class="btn btn-primary" style="margin:4px">📞 <?= h($client['phone']) ?></a>
+    <?php endif; ?>
+    <?php if($lineUrl): ?>
+      <a href="<?= h($lineUrl) ?>" target="_blank" class="btn btn-accent" style="margin:4px">💬 LINE 諮詢</a>
+    <?php endif; ?>
+  </div>
+</section>
+<?php endif; ?>
 
 <!-- ══ 2. Featured Case — 大 Before/After 對比 ═══════════════════════ -->
 <?php if ($featured): ?>
@@ -123,7 +149,11 @@ require __DIR__ . '/layout_head.php';
         </div>
       </div>
       <div class="proCase-card-meta">
-        <h3 class="proCase-card-title"><?= h($c['title']) ?></h3>
+        <?php $caseDetailUrl = !empty($c['slug']) ? (siteUrl($sub, 'cases') . '/' . rawurlencode($c['slug'])) : null; ?>
+        <h3 class="proCase-card-title">
+          <?php if ($caseDetailUrl): ?><a href="<?= h($caseDetailUrl) ?>" style="color:inherit;text-decoration:none"><?= h($c['title']) ?></a>
+          <?php else: ?><?= h($c['title']) ?><?php endif; ?>
+        </h3>
         <?php if ($c['desc']): ?>
         <p class="proCase-card-desc"><?= h($c['desc']) ?></p>
         <?php endif; ?>
@@ -132,6 +162,9 @@ require __DIR__ . '/layout_head.php';
           <?php if ($c['location']): ?><span>📍 <?= h($c['location']) ?></span><?php endif; ?>
           <?php if ($c['area']): ?><span>📐 <?= h($c['area']) ?> 坪</span><?php endif; ?>
         </div>
+        <?php endif; ?>
+        <?php if ($caseDetailUrl): ?>
+          <div style="margin-top:10px"><a href="<?= h($caseDetailUrl) ?>" style="font-size:.85rem;color:var(--g-accent);text-decoration:none;font-weight:700">查看案例 →</a></div>
         <?php endif; ?>
       </div>
     </article>
@@ -170,6 +203,12 @@ require __DIR__ . '/layout_head.php';
 .prosvc-tag-dot { width: 6px; height: 6px; background: var(--g-accent); border-radius: 50%; }
 .prosvc-hero-title { font-size: clamp(2.4rem, 6vw, 4rem); font-weight: 900; letter-spacing: -0.04em; line-height: 1; color: #fff; margin: 0 0 18px; text-shadow: 0 4px 30px rgba(0,0,0,0.4); }
 .prosvc-hero-sub { font-size: clamp(1rem, 1.5vw, 1.2rem); color: rgba(255,255,255,0.9); }
+
+/* 地區切換列 */
+.proCase-region-nav { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; padding: 28px 20px 4px; max-width: 1180px; margin: 0 auto; }
+.proCase-region-link { display: inline-flex; align-items: center; padding: 9px 22px; border-radius: 100px; font-size: .92rem; font-weight: 700; text-decoration: none; color: var(--g-ink); background: var(--g-bg-alt); border: 1.5px solid rgba(var(--g-ink-rgb), 0.1); transition: all .2s ease; }
+.proCase-region-link:hover { border-color: var(--g-accent); color: var(--g-accent); }
+.proCase-region-link.is-active { background: var(--g-ink); color: #fff; border-color: var(--g-ink); }
 
 /* Featured Before/After */
 .proCase-feature { padding: 90px 0 80px; max-width: 1180px; margin: 0 auto; }

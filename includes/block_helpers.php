@@ -105,8 +105,43 @@ function saveStoreBlock(int $clientId, string $type, array $data, int $sortOrder
 
 function deleteStoreBlock(int $blockId, int $clientId): void {
     $db = getDB();
+    // 撈出 data，把區塊內的圖檔一起刪
+    $stmt = $db->prepare("SELECT data FROM store_blocks WHERE id=? AND client_id=?");
+    $stmt->execute([$blockId, $clientId]);
+    $row = $stmt->fetch();
+    if ($row && !empty($row['data'])) {
+        $data = json_decode($row['data'], true) ?: [];
+        foreach (collectBlockImagePaths($data) as $p) {
+            if ($p) deleteImage($p);
+        }
+    }
     $stmt = $db->prepare("DELETE FROM store_blocks WHERE id=? AND client_id=?");
     $stmt->execute([$blockId, $clientId]);
+}
+
+/**
+ * 從 block data 結構（service / menu / portfolio / pricing）撈出所有圖檔路徑。
+ * 用於替換 / 刪除區塊時，連帶清掉硬碟上的孤兒圖檔。
+ */
+function collectBlockImagePaths(array $data): array {
+    $paths = [];
+    // service / portfolio / pricing → items[*].image
+    if (!empty($data['items']) && is_array($data['items'])) {
+        foreach ($data['items'] as $it) {
+            if (!empty($it['image'])) $paths[] = $it['image'];
+        }
+    }
+    // menu → groups[*].items[*].image
+    if (!empty($data['groups']) && is_array($data['groups'])) {
+        foreach ($data['groups'] as $g) {
+            if (!empty($g['items']) && is_array($g['items'])) {
+                foreach ($g['items'] as $it) {
+                    if (!empty($it['image'])) $paths[] = $it['image'];
+                }
+            }
+        }
+    }
+    return array_values(array_filter(array_unique($paths)));
 }
 
 /**

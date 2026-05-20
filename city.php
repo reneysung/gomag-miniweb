@@ -212,7 +212,6 @@ require_once __DIR__ . '/main/layout_head.php';
 $itemList = [];
 $idx = 1;
 foreach ($clients as $cl) {
-    $sub = $cl['subdomain'] ?: $cl['slug'];
     $itemList[] = [
         '@type' => 'ListItem',
         'position' => $idx++,
@@ -220,7 +219,8 @@ foreach ($clients as $cl) {
             '@type' => 'LocalBusiness',
             'name' => $cl['brand_name'],
             'address' => $cl['address'],
-            'url' => ((IS_LOCAL || IS_STAGING) ? BASE_URL . '/store.php?sub=' . $sub : 'https://www.gomag.com.tw/store/' . $sub),
+            // 主站 directory 卡片永遠指向 /store/{slug}（行銷頁）；mini-site 是獨立品牌入口
+            'url' => clientStoreUrl($cl),
         ],
     ];
 }
@@ -373,6 +373,7 @@ $breadcrumbLd = [
 // ═══ Phase D: 該縣市本週熱門 / 最新加入 / 口碑 ═══
 $hotStmt = $db->prepare("
   SELECT cl.id, cl.subdomain, cl.slug, cl.brand_name, cl.tagline, cl.hero_image_path,
+         cl.has_minisite, cl.external_website_url,
          cl.address, c.name AS cat_name, c.icon AS cat_icon, c.slug AS cat_slug
   FROM clients cl LEFT JOIN categories c ON cl.category_id=c.id
   WHERE cl.is_active=1 AND COALESCE(cl.is_placeholder,0)=0 AND cl.address LIKE ?
@@ -383,6 +384,7 @@ $hotStores = $hotStmt->fetchAll();
 
 $latestStmt = $db->prepare("
   SELECT cl.id, cl.subdomain, cl.slug, cl.brand_name, cl.tagline, cl.hero_image_path,
+         cl.has_minisite, cl.external_website_url,
          cl.address, c.name AS cat_name, c.icon AS cat_icon, c.slug AS cat_slug
   FROM clients cl LEFT JOIN categories c ON cl.category_id=c.id
   WHERE cl.is_active=1 AND COALESCE(cl.is_placeholder,0)=0 AND cl.address LIKE ?
@@ -392,7 +394,8 @@ $latestStmt->execute(array_merge([$cityName . '%'], $dupSkip));
 $latestStores = $latestStmt->fetchAll();
 
 $cityReviewsStmt = $db->prepare("
-  SELECT t.reviewer_name, t.rating, t.content, cl.brand_name, cl.subdomain, cl.slug
+  SELECT t.reviewer_name, t.rating, t.content, cl.brand_name, cl.subdomain, cl.slug,
+         cl.has_minisite, cl.external_website_url
   FROM testimonials t JOIN clients cl ON t.client_id = cl.id
   WHERE t.is_active=1 AND cl.is_active=1 AND cl.address LIKE ?
     AND cl.slug NOT IN ($dupPh)
@@ -405,7 +408,7 @@ function renderCityStoreCard(array $cl): void {
   $sub = $cl['subdomain'] ?? $cl['slug'];
   $heroImg = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
   ?>
-  <a class="g-store-card" href="<?= BASE_URL ?>/store.php?sub=<?= urlencode($sub) ?>">
+  <a class="g-store-card" href="<?= h(clientStoreUrl($cl)) ?>">
     <div class="g-store-img" <?= $heroImg ? 'style="background-image:url(\''.$heroImg.'\')"' : '' ?>>
       <?php if (!$heroImg): ?><div class="g-store-img-fallback"><span class="icon"><?= h($cl['cat_icon']??'🏪') ?></span><span class="label"><?= h($cl['cat_name']??'') ?></span></div><?php endif; ?>
     </div>
@@ -487,7 +490,7 @@ function renderCityStoreCard(array $cl): void {
     <?php foreach ($catClients as $cl):
         $sub = $cl['subdomain'] ?? $cl['slug'];
         $heroImg = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
-        $linkUrl = BASE_URL . '/store.php?sub=' . urlencode($sub);
+        $linkUrl = clientStoreUrl($cl);
         $isPH = !empty($cl['is_placeholder']);
         $cardClass = 'g-store-card' . ($isPH ? ' g-store-card-ph' : '');
     ?>
@@ -552,7 +555,7 @@ function renderCityStoreCard(array $cl): void {
           </div>
         </div>
         <p class="g-review-text"><?= h(mb_strimwidth($r['content'], 0, 160, '…', 'UTF-8')) ?></p>
-        <a href="<?= BASE_URL ?>/store.php?sub=<?= urlencode($sub) ?>" style="display:inline-block; margin-top:10px; font-size:.8rem; color:var(--g-ink-muted); text-decoration:none; border-bottom:1px dashed var(--g-border);">
+        <a href="<?= h(clientStoreUrl($r)) ?>" style="display:inline-block; margin-top:10px; font-size:.8rem; color:var(--g-ink-muted); text-decoration:none; border-bottom:1px dashed var(--g-border);">
           → <?= h($r['brand_name']) ?>
         </a>
       </div>

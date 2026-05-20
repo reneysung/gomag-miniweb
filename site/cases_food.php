@@ -9,7 +9,8 @@
 $photos = foodPhotoSet();
 $cases = $site['cases'] ?? [];
 
-// DB 沒 cases 就用業種預設料理作品集
+// 不再 hardcode 假料理作品 — DB 空 → 顯示「整理中」
+$works = [];
 if (!empty($cases)) {
     $works = array_map(function($c) use ($photos) {
         $img = !empty($c['after_image']) ? BASE_URL . '/' . $c['after_image']
@@ -20,18 +21,6 @@ if (!empty($cases)) {
             'img'  => $img,
         ];
     }, array_slice($cases, 0, 12));
-} else {
-    $works = [
-        ['name' => '招牌沙朗牛排', 'desc' => '美國 Choice 級頂級沙朗，炭火直烤鎖住肉汁',           'img' => $photos['fire']],
-        ['name' => '炭烤切片',     'desc' => '低溫慢烤至完美 Medium Rare，外酥內嫩',                'img' => $photos['sliced']],
-        ['name' => '舒肥嫩煎',     'desc' => '舒肥技術鎖水分，再以鑄鐵鍋表面焦化',                  'img' => $photos['meat']],
-        ['name' => '主廚備餐',     'desc' => '每一份料理都經過主廚親手把關',                        'img' => $photos['chef']],
-        ['name' => '佐餐紅酒',     'desc' => '專業侍酒師選酒，搭配每道料理的最佳組合',              'img' => $photos['wine']],
-        ['name' => '用餐空間',     'desc' => '溫暖燈光、舒適座位，為您呈現完整用餐體驗',            'img' => $photos['interior']],
-        ['name' => '經典提拉米蘇', 'desc' => '義式手指餅乾浸濃縮咖啡，馬斯卡彭層疊',                'img' => $photos['table']],
-        ['name' => '凱薩沙拉',     'desc' => '羅曼生菜、帕馬森起司、酥脆麵包丁、自製凱薩醬',        'img' => $photos['table']],
-        ['name' => '炭烤豬肋排',   'desc' => '慢烤 8 小時，BBQ 醬汁刷烤，骨肉一拉就分離',          'img' => $photos['fire']],
-    ];
 }
 
 // 第一張當大 feature
@@ -76,6 +65,20 @@ body { background: var(--dine-bg); color: var(--dine-cream); }
     <p class="dineport-tagline">每一道料理，都是廚房裡的一份故事</p>
   </div>
 </section>
+
+<!-- 空狀態：DB 沒 cases -->
+<?php if (empty($works)): ?>
+<section style="padding:80px 20px;background:#0f0c0a;color:rgba(245,230,200,.7)">
+  <div style="max-width:600px;margin:0 auto;padding:48px 24px;text-align:center;background:rgba(245,230,200,.04);border:1px solid rgba(245,230,200,.15);border-radius:14px">
+    <div style="font-size:3rem;margin-bottom:14px">🍳</div>
+    <h3 style="font-size:1.2rem;font-weight:600;color:#f5e6c8;margin-bottom:8px;font-family:'Cormorant Garamond',serif">料理作品整理中</h3>
+    <p style="color:rgba(245,230,200,.6);font-size:.95rem;margin-bottom:24px">主廚精心料理的相片正在拍攝中，歡迎來電訂位品嚐。</p>
+    <?php if (!empty($client['phone'])): ?>
+      <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$client['phone'])) ?>" style="display:inline-block;padding:12px 28px;background:#f5e6c8;color:#0f0c0a;border-radius:0;text-decoration:none;font-weight:600;letter-spacing:.1em">📞 訂位 <?= h($client['phone']) ?></a>
+    <?php endif; ?>
+  </div>
+</section>
+<?php endif; ?>
 
 <!-- ══ 2. Featured Work（大 feature） ════════════════════════════════ -->
 <?php if ($featured): ?>

@@ -12,6 +12,12 @@ $db = getDB();
 // 儲存
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrf();
+
+    // 撈舊圖片路徑 — 上傳新圖時要刪舊檔，避免伺服器囤積孤兒檔
+    $_oldImagesStmt = $db->prepare("SELECT logo_path, hero_image_path, owner_avatar, photos FROM clients WHERE id=?");
+    $_oldImagesStmt->execute([$clientId]);
+    $_oldImages = $_oldImagesStmt->fetch(PDO::FETCH_ASSOC) ?: [];
+
     $fields = [
         'brand_name'             => trim($_POST['brand_name'] ?? ''),
         'tagline'                => trim($_POST['tagline'] ?? ''),
@@ -21,37 +27,75 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'business_hours'         => trim($_POST['business_hours'] ?? ''),
         'email'                  => trim($_POST['email'] ?? ''),
         'address'                => trim($_POST['address'] ?? ''),
+        // SEO schema 細欄位（旭森風格 — 拆 PostalAddress + geo + opening hours）
+        'address_street'         => trim($_POST['address_street'] ?? '') ?: null,
+        'address_district'       => trim($_POST['address_district'] ?? '') ?: null,
+        'address_region'         => trim($_POST['address_region'] ?? '') ?: null,
+        'postal_code'            => trim($_POST['postal_code'] ?? '') ?: null,
+        'latitude'               => !empty($_POST['latitude']) ? (float)$_POST['latitude'] : null,
+        'longitude'              => !empty($_POST['longitude']) ? (float)$_POST['longitude'] : null,
+        'opening_hours_json'     => trim($_POST['opening_hours_json'] ?? '') ?: null,
         'external_website_url'   => trim($_POST['external_website_url'] ?? ''),
         'about_text'             => trim($_POST['about_text'] ?? ''),
         'landing_extra_content'  => trim($_POST['landing_extra_content'] ?? ''),
         'has_minisite'           => isset($_POST['has_minisite']) ? 1 : 0,
+        'is_featured'            => isset($_POST['is_featured']) ? 1 : 0,
+        'is_placeholder'         => isset($_POST['is_placeholder']) ? 1 : 0,
+        'subdomain_provisioned'  => isset($_POST['subdomain_provisioned']) ? 1 : 0,
         'legacy_store_id'        => trim($_POST['legacy_store_id'] ?? ''),
         'google_maps_embed'      => trim($_POST['google_maps_embed'] ?? ''),
         'google_place_id'        => trim($_POST['google_place_id'] ?? ''),
-        // SEO 欄位
+        // SEO 欄位 — 主站行銷頁 store.php 用
         'store_meta_title'       => trim($_POST['store_meta_title'] ?? ''),
         'store_meta_desc'        => trim($_POST['store_meta_desc'] ?? ''),
         'store_keywords'         => trim($_POST['store_keywords'] ?? ''),
         'store_og_image'         => trim($_POST['store_og_image'] ?? ''),
+        // Mini-site SEO 欄位 — {sub}.gomag.com.tw 用（migration 017）
+        'minisite_meta_title'    => trim($_POST['minisite_meta_title'] ?? '') ?: null,
+        'minisite_meta_desc'     => trim($_POST['minisite_meta_desc'] ?? '') ?: null,
+        'minisite_og_image'      => trim($_POST['minisite_og_image'] ?? '') ?: null,
         // Phase C: Owner block
         'owner_name'             => trim($_POST['owner_name'] ?? ''),
         'owner_intro'            => trim($_POST['owner_intro'] ?? ''),
     ];
 
-    // Logo 上傳
+    $_uploadErrors = [];  // 收集上傳失敗原因，存檔後一起顯示
+
+    // Logo 上傳 — 成功後刪舊檔
     if (!empty($_FILES['logo']['name'])) {
-        $path = uploadImage($_FILES['logo'], 'brand');
-        if ($path) $fields['logo_path'] = $path;
+        $path = uploadImageX($_FILES['logo'], 'brand', $_r);
+        if ($path) {
+            if (!empty($_oldImages['logo_path']) && $_oldImages['logo_path'] !== $path) {
+                deleteImage($_oldImages['logo_path']);
+            }
+            $fields['logo_path'] = $path;
+        } elseif ($_r) {
+            $_uploadErrors[] = "Logo：{$_r}";
+        }
     }
-    // Hero 圖片上傳
+    // Hero 圖片上傳 — 成功後刪舊檔
     if (!empty($_FILES['hero_image']['name'])) {
-        $path = uploadImage($_FILES['hero_image'], 'brand');
-        if ($path) $fields['hero_image_path'] = $path;
+        $path = uploadImageX($_FILES['hero_image'], 'brand', $_r);
+        if ($path) {
+            if (!empty($_oldImages['hero_image_path']) && $_oldImages['hero_image_path'] !== $path) {
+                deleteImage($_oldImages['hero_image_path']);
+            }
+            $fields['hero_image_path'] = $path;
+        } elseif ($_r) {
+            $_uploadErrors[] = "Hero 主圖：{$_r}";
+        }
     }
-    // Phase C: Owner avatar 上傳
+    // Phase C: Owner avatar 上傳 — 成功後刪舊檔
     if (!empty($_FILES['owner_avatar']['name'])) {
-        $path = uploadImage($_FILES['owner_avatar'], 'brand');
-        if ($path) $fields['owner_avatar'] = $path;
+        $path = uploadImageX($_FILES['owner_avatar'], 'brand', $_r);
+        if ($path) {
+            if (!empty($_oldImages['owner_avatar']) && $_oldImages['owner_avatar'] !== $path) {
+                deleteImage($_oldImages['owner_avatar']);
+            }
+            $fields['owner_avatar'] = $path;
+        } elseif ($_r) {
+            $_uploadErrors[] = "老闆頭像：{$_r}";
+        }
     }
     // Phase C: Photo gallery 多檔上傳
     $existingPhotos = !empty($_POST['existing_photos']) ? json_decode($_POST['existing_photos'], true) : [];
@@ -63,6 +107,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   'size' => $_FILES['photos']['size'][$i], 'error' => $_FILES['photos']['error'][$i]];
             $p = uploadImage($f, 'brand');
             if ($p) $existingPhotos[] = $p;
+        }
+    }
+    // Photo gallery — 對比新舊，刪掉被移除的（後台勾刪除）
+    $_oldPhotos = !empty($_oldImages['photos']) ? json_decode($_oldImages['photos'], true) : [];
+    if (is_array($_oldPhotos)) {
+        $_removedPhotos = array_diff($_oldPhotos, $existingPhotos);
+        foreach ($_removedPhotos as $_p) {
+            if ($_p) deleteImage($_p);
         }
     }
     $fields['photos'] = $existingPhotos ? json_encode(array_values(array_unique($existingPhotos)), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null;
@@ -91,11 +143,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $fields['about_tags'] = json_encode($aboutTags, JSON_UNESCAPED_UNICODE);
     }
 
+    // 偵測 subdomain_provisioned 從 0 → 1 的時刻，記錄 provisioned_at
+    $oldProvisioned = (int)$db->query("SELECT subdomain_provisioned FROM clients WHERE id=" . (int)$clientId)->fetchColumn();
+    if ($fields['subdomain_provisioned'] == 1 && $oldProvisioned == 0) {
+        $fields['subdomain_provisioned_at'] = date('Y-m-d H:i:s');
+    }
+
     $sets = implode(', ', array_map(fn($k) => "`$k` = :$k", array_keys($fields)));
     $stmt = $db->prepare("UPDATE clients SET $sets WHERE id = :id");
     $stmt->execute(array_merge($fields, ['id' => $clientId]));
 
-    setFlash('success', '✅ 基本資訊已儲存！');
+    if ($_uploadErrors) {
+        // 有圖片上傳失敗 → 顯示明確原因（其他欄位已存好）
+        setFlash('error', '⚠️ 資料已存，但有圖片沒上傳成功：' . implode('；', $_uploadErrors));
+    } else {
+        setFlash('success', '✅ 基本資訊已儲存！');
+    }
     redirect(BASE_URL . '/admin/pages/settings.php?saved=1');
 }
 
@@ -119,6 +182,10 @@ if (IS_PROD) {
     // mini-site：staging 沒有 wildcard 子網域，永遠用 path-based
     $previewMiniUrl = BASE_URL . '/site/index.php?sub=' . urlencode($previewSub);
 }
+
+// Tab 切換：basic（共用基本） / store（行銷頁專屬） / minisite（小官網專屬）
+$tab = $_GET['tab'] ?? 'basic';
+if (!in_array($tab, ['basic', 'store', 'minisite'])) $tab = 'basic';
 
 require_once __DIR__ . '/../includes/layout_head.php';
 ?>
@@ -161,11 +228,44 @@ require_once __DIR__ . '/../includes/layout_head.php';
 </div>
 <?php endif; ?>
 
+<!-- ═══════ Tab 切換 ═══════ -->
+<div style="display:flex;gap:4px;margin-bottom:20px;background:#fff;border-radius:10px;padding:6px;border:1px solid #e5e5e5;box-shadow:0 1px 3px rgba(0,0,0,.04)">
+  <a href="?tab=basic"
+     style="flex:1;text-align:center;padding:11px 16px;border-radius:7px;text-decoration:none;font-weight:700;font-size:.92rem;<?= $tab==='basic'?'background:#0f766e;color:#fff':'color:#666' ?>">
+    🛒 基本資料
+    <div style="font-size:.7rem;opacity:.7;font-weight:500;margin-top:2px"><?= $tab==='basic'?'品牌 / 圖片 / Owner / 相簿 / 關於 / 地址 / 時間':'兩邊共用' ?></div>
+  </a>
+  <a href="?tab=store"
+     style="flex:1;text-align:center;padding:11px 16px;border-radius:7px;text-decoration:none;font-weight:700;font-size:.92rem;<?= $tab==='store'?'background:#16a34a;color:#fff':'color:#666' ?>">
+    📢 行銷頁 SEO
+    <div style="font-size:.7rem;opacity:.7;font-weight:500;margin-top:2px"><?= $tab==='store'?'主站 /store/'.h($client['slug'] ?? '').' 專屬':'主站專屬' ?></div>
+  </a>
+  <?php if (!empty($client['has_minisite'])): ?>
+  <a href="?tab=minisite"
+     style="flex:1;text-align:center;padding:11px 16px;border-radius:7px;text-decoration:none;font-weight:700;font-size:.92rem;<?= $tab==='minisite'?'background:#2563eb;color:#fff':'color:#666' ?>">
+    🌐 小官網 SEO
+    <div style="font-size:.7rem;opacity:.7;font-weight:500;margin-top:2px"><?= $tab==='minisite'?h($client['subdomain'] ?? $client['slug'] ?? '').'.gomag.com.tw 專屬':'小官網專屬' ?></div>
+  </a>
+  <?php endif; ?>
+</div>
+
+<style>
+/* Tab 切換：用 CSS 隱藏不對應 tab 的 cards */
+body[data-current-tab="basic"]    .tab-section[data-tab="store"],
+body[data-current-tab="basic"]    .tab-section[data-tab="minisite"] { display:none; }
+body[data-current-tab="store"]    .tab-section[data-tab="basic"],
+body[data-current-tab="store"]    .tab-section[data-tab="minisite"] { display:none; }
+body[data-current-tab="minisite"] .tab-section[data-tab="basic"],
+body[data-current-tab="minisite"] .tab-section[data-tab="store"] { display:none; }
+</style>
+<script>document.body.setAttribute('data-current-tab', '<?= h($tab) ?>');</script>
+
 <form method="POST" enctype="multipart/form-data">
 <input type="hidden" name="_token" value="<?= csrfToken() ?>">
+<input type="hidden" name="_tab" value="<?= h($tab) ?>">
 
 <!-- ═══════ 平台設定（主站分類、小官網開關、外部官網）═══════ -->
-<div class="card" style="margin-bottom:20px;border-left:4px solid var(--accent);">
+<div class="card tab-section" data-tab="basic" style="margin-bottom:20px;border-left:4px solid var(--accent);">
   <div class="card-header">
     <h2>🌐 平台設定（主站列表 & 子網域）</h2>
   </div>
@@ -210,6 +310,73 @@ require_once __DIR__ . '/../includes/layout_head.php';
       </div>
     </div>
 
+    <!-- 首頁精選展示 -->
+    <div class="form-group-admin" style="background:#fffbeb;padding:14px;border-radius:8px;border:1.5px solid #fcd34d;margin-top:10px;">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;">
+        <input type="checkbox" name="is_featured" value="1"
+               <?= !empty($client['is_featured']) ? 'checked' : '' ?>
+               style="width:20px;height:20px;cursor:pointer;">
+        <span>🌟 在 gomag.com.tw 首頁「精選店家」區展示</span>
+      </label>
+      <div class="hint" style="margin-top:6px;margin-left:30px;">
+        ☑ 勾起來 → 首頁該分類的精選區會顯示這家（<strong>每分類最多取 4 家</strong>，依最新建檔順序）<br>
+        ☐ 不勾 → 不會出現在首頁精選區（但 city / category / search 還是看得到）<br>
+        💡 也會優先出現在縣市頁的「本週熱門」區
+      </div>
+    </div>
+
+    <!-- Placeholder 占位 -->
+    <div class="form-group-admin" style="background:#fef2f2;padding:14px;border-radius:8px;border:1.5px solid #fca5a5;margin-top:10px;">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;">
+        <input type="checkbox" name="is_placeholder" value="1"
+               <?= !empty($client['is_placeholder']) ? 'checked' : '' ?>
+               style="width:20px;height:20px;cursor:pointer;">
+        <span>📋 標記為「占位客戶」（資料整理中）</span>
+      </label>
+      <div class="hint" style="margin-top:6px;margin-left:30px;">
+        ☑ 勾起來 → 前台卡片會顯示橘色「📋 資料整理中」徽章。適用於剛簽約還沒給資料的客戶，或想充版面的展示用客戶。<br>
+        ☐ 不勾（正常客戶）→ 不顯示徽章，前台呈現完整資料。<br>
+        ⚠️ Placeholder 客戶<strong>不會出現在「本週熱門」、「最新加入」</strong>區段，避免誤導訪客。
+      </div>
+    </div>
+
+    <!-- hPanel 子網域已設定旗標 -->
+    <?php if (!empty($client['has_minisite'])): ?>
+    <div class="form-group-admin" style="background:<?= !empty($client['subdomain_provisioned']) ? '#e8f5e9' : '#fff3e0' ?>;padding:14px;border-radius:8px;border:1.5px solid <?= !empty($client['subdomain_provisioned']) ? '#a5d6a7' : '#ffcc80' ?>;margin-top:10px;">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;">
+        <input type="checkbox" name="subdomain_provisioned" value="1"
+               <?= !empty($client['subdomain_provisioned']) ? 'checked' : '' ?>
+               style="width:20px;height:20px;cursor:pointer;">
+        <span><?= !empty($client['subdomain_provisioned']) ? '✅ hPanel 子網域已設定 + SSL 已簽' : '⚠️ Hostinger hPanel 子網域 + SSL 尚未設定' ?></span>
+      </label>
+      <?php if (empty($client['subdomain_provisioned'])):
+        $_sub = $client['subdomain'] ?: $client['slug'];
+      ?>
+      <div class="hint" style="margin-top:10px;margin-left:30px;line-height:1.7;">
+        <strong>子網域尚未設定 → 訪問 <code><?= h($_sub) ?>.gomag.com.tw</code> 會 403 看不到 mini-site</strong>
+        <ol style="margin-top:8px;padding-left:20px;">
+          <li>登入 <a href="https://hpanel.hostinger.com/" target="_blank">Hostinger hPanel</a></li>
+          <li>左側選單 <strong>Domains</strong> → 找 gomag.com.tw</li>
+          <li>分頁 <strong>Subdomains</strong> → 點 <strong>Create subdomain</strong></li>
+          <li>Subdomain 填 <code><?= h($_sub) ?></code></li>
+          <li>Document Root 改成 <code>public_html</code>（去掉預設的 /<?= h($_sub) ?> 後綴）</li>
+          <li>勾 <strong>Force HTTPS</strong> + <strong>Auto Let's Encrypt SSL</strong></li>
+          <li>等 5-10 分鐘 SSL 自動簽好</li>
+          <li>訪問 <code>https://<?= h($_sub) ?>.gomag.com.tw/</code> 確認 OK 後 ☑ 勾上面打勾框並儲存</li>
+        </ol>
+        <button type="button" onclick="navigator.clipboard.writeText('<?= h($_sub) ?>').then(()=>this.textContent='✓ 已複製')" style="margin-top:8px;padding:6px 14px;background:#fff;border:1px solid #ccc;border-radius:6px;cursor:pointer;font-size:.85rem">📋 複製子網域字串「<?= h($_sub) ?>」</button>
+      </div>
+      <?php else: ?>
+      <div class="hint" style="margin-top:6px;margin-left:30px;">
+        子網域已上線：<a href="https://<?= h($client['subdomain'] ?: $client['slug']) ?>.gomag.com.tw/" target="_blank">https://<?= h($client['subdomain'] ?: $client['slug']) ?>.gomag.com.tw/</a>
+        <?php if (!empty($client['subdomain_provisioned_at'])): ?>
+          <br><span style="color:#666;font-size:.85rem">設定日期：<?= date('Y/m/d', strtotime($client['subdomain_provisioned_at'])) ?></span>
+        <?php endif; ?>
+      </div>
+      <?php endif; ?>
+    </div>
+    <?php endif; ?>
+
     <!-- 外部官網 -->
     <div class="form-group-admin" style="margin-top:10px;">
       <label>客戶自有獨立官網 URL（可選）</label>
@@ -224,7 +391,7 @@ require_once __DIR__ . '/../includes/layout_head.php';
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
 
   <!-- 基本資料 -->
-  <div class="card">
+  <div class="card tab-section" data-tab="basic">
     <div class="card-header"><h2>🏢 品牌資料</h2></div>
     <div class="card-body">
       <div class="form-group-admin">
@@ -253,15 +420,78 @@ require_once __DIR__ . '/../includes/layout_head.php';
                value="<?= h($client['email']) ?>">
       </div>
       <div class="form-group-admin">
-        <label>地址</label>
+        <label>地址（顯示用，完整字串）</label>
         <input type="text" name="address" class="form-control"
-               value="<?= h($client['address']) ?>">
+               value="<?= h($client['address']) ?>"
+               placeholder="例：嘉義市西區中山路一段 123 號">
+        <div class="hint">前台直接顯示用。下面 SEO 細欄位選填，填了 schema.org PostalAddress 才完整、有助 Google 本地搜尋。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEO Local Business 細欄位 -->
+  <div class="card tab-section" data-tab="minisite">
+    <div class="card-header"><h2>📍 SEO 本地商家欄位（schema.org）</h2></div>
+    <div class="card-body">
+      <div class="hint" style="margin-bottom:16px;">
+        填了下面欄位，JSON-LD 會輸出完整 <code>PostalAddress</code> + <code>GeoCoordinates</code> + <code>OpeningHoursSpecification</code>。
+        Google 本地搜尋、知識面板、Maps 連動會更完整。沒填則沿用上方「地址」單一字串。
+      </div>
+      <div class="grid-2">
+        <div class="form-group-admin">
+          <label>街道地址</label>
+          <input type="text" name="address_street" class="form-control"
+                 value="<?= h($client['address_street'] ?? '') ?>"
+                 placeholder="例：中山路一段 123 號">
+          <div class="hint">不含縣市/區，只填街道+號</div>
+        </div>
+        <div class="form-group-admin">
+          <label>郵遞區號</label>
+          <input type="text" name="postal_code" class="form-control"
+                 value="<?= h($client['postal_code'] ?? '') ?>"
+                 placeholder="例：600" maxlength="10">
+        </div>
+        <div class="form-group-admin">
+          <label>行政區</label>
+          <input type="text" name="address_district" class="form-control"
+                 value="<?= h($client['address_district'] ?? '') ?>"
+                 placeholder="例：西區 / 永康區">
+        </div>
+        <div class="form-group-admin">
+          <label>縣市</label>
+          <input type="text" name="address_region" class="form-control"
+                 value="<?= h($client['address_region'] ?? '') ?>"
+                 placeholder="例：嘉義市 / 台南市">
+        </div>
+        <div class="form-group-admin">
+          <label>緯度 (Latitude)</label>
+          <input type="text" name="latitude" class="form-control"
+                 value="<?= h($client['latitude'] ?? '') ?>"
+                 placeholder="例：23.4810">
+          <div class="hint">Google Maps 點店家 → 分享 → 從 URL 抽 @23.481,120.456 的第一個數字</div>
+        </div>
+        <div class="form-group-admin">
+          <label>經度 (Longitude)</label>
+          <input type="text" name="longitude" class="form-control"
+                 value="<?= h($client['longitude'] ?? '') ?>"
+                 placeholder="例：120.4496">
+        </div>
+      </div>
+      <div class="form-group-admin">
+        <label>營業時間（JSON）</label>
+        <textarea name="opening_hours_json" class="form-control" rows="3"
+                  placeholder='{"mon":"09:00-18:00","tue":"09:00-18:00","wed":"09:00-18:00","thu":"09:00-18:00","fri":"09:00-18:00","sat":"09:00-18:00","sun":"closed"}'><?= h($client['opening_hours_json'] ?? '') ?></textarea>
+        <div class="hint">
+          格式：<code>{"mon":"09:00-18:00","sun":"closed"}</code>。
+          7 天 key 用 mon/tue/wed/thu/fri/sat/sun，值用 <code>09:00-18:00</code> 或 <code>closed</code>。
+          <a href="javascript:void(0)" onclick="document.querySelector('[name=opening_hours_json]').value='{&quot;mon&quot;:&quot;09:00-18:00&quot;,&quot;tue&quot;:&quot;09:00-18:00&quot;,&quot;wed&quot;:&quot;09:00-18:00&quot;,&quot;thu&quot;:&quot;09:00-18:00&quot;,&quot;fri&quot;:&quot;09:00-18:00&quot;,&quot;sat&quot;:&quot;09:00-18:00&quot;,&quot;sun&quot;:&quot;closed&quot;}'">套用週一到六 9-18、週日公休</a>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- 圖片上傳 -->
-  <div class="card">
+  <div class="card tab-section" data-tab="basic">
     <div class="card-header"><h2>🖼️ 品牌圖片</h2></div>
     <div class="card-body">
       <div class="form-group-admin">
@@ -306,7 +536,7 @@ while (count($currentStats) < 4) $currentStats[] = ['value'=>'','label'=>''];
 $currentTags = !empty($client['about_tags']) ? json_decode($client['about_tags'], true) : ['','','',''];
 while (count($currentTags) < 4) $currentTags[] = '';
 ?>
-<div class="card" style="margin-bottom:20px;">
+<div class="card tab-section" data-tab="basic" style="margin-bottom:20px;">
   <div class="card-header"><h2>📊 首頁 Hero 統計數字</h2></div>
   <div class="card-body">
     <p style="font-size:.85rem;color:var(--muted);margin-bottom:16px">
@@ -332,7 +562,7 @@ while (count($currentTags) < 4) $currentTags[] = '';
 </div>
 
 <!-- 關於我們標籤 -->
-<div class="card" style="margin-bottom:20px;">
+<div class="card tab-section" data-tab="basic" style="margin-bottom:20px;">
   <div class="card-header"><h2>🏷️ 關於我們 — 亮點標籤</h2></div>
   <div class="card-body">
     <p style="font-size:.85rem;color:var(--muted);margin-bottom:16px">
@@ -348,7 +578,7 @@ while (count($currentTags) < 4) $currentTags[] = '';
 </div>
 
 <!-- 營業時間 -->
-<div class="card" style="margin-bottom:20px;">
+<div class="card tab-section" data-tab="basic" style="margin-bottom:20px;">
   <div class="card-header"><h2>🕐 營業時間</h2></div>
   <div class="card-body">
     <div class="form-group-admin">
@@ -360,10 +590,13 @@ while (count($currentTags) < 4) $currentTags[] = '';
 </div>
 
 <!-- Phase C: 經營者 Owner Block -->
-<div class="card" style="margin-bottom:20px; border:1.5px solid #FF5A36;">
-  <div class="card-header"><h2>👤 經營者資訊（Owner Block）</h2></div>
+<div class="card tab-section" data-tab="basic" style="margin-bottom:20px; border:1.5px solid #FF5A36;">
+  <div class="card-header">
+    <h2>👤 經營者資訊（Owner Block）</h2>
+    <span style="display:inline-block;margin-left:8px;background:#fff3e0;color:#e65100;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:20px">📢 兩邊都顯示</span>
+  </div>
   <div class="card-body">
-    <p class="hint" style="margin-bottom:14px;">顯示在新版店家頁「關於」上方，含圓形頭像 + 名字 + 一行介紹。</p>
+    <p class="hint" style="margin-bottom:14px;">顯示在主站行銷頁 <strong>/store/{slug}</strong> 的「關於」上方，以及 mini-site 首頁。</p>
     <div style="display:grid; grid-template-columns: 100px 1fr; gap:16px; align-items:start;">
       <div>
         <?php if (!empty($client['owner_avatar'])): ?>
@@ -393,7 +626,7 @@ while (count($currentTags) < 4) $currentTags[] = '';
 
 <!-- Phase C: Photo Gallery -->
 <?php $existingPhotos = !empty($client['photos']) ? (json_decode($client['photos'], true) ?: []) : []; ?>
-<div class="card" style="margin-bottom:20px; border:1.5px solid #FF5A36;">
+<div class="card tab-section" data-tab="basic" style="margin-bottom:20px; border:1.5px solid #FF5A36;">
   <div class="card-header"><h2>📷 照片集（Photo Gallery）</h2></div>
   <div class="card-body">
     <p class="hint" style="margin-bottom:14px;">顯示在新版店家頁 Hero 之後，最多前 5 張會以 Airbnb 樣式 grid 呈現。</p>
@@ -415,7 +648,7 @@ while (count($currentTags) < 4) $currentTags[] = '';
 </div>
 
 <!-- 關於我們 -->
-<div class="card" style="margin-bottom:20px;">
+<div class="card tab-section" data-tab="basic" style="margin-bottom:20px;">
   <div class="card-header"><h2>📝 關於我們</h2></div>
   <div class="card-body">
     <div class="form-group-admin">
@@ -427,7 +660,7 @@ while (count($currentTags) < 4) $currentTags[] = '';
 </div>
 
 <!-- 主站行銷頁延伸內容 -->
-<div class="card" style="margin-bottom:20px;border-left:4px solid var(--accent);">
+<div class="card tab-section" data-tab="store" style="margin-bottom:20px;border-left:4px solid var(--accent);">
   <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
     <h2>🎯 主站行銷頁延伸內容（一頁式）</h2>
     <div style="display:inline-flex;gap:0;border:1.5px solid var(--border);border-radius:8px;overflow:hidden">
@@ -510,12 +743,57 @@ modeRich.addEventListener('click', () => {
 });
 </script>
 
-<!-- ═══════ SEO 設定（行銷頁專用）═══════ -->
-<div class="card" style="margin-bottom:20px; border-left:4px solid #16a34a;">
-  <div class="card-header"><h2>🔍 行銷頁 SEO 設定</h2></div>
+<!-- ═══════ Mini-site SEO 設定（{sub}.gomag.com.tw 專用）═══════ -->
+<?php if (!empty($client['has_minisite'])): ?>
+<div class="card tab-section" data-tab="minisite" style="margin-bottom:20px; border-left:4px solid #2563eb;">
+  <div class="card-header"><h2>🌐 Mini-site SEO 設定</h2></div>
   <div class="card-body">
     <p style="font-size:.85rem; color:var(--muted); margin-bottom:14px;">
-      這些設定影響此店家在 Google 搜尋的呈現。留空則自動產生。
+      影響子網域 <code><?= h($client['subdomain'] ?: $client['slug']) ?>.gomag.com.tw</code> 的 Google 呈現。<strong>留空 = 自動用品牌名 + tagline / about_text</strong>。
+    </p>
+
+    <div style="background:#fef3c7; border:1.5px solid #f59e0b; border-radius:8px; padding:14px 16px; margin-bottom:18px; font-size:.88rem; line-height:1.6;">
+      <strong>⚠️ SEO 雙曝光戰略 — 兩頁要寫不一樣！</strong><br>
+      <span style="color:#78350f;">這個店家有兩個被 Google 索引的 URL，內容要差異化才能雙雙上榜：</span>
+      <ul style="margin:8px 0 0 18px; color:#78350f;">
+        <li><strong>行銷頁</strong>（<code>/store/{slug}</code>）→ 主打<strong>關鍵字搜尋</strong>（例：「台中裝潢細清推薦」）</li>
+        <li><strong>小官網</strong>（<code>{slug}.gomag.com.tw</code>）→ 主打<strong>品牌搜尋</strong>（例：搜店名）</li>
+      </ul>
+      <span style="color:#78350f;">兩頁的 meta title / desc <strong>不能一字不差複製貼上</strong>，否則 Google 會挑一個冷藏另一個。</span>
+    </div>
+
+    <div class="form-group-admin">
+      <label>Meta Title（自訂搜尋標題）</label>
+      <input type="text" name="minisite_meta_title" class="form-control" maxlength="60"
+             placeholder="<?= h($client['brand_name'] ?? '') ?>｜<?= h($client['tagline'] ?? '一句話標語') ?>"
+             value="<?= h($client['minisite_meta_title'] ?? '') ?>">
+      <div class="hint">建議 50-60 字。留空 = 自動「{品牌}｜{tagline}」</div>
+    </div>
+
+    <div class="form-group-admin">
+      <label>Meta Description</label>
+      <textarea name="minisite_meta_desc" class="form-control" rows="2" maxlength="300"
+                placeholder="一句話介紹此 mini-site（120-160 字）"><?= h($client['minisite_meta_desc'] ?? '') ?></textarea>
+      <div class="hint">建議 120-160 字。留空 = 自動用 about_text 前 120 字</div>
+    </div>
+
+    <div class="form-group-admin">
+      <label>Mini-site 社群分享圖 URL</label>
+      <input type="text" name="minisite_og_image" class="form-control"
+             placeholder="https://... 或 uploads/brand/xxx.jpg"
+             value="<?= h($client['minisite_og_image'] ?? '') ?>">
+      <div class="hint">建議 1200×630 px。留空 = 用 Hero 圖</div>
+    </div>
+  </div>
+</div>
+<?php endif; ?>
+
+<!-- ═══════ SEO 設定（行銷頁 /store/{slug} 專用）═══════ -->
+<div class="card tab-section" data-tab="store" style="margin-bottom:20px; border-left:4px solid #16a34a;">
+  <div class="card-header"><h2>📢 行銷頁 SEO 設定（主站 /store/<?= h($client['slug'] ?? '') ?>）</h2></div>
+  <div class="card-body">
+    <p style="font-size:.85rem; color:var(--muted); margin-bottom:14px;">
+      <strong>⚠️ 只影響主站 <code>/store/<?= h($client['slug'] ?? '') ?></code></strong>，不影響 mini-site 子網域。
     </p>
 
     <div class="form-group-admin">
@@ -552,7 +830,7 @@ modeRich.addEventListener('click', () => {
 </div>
 
 <!-- Google 地圖 -->
-<div class="card" style="margin-bottom:20px;">
+<div class="card tab-section" data-tab="basic" style="margin-bottom:20px;">
   <div class="card-header"><h2>🗺️ Google 地圖嵌入</h2></div>
   <div class="card-body">
     <div class="form-group-admin">
@@ -574,7 +852,7 @@ modeRich.addEventListener('click', () => {
 </div>
 
 <!-- Google 評價串接 -->
-<div class="card" style="margin-bottom:20px; border-left:4px solid var(--accent);">
+<div class="card tab-section" data-tab="basic" style="margin-bottom:20px; border-left:4px solid var(--accent);">
   <div class="card-header"><h2>🌟 Google 評價</h2></div>
   <div class="card-body">
     <div class="form-group-admin">

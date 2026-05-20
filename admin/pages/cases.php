@@ -74,14 +74,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // 施工前圖片
     if (!empty($_FILES['before_image']['name'])) {
         $path = uploadImage($_FILES['before_image'], 'cases');
-        $data['before_image'] = $path ?: $existBefore;
+        if ($path) {
+            // 上傳成功 → 刪舊檔
+            if ($existBefore && $existBefore !== $path) deleteImage($existBefore);
+            $data['before_image'] = $path;
+        } else {
+            $data['before_image'] = $existBefore;
+        }
     } else {
         $data['before_image'] = $existBefore;
     }
     // 施工後圖片
     if (!empty($_FILES['after_image']['name'])) {
         $path = uploadImage($_FILES['after_image'], 'cases');
-        $data['after_image'] = $path ?: $existAfter;
+        if ($path) {
+            // 上傳成功 → 刪舊檔
+            if ($existAfter && $existAfter !== $path) deleteImage($existAfter);
+            $data['after_image'] = $path;
+        } else {
+            $data['after_image'] = $existAfter;
+        }
     } else {
         $data['after_image'] = $existAfter;
     }

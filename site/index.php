@@ -4,10 +4,8 @@ require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/front_functions.php';
 
-// Phase F redesign 期間：強制 CDN 不 cache（避免 stale）
-header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
-header('Pragma: no-cache');
-header('Expires: 0');
+// CDN cache 5 分鐘，平衡新鮮度（後台更新後可見）跟 Core Web Vitals（TTFB）
+header('Cache-Control: public, max-age=300, must-revalidate');
 
 $sub = getSubdomain();
 if (!$sub) { http_response_code(404); die('找不到網站'); }
@@ -711,10 +709,11 @@ if($featured): ?>
       <a href="<?= siteUrl($sub,'cases') ?>" class="animate-in delay-<?= $i+1 ?>" style="display:block;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,.07);transition:transform .2s,box-shadow .2s;text-decoration:none;color:inherit"
            onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 10px 32px rgba(0,0,0,.12)'"
            onmouseout="this.style.transform='';this.style.boxShadow=''">
+        <?php $_caseAlt = h(($c['title'] ?? '') . ($c['svc_name'] ? ' · ' . $c['svc_name'] : '')); ?>
         <?php if($bThumb && $aThumb && !$isFood): ?>
         <div style="position:relative;height:200px;overflow:hidden">
-          <img src="<?= BASE_URL.'/'.h($bThumb) ?>" style="position:absolute;top:0;left:0;width:50%;height:100%;object-fit:cover;filter:saturate(.6) brightness(.95)">
-          <img src="<?= BASE_URL.'/'.h($aThumb) ?>" style="position:absolute;top:0;right:0;width:50%;height:100%;object-fit:cover">
+          <img src="<?= BASE_URL.'/'.h($bThumb) ?>" alt="<?= $_caseAlt ?>・施作前" style="position:absolute;top:0;left:0;width:50%;height:100%;object-fit:cover;filter:saturate(.6) brightness(.95)">
+          <img src="<?= BASE_URL.'/'.h($aThumb) ?>" alt="<?= $_caseAlt ?>・施作後" style="position:absolute;top:0;right:0;width:50%;height:100%;object-fit:cover">
           <div style="position:absolute;left:50%;top:0;width:2px;height:100%;background:#fff;z-index:2"></div>
           <div style="position:absolute;top:8px;left:0;right:0;display:flex;justify-content:space-between;padding:0 8px;z-index:3">
             <span style="font-size:.65rem;font-weight:800;padding:2px 8px;border-radius:4px;background:rgba(0,0,0,.55);color:#fff">BEFORE</span>
@@ -722,9 +721,9 @@ if($featured): ?>
           </div>
         </div>
         <?php elseif($aThumb): ?>
-          <img src="<?= BASE_URL.'/'.h($aThumb) ?>" style="width:100%;height:200px;object-fit:cover">
+          <img src="<?= BASE_URL.'/'.h($aThumb) ?>" alt="<?= $_caseAlt ?>" style="width:100%;height:200px;object-fit:cover">
         <?php elseif($bThumb): ?>
-          <img src="<?= BASE_URL.'/'.h($bThumb) ?>" style="width:100%;height:200px;object-fit:cover">
+          <img src="<?= BASE_URL.'/'.h($bThumb) ?>" alt="<?= $_caseAlt ?>" style="width:100%;height:200px;object-fit:cover">
         <?php else: ?>
           <div style="width:100%;height:200px;background:linear-gradient(135deg,var(--g-ink),rgba(var(--g-ink-rgb),.7));display:flex;align-items:center;justify-content:center">
             <span style="font-size:3rem;opacity:.3"><?= $isFood ? '🍽️' : '📸' ?></span>
@@ -787,6 +786,15 @@ if($featured): ?>
   </div>
 </section>
 <?php endif; ?>
+
+<!-- ══ 5.3 經營者介紹（partial） ═══════════════════════ -->
+<?php require __DIR__ . '/_partial_owner_block.php'; ?>
+
+<!-- ══ 5.4 店家相簿（partial） ═══════════════════════ -->
+<?php require __DIR__ . '/_partial_photos_gallery.php'; ?>
+
+<!-- ══ 5.5 最新專欄 preview（partial）═══════════════════════ -->
+<?php require __DIR__ . '/_partial_column_preview.php'; ?>
 
 <!-- ══ 6. 聯絡 + 地圖 + FB 粉絲頁 ═══════════════════════ -->
 <section class="section" id="contact">

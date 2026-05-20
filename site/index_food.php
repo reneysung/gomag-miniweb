@@ -260,6 +260,15 @@ if ($hasFb || $hasMap):
 </section>
 <?php endif; ?>
 
+<!-- 經營者介紹（partial）-->
+<?php require __DIR__ . '/_partial_owner_block.php'; ?>
+
+<!-- 店家相簿（partial）-->
+<?php require __DIR__ . '/_partial_photos_gallery.php'; ?>
+
+<!-- 最新專欄 preview（partial）-->
+<?php require __DIR__ . '/_partial_column_preview.php'; ?>
+
 <!-- ══ 8. CONTACT INFO（簡潔深色 footer-like）════════════════════════════ -->
 <section class="dine-contact">
   <div class="dine-contact-grid">

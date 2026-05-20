@@ -9,10 +9,6 @@ includes/config.php
 uploads/
 uploads/**
 
-# 案例照片收件匣（Reney 放原圖，Claude 處理後上傳，不進 git）
-_incoming/
-_incoming/**
-
 # ════════════════════════════════════════════
 # 一次性腳本（用完自我刪除型）
 # ════════════════════════════════════════════
@@ -57,10 +53,10 @@ cache/
 cache/**
 
 # ════════════════════════════════════════════
-# Claude Code 工作產物（整個目錄不進 repo）
+# Claude Code 工作產物
 # ════════════════════════════════════════════
-.claude/
-.claude/**
+.claude/launch.json
+.claude/settings.local.json
 
 # ════════════════════════════════════════════
 # 第三方備份檔
@@ -87,5 +83,3 @@ _seed_design_images.php
 _seed_artru_demo.php
 _update_artru_real.php
 _build_client.php
-_seed_lanhung.php
-_seed_lanhung_landing.php

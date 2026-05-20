@@ -15,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'line_url'    => trim($_POST['line_url'] ?? ''),
         'line_id'     => trim($_POST['line_id'] ?? ''),
         'fb_page_url' => trim($_POST['fb_page_url'] ?? ''),
+        'fb_embed_enabled' => isset($_POST['fb_embed_enabled']) ? 1 : 0,
         'instagram_url' => trim($_POST['instagram_url'] ?? ''),
         'youtube_url' => trim($_POST['youtube_url'] ?? ''),
     ];
@@ -60,6 +61,22 @@ require_once __DIR__ . '/../includes/layout_head.php';
         <label><?= $f['icon'] ?> <?= $f['label'] ?></label>
         <input type="text" name="<?= $f['name'] ?>" class="form-control"
                value="<?= h($social[$f['name']] ?? '') ?>" placeholder="<?= h($f['placeholder']) ?>">
+        <?php if ($f['name'] === 'fb_page_url'): ?>
+          <div style="margin-top:10px; padding:14px 16px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px;">
+            <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer; margin:0; font-weight:600;">
+              <input type="checkbox" name="fb_embed_enabled" value="1"
+                     <?= !empty($social['fb_embed_enabled']) ? 'checked' : '' ?>
+                     style="margin-top:3px; transform:scale(1.2);">
+              <span>
+                📌 在 <code>/store/{slug}</code> 頁面最下方<strong>自動嵌入 FB 即時動態框</strong>
+                <div style="font-weight:400; color:#475569; font-size:.85rem; margin-top:4px; line-height:1.5;">
+                  勾起來後，你在 FB 粉專發任何貼文，店家頁面下方都會同步顯示。<br>
+                  ⚠️ 會稍微拖慢頁面載入速度（多 1-2 秒）。新版 Meta 商業檔案有時無法載入，貼完請開頁面確認。
+                </div>
+              </span>
+            </label>
+          </div>
+        <?php endif; ?>
       </div>
       <?php endforeach; ?>
       <button type="submit" class="btn btn-primary">💾 儲存社群連結</button>

@@ -58,12 +58,32 @@ function getFlash(): ?array {
 
 // 圖片上傳處理
 function uploadImage(array $file, string $subdir = 'services'): string|false {
-    $allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-    $maxSize = 5 * 1024 * 1024; // 5MB
+    return uploadImageX($file, $subdir, $reason);  // 包一層相容舊呼叫
+}
 
-    if ($file['error'] !== UPLOAD_ERR_OK) return false;
-    if ($file['size'] > $maxSize) return false;
-    if (!in_array($file['type'], $allowedTypes)) return false;
+/**
+ * 圖片上傳（含失敗原因回傳）。
+ * @param string|null &$reason 失敗時填入中文錯誤原因，給 admin 顯示
+ */
+function uploadImageX(array $file, string $subdir, ?string &$reason = null): string|false {
+    $allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    $maxSize = 15 * 1024 * 1024; // 15MB（放寬，涵蓋多數手機照片）
+    $reason = null;
+
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        $reason = ($file['error'] === UPLOAD_ERR_INI_SIZE || $file['error'] === UPLOAD_ERR_FORM_SIZE)
+            ? '檔案太大，超過伺服器限制' : '上傳過程出錯（錯誤碼 ' . $file['error'] . '）';
+        return false;
+    }
+    if ($file['size'] > $maxSize) {
+        $reason = '圖片太大（' . round($file['size'] / 1024 / 1024, 1) . ' MB），請壓到 15 MB 以內';
+        return false;
+    }
+    if (!in_array($file['type'], $allowedTypes)) {
+        $t = $file['type'] ?: '未知';
+        $reason = "不支援的格式（{$t}）。請用 JPG / PNG / WebP；iPhone 的 HEIC 請先轉成 JPG";
+        return false;
+    }
 
     $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
     $filename = uniqid('img_', true) . '.' . strtolower($ext);
@@ -74,6 +94,7 @@ function uploadImage(array $file, string $subdir = 'services'): string|false {
     if (move_uploaded_file($file['tmp_name'], $targetPath)) {
         return 'uploads/' . $subdir . '/' . $filename;
     }
+    $reason = '檔案寫入失敗（伺服器權限或空間問題）';
     return false;
 }
 

@@ -6,17 +6,7 @@
  */
 $photos = servicePhotoSet();
 $ts = $site['testimonials'] ?? [];
-
-if (empty($ts)) {
-    $ts = [
-        ['reviewer_name' => '陳太太', 'rating' => 5, 'content' => '裝潢後請他們來細清，連縫隙都很乾淨。技師很細心，連檯面下都仔細擦過。', 'service_name' => '裝潢後細清'],
-        ['reviewer_name' => '王先生', 'rating' => 5, 'content' => '搬家前請他們深度清潔，押金順利全額退還，省下不少麻煩。價格公道。', 'service_name' => '搬遷清潔'],
-        ['reviewer_name' => 'Linda',  'rating' => 5, 'content' => '廚房油垢累積多年，他們處理後跟新的一樣。會推薦給家人朋友。', 'service_name' => '居家深度清潔'],
-        ['reviewer_name' => '李小姐', 'rating' => 5, 'content' => '4 樓玻璃外窗自己根本沒辦法清，他們有專業設備，整片透亮。', 'service_name' => '玻璃清洗'],
-        ['reviewer_name' => '張先生', 'rating' => 5, 'content' => '準時到場、準時完成，環保清潔劑沒有刺鼻味，孩子在家也安心。', 'service_name' => '居家深度清潔'],
-        ['reviewer_name' => '林媽媽', 'rating' => 5, 'content' => '免費估價透明、沒有隱藏費用，配合度高還會主動提醒注意事項。', 'service_name' => '裝潢後細清'],
-    ];
-}
+// 不再 hardcode 假評價 — DB 空 → 顯示「整理中」
 
 // stats
 $ratings = array_map(fn($t) => (int)($t['rating'] ?? 5), $ts);
@@ -65,6 +55,22 @@ require __DIR__ . '/layout_head.php';
 </section>
 
 <!-- ══ 3. Featured Review ════════════════════════════════════════════ -->
+<?php if (empty($ts)): ?>
+<section style="padding:80px 20px">
+  <div style="max-width:600px;margin:0 auto;padding:48px 24px;text-align:center;background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.06)">
+    <div style="font-size:3rem;margin-bottom:14px">⭐</div>
+    <h3 style="font-size:1.2rem;font-weight:800;color:var(--g-ink);margin-bottom:8px">客戶評價整理中</h3>
+    <p style="color:#888;font-size:.95rem;margin-bottom:24px">最新好評正在收集中，歡迎成為下一個滿意客戶。</p>
+    <?php if (!empty($client['phone'])): ?>
+      <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$client['phone'])) ?>" class="btn btn-primary" style="margin:4px">📞 <?= h($client['phone']) ?></a>
+    <?php endif; ?>
+    <?php if($lineUrl ?? null): ?>
+      <a href="<?= h($lineUrl) ?>" target="_blank" class="btn btn-accent" style="margin:4px">💬 LINE 諮詢</a>
+    <?php endif; ?>
+  </div>
+</section>
+<?php endif; ?>
+
 <?php if ($featured): ?>
 <section class="proRev-feature">
   <div class="proRev-feature-inner">
@@ -100,8 +106,13 @@ require __DIR__ . '/layout_head.php';
         <div class="proRev-card-avatar"><?= h(mb_substr($t['reviewer_name'], 0, 1)) ?></div>
         <div>
           <div class="proRev-card-name"><?= h($t['reviewer_name']) ?></div>
-          <?php if (!empty($t['service_name'])): ?>
-          <div class="proRev-card-svc"><?= h($t['service_name']) ?></div>
+          <?php $_svcName = $t['svc_name'] ?? $t['service_name'] ?? ''; ?>
+          <?php if ($_svcName): ?>
+            <?php if (!empty($t['svc_slug'])): $_svcUrl = siteUrl($sub ?? $slug, 'services') . '/' . rawurlencode($t['svc_slug']); ?>
+              <div class="proRev-card-svc"><a href="<?= h($_svcUrl) ?>" style="color:inherit;text-decoration:none;border-bottom:1px dashed currentColor"><?= h($_svcName) ?></a></div>
+            <?php else: ?>
+              <div class="proRev-card-svc"><?= h($_svcName) ?></div>
+            <?php endif; ?>
           <?php endif; ?>
         </div>
       </div>

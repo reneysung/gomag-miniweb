@@ -12,10 +12,15 @@ $social   = $site['social'];
 $services = $site['services'];
 $seo      = getSeo($site, $pageKey);
 
-$metaTitle = $seo['meta_title'] ?? ($client['brand_name'] . '｜' . ($client['tagline'] ?? ''));
-$metaDesc  = $seo['meta_desc']  ?? ($client['about_text'] ? mb_strimwidth(strip_tags($client['about_text']), 0, 120, '…') : '');
-$canonicalUrl = getCanonicalUrl($slug, $pageKey);
-$ogImage   = $seo['og_image'] ?? ($client['hero_image_path'] ? BASE_URL . '/' . $client['hero_image_path'] : '');
+// Mini-site SEO 優先級：頁面 SEO（service_detail 等預設）> client 自訂 minisite_meta_* > 自動組
+$metaTitle = $seo['meta_title']
+    ?? (!empty($client['minisite_meta_title']) ? $client['minisite_meta_title'] : ($client['brand_name'] . '｜' . ($client['tagline'] ?? '')));
+$metaDesc  = $seo['meta_desc']
+    ?? (!empty($client['minisite_meta_desc']) ? $client['minisite_meta_desc'] : ($client['about_text'] ? mb_strimwidth(strip_tags($client['about_text']), 0, 120, '…') : ''));
+// canonical：呼叫者可預先設定（如 service_detail.php），否則由 pageKey 自動算
+$canonicalUrl = $canonicalUrl ?? getCanonicalUrl($slug, $pageKey);
+$ogImage   = $seo['og_image']
+    ?? (!empty($client['minisite_og_image']) ? (str_starts_with($client['minisite_og_image'], 'http') ? $client['minisite_og_image'] : BASE_URL . '/' . $client['minisite_og_image']) : ($client['hero_image_path'] ? BASE_URL . '/' . $client['hero_image_path'] : ''));
 // LINE URL：line_url 直填 > line_id 自動組 > 沒設則 ''（templates 用 if 判斷）
 $lineUrl = '';
 if (!empty($social['line_url']) && filter_var($social['line_url'], FILTER_VALIDATE_URL)) {
@@ -34,6 +39,19 @@ $_isFood = (bool)preg_match('/(餐|食|料理|咖啡|甜點|甜品|烘焙|燒肉
 $_casesLabel = $_isFood ? '料理作品' : '施工案例';
 $_casesIcon  = $_isFood ? '🍽️' : '📸';
 $_logoIcon   = $_isFood ? '🍝' : '🌊';
+
+// 該客戶是否有發過專欄文章（決定是否顯示「專欄」nav）
+$_hasArticles = false;
+try {
+    $_artCheck = getDB()->prepare("SELECT 1 FROM articles WHERE client_id=? AND is_active=1 LIMIT 1");
+    $_artCheck->execute([(int)$client['id']]);
+    $_hasArticles = (bool)$_artCheck->fetch();
+} catch (Exception $e) { /* articles 表可能還沒建 */ }
+
+// 專欄列表 URL（prod 用 /column 對齊旭森；staging 用 articles.php?sub=）
+$_columnUrl = (IS_LOCAL || IS_STAGING)
+    ? BASE_URL . '/site/articles.php?sub=' . urlencode($slug)
+    : 'https://' . $slug . '.' . MINISITE_DOMAIN . '/column';
 ?>
 <!DOCTYPE html>
 <html lang="zh-Hant-TW">
@@ -43,6 +61,13 @@ $_logoIcon   = $_isFood ? '🍝' : '🌊';
 <title><?= h($metaTitle) ?></title>
 <meta name="description" content="<?= h($metaDesc) ?>">
 <link rel="canonical" href="<?= h($canonicalUrl) ?>">
+<link rel="alternate" hreflang="zh-Hant" href="<?= h($canonicalUrl) ?>">
+<link rel="alternate" hreflang="x-default" href="<?= h($canonicalUrl) ?>">
+<?php
+// link rel=sitemap：指向同 host 的 sitemap.xml（sitemap.php 會依 host 過濾，只列本子網域 URL）
+$_siteSitemapHost = (IS_LOCAL || IS_STAGING) ? rtrim(BASE_URL, '/') : 'https://' . $slug . '.' . MINISITE_DOMAIN;
+?>
+<link rel="sitemap" type="application/xml" href="<?= h($_siteSitemapHost) ?>/sitemap.xml" title="Sitemap">
 <meta property="og:title"       content="<?= h($seo['og_title'] ?? $metaTitle) ?>">
 <meta property="og:description" content="<?= h($metaDesc) ?>">
 <meta property="og:type"        content="website">
@@ -225,6 +250,9 @@ img{max-width:100%;display:block}
       <a href="<?= siteUrl($slug) ?>"             class="<?= $pageKey==='home'?'active':'' ?>">首頁</a>
       <a href="<?= siteUrl($slug,'services') ?>"  class="<?= $pageKey==='services'?'active':'' ?>">服務項目</a>
       <a href="<?= siteUrl($slug,'cases') ?>"     class="<?= $pageKey==='cases'?'active':'' ?>"><?= $_casesLabel ?></a>
+      <?php if ($_hasArticles): ?>
+        <a href="<?= h($_columnUrl) ?>" class="<?= in_array($pageKey,['articles','article_detail'])?'active':'' ?>">專欄</a>
+      <?php endif; ?>
       <a href="<?= siteUrl($slug,'testimonials') ?>" class="<?= $pageKey==='testimonials'?'active':'' ?>">客戶好評</a>
       <?php if ($phone): ?>
         <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$phone)) ?>" class="btn-contact">📞 <?= h($phone) ?></a>
@@ -238,6 +266,9 @@ img{max-width:100%;display:block}
     <a href="<?= siteUrl($slug) ?>"            onclick="closeMobileMenu()">🏠 首頁</a>
     <a href="<?= siteUrl($slug,'services') ?>" onclick="closeMobileMenu()">🛠️ 服務項目</a>
     <a href="<?= siteUrl($slug,'cases') ?>"    onclick="closeMobileMenu()"><?= $_casesIcon ?> <?= $_casesLabel ?></a>
+    <?php if ($_hasArticles): ?>
+      <a href="<?= h($_columnUrl) ?>" onclick="closeMobileMenu()">📝 專欄</a>
+    <?php endif; ?>
     <a href="<?= siteUrl($slug,'testimonials') ?>" onclick="closeMobileMenu()">⭐ 客戶好評</a>
     <?php if ($phone): ?>
       <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$phone)) ?>" class="highlight">📞 <?= h($phone) ?></a>

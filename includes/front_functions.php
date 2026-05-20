@@ -16,6 +16,7 @@ function getDuplicateSkipSlugs(): array {
         'gourmetrestaurant1', // 來道好食雞 → gourmetrestaurant2 (id=76 → 145)
         '065957487',          // 二鍋壽喜燒 → 062263168 (id=90 → 13)
         'docaroating',        // 鍍卡：拼錯修正 → docar
+        'xusen',              // 旭浪清潔 demo → 外部 062051129 舊官網（不是站內合併）
     ];
 }
 
@@ -87,6 +88,47 @@ function siteUrl(string $sub, string $page = ''): string {
 }
 
 /**
+ * 客戶公開 URL：依 has_minisite / external_website_url 決定卡片連結目的地
+ * 主站列表頁（index / category / city）的客戶卡片用這個 helper 統一邏輯：
+ *   1. has_minisite=1 → mini-site 首頁（直接連，省一跳，PageRank 直接傳遞）
+ *   2. external_website_url 設了 → 外部官網
+ *   3. fallback → 主站 /store/{sub}（has_minisite=0 客戶用）
+ *
+ * @param array $cl clients 表 row（需 has_minisite / external_website_url / subdomain / slug）
+ */
+function clientPublicUrl(array $cl): string {
+    $sub = $cl['subdomain'] ?: $cl['slug'];
+    // 1. mini-site 優先
+    if (!empty($cl['has_minisite'])) {
+        return (IS_LOCAL || IS_STAGING)
+            ? BASE_URL . '/site/index.php?sub=' . urlencode($sub)
+            : 'https://' . $sub . '.' . MINISITE_DOMAIN . '/';
+    }
+    // 2. 外部官網
+    if (!empty($cl['external_website_url']) && filter_var($cl['external_website_url'], FILTER_VALIDATE_URL)) {
+        return $cl['external_website_url'];
+    }
+    // 3. 主站 store.php
+    return (IS_LOCAL || IS_STAGING)
+        ? BASE_URL . '/store.php?sub=' . urlencode($sub)
+        : 'https://www.gomag.com.tw/store/' . urlencode($sub);
+}
+
+/**
+ * 主站行銷頁 URL（always /store/{slug}）— 給 directory 卡片用
+ * 設計策略：主站目錄 / 縣市頁 / 分類頁 / 搜尋頁的卡片連結，永遠指向行銷頁。
+ * 小官網（mini-site）是獨立品牌入口，只有打網址或從 Google 進來的人才會看到。
+ *
+ * 跟 clientPublicUrl 的差別：本 helper 不管 has_minisite 一律回 /store/{slug}。
+ */
+function clientStoreUrl(array $cl): string {
+    $sub = $cl['subdomain'] ?: $cl['slug'];
+    return (IS_LOCAL || IS_STAGING)
+        ? BASE_URL . '/store.php?sub=' . urlencode($sub)
+        : 'https://www.gomag.com.tw/store/' . urlencode($sub);
+}
+
+/**
  * 依子網域載入完整前台資料
  * 查 clients.subdomain 欄位（新架構）
  * 如果找不到則 fallback 到 clients.slug（相容舊資料）
@@ -142,7 +184,7 @@ function loadSiteData(string $sub): array {
     $cases = $ca->fetchAll();
 
     // 評價
-    $te = $db->prepare('SELECT t.*, s.name AS svc_name FROM testimonials t LEFT JOIN services s ON t.service_id=s.id WHERE t.client_id=? AND t.is_active=1 ORDER BY t.sort_order,t.id');
+    $te = $db->prepare('SELECT t.*, s.name AS svc_name, s.slug AS svc_slug FROM testimonials t LEFT JOIN services s ON t.service_id=s.id WHERE t.client_id=? AND t.is_active=1 ORDER BY t.sort_order,t.id');
     $te->execute([$cid]);
     $testimonials = $te->fetchAll();
 
@@ -284,4 +326,41 @@ function caseThumb(string $path): string {
         return $imgs ? $path . '/' . basename($imgs[0]) : '';
     }
     return $path;
+}
+
+/**
+ * 案例地區頁對映 — mini-site /cases/{region} 用
+ * key = URL slug；prefix = case.location 開頭字串（DB 統一用「台」不用「臺」）
+ * 加新地區：這裡加一筆 + .htaccess 的 (taichung|changhua) allowlist 同步加。
+ */
+function caseRegionMap(): array {
+    return [
+        'taichung' => ['label' => '台中', 'prefix' => '台中'],
+        'changhua' => ['label' => '彰化', 'prefix' => '彰化'],
+    ];
+}
+
+/** 從 case location 推斷地區 slug；無對映回 '' */
+function caseRegionSlug(string $location): string {
+    $location = trim($location);
+    if ($location === '') return '';
+    foreach (caseRegionMap() as $slug => $r) {
+        if (mb_strpos($location, $r['prefix']) === 0) return $slug;
+    }
+    return '';
+}
+
+/**
+ * 一組案例中實際出現的地區 slug（依 caseRegionMap 順序），給切換列 / sitemap 用
+ * @param array $cases loadSiteData()['cases']
+ * @return string[] 例 ['taichung','changhua']
+ */
+function caseRegionsPresent(array $cases): array {
+    $present = [];
+    foreach ($cases as $c) {
+        $r = caseRegionSlug($c['location'] ?? '');
+        if ($r && !in_array($r, $present, true)) $present[] = $r;
+    }
+    // 依 caseRegionMap 宣告順序排序
+    return array_values(array_filter(array_keys(caseRegionMap()), fn($s) => in_array($s, $present, true)));
 }

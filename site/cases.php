@@ -4,9 +4,7 @@ require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/helpers.php';
 require_once __DIR__ . '/../includes/front_functions.php';
 
-header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
-header('Pragma: no-cache');
-header('Expires: 0');
+header('Cache-Control: public, max-age=300, must-revalidate');
 
 $sub  = getSubdomain();
 $slug = $sub;
@@ -25,6 +23,48 @@ if (!empty($social['line_url']) && filter_var($social['line_url'], FILTER_VALIDA
 } elseif (!empty($social['line_id'])) {
     $rawId = ltrim(trim($social['line_id']), '@');
     if (preg_match('/^[a-zA-Z0-9_\-]+$/', $rawId)) $lineUrl = 'https://line.me/R/ti/p/@' . $rawId;
+}
+
+// ── 地區案例頁 /cases/{region}（台中 / 彰化 SEO 著陸頁）────────────────
+// 由 .htaccess 規則帶入 ?region=taichung|changhua。下游模板共用 $site['cases']。
+$caseAllRegions  = caseRegionsPresent($site['cases'] ?? []);  // 過濾前的全部地區（給切換列）
+$caseRegion      = strtolower(trim($_GET['region'] ?? ''));
+$caseRegionLabel = '';                 // 模板判斷是否地區模式：'' = 全部案例
+$caseHeroTitle   = '';                 // 地區模式 hero H1（給 cases_service.php 用）
+$caseHeroSub     = '';
+if ($caseRegion !== '') {
+    $regionMap = caseRegionMap();
+    if (!isset($regionMap[$caseRegion])) { http_response_code(404); die('找不到該地區'); }
+    $caseRegionLabel = $regionMap[$caseRegion]['label'];
+
+    // 只留該地區案例
+    $site['cases'] = array_values(array_filter(
+        $site['cases'] ?? [],
+        fn($c) => caseRegionSlug($c['location'] ?? '') === $caseRegion
+    ));
+
+    // 業務名詞：清潔公司 → 清潔（去掉法人/組織尾綴）
+    $bizNoun = preg_replace('/(股份有限公司|有限公司|公司|工作室|事務所|工坊|團隊|商行|企業社)$/u', '', (string)($client['industry'] ?? ''));
+    if ($bizNoun === '') $bizNoun = '清潔';
+    $brand = $client['brand_name'] ?? '';
+
+    // SEO 覆寫（layout_head 透過 getSeo($site,'cases') 讀）
+    $seoTitle = "{$caseRegionLabel}{$bizNoun}案例｜{$brand}";
+    $seoDesc  = "{$brand}{$caseRegionLabel}地區{$bizNoun}施工實績：裝潢細清、石材晶化、地毯清洗、地板打蠟保養，真實 Before／After 對比案例參考。免費到府估價。";
+    $site['seo']['cases'] = [
+        'meta_title' => $seoTitle,
+        'meta_desc'  => $seoDesc,
+        'og_title'   => $seoTitle,
+        'og_image'   => $site['seo']['cases']['og_image'] ?? '',
+    ];
+
+    // canonical 指向地區頁本身
+    $canonicalUrl = (IS_LOCAL || IS_STAGING)
+        ? BASE_URL . '/site/cases.php?sub=' . urlencode($sub) . '&region=' . urlencode($caseRegion)
+        : siteUrl($sub, 'cases') . '/' . $caseRegion;
+
+    $caseHeroTitle = "{$caseRegionLabel}{$bizNoun}案例";
+    $caseHeroSub   = "{$brand} · {$caseRegionLabel}地區施工實績，真實 Before／After";
 }
 
 $ind = $client['industry'] ?? '';

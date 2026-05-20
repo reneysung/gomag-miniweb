@@ -47,6 +47,7 @@ $recentCases->execute([$clientId]);
 $recentCases = $recentCases->fetchAll();
 
 $allClients = [];
+$pendingSubdomains = [];
 if ($admin['role'] === 'super') {
     $allClients = $db->query("
         SELECT c.id,c.slug,c.brand_name,c.is_active,
@@ -55,6 +56,14 @@ if ($admin['role'] === 'super') {
         FROM clients c
         LEFT JOIN client_themes ct ON ct.client_id=c.id AND ct.is_active=1
         ORDER BY c.id LIMIT 8
+    ")->fetchAll();
+
+    // 子網域待辦：has_minisite=1 但 hPanel 還沒設
+    $pendingSubdomains = $db->query("
+        SELECT id, slug, subdomain, brand_name, has_minisite, subdomain_provisioned, created_at, updated_at
+        FROM clients
+        WHERE is_active=1 AND has_minisite=1 AND COALESCE(subdomain_provisioned, 0) = 0
+        ORDER BY id DESC
     ")->fetchAll();
 }
 
@@ -98,6 +107,72 @@ require_once __DIR__ . '/includes/layout_head.php';
     <?php endif; ?>
   </div>
 </div>
+
+<?php if ($admin['role'] === 'super' && !empty($pendingSubdomains)): ?>
+<!-- ═══════ 子網域待辦清單（super 限定） ═══════ -->
+<div style="background:#fff3e0;border:1.5px solid #ffb74d;border-radius:14px;padding:20px 24px;margin-bottom:24px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+    <h2 style="font-size:1.05rem;font-weight:800;color:#e65100;margin:0">
+      ⚠️ Hostinger hPanel 子網域待設定（<?= count($pendingSubdomains) ?> 個）
+    </h2>
+    <a href="https://hpanel.hostinger.com/" target="_blank" style="background:#fff;border:1px solid #ffb74d;color:#e65100;padding:6px 14px;border-radius:6px;text-decoration:none;font-size:.85rem;font-weight:700">🔗 開 hPanel</a>
+  </div>
+  <div style="font-size:.85rem;color:#5d4037;margin-bottom:14px;line-height:1.6">
+    <strong>💡 最簡流程</strong>：
+    <ol style="margin:6px 0 0 18px;line-height:1.7">
+      <li>Chrome 登入 <a href="https://hpanel.hostinger.com/" target="_blank">Hostinger hPanel</a>（保持 Claude extension 連線）</li>
+      <li>跟 Claude 說「幫我建 {slug} 子網域」</li>
+      <li>Claude 5 分鐘自動完成（hPanel 點選 + SSH symlink + DB 標記）</li>
+    </ol>
+  </div>
+  <div style="background:#fff;border-radius:8px;overflow:hidden;border:1px solid #ffe0b2">
+    <table style="width:100%;font-size:.88rem;border-collapse:collapse">
+      <thead style="background:#fafafa">
+        <tr style="border-bottom:1px solid #ffe0b2">
+          <th style="text-align:left;padding:10px 14px;font-weight:700;color:#666">客戶</th>
+          <th style="text-align:left;padding:10px 14px;font-weight:700;color:#666">建議子網域</th>
+          <th style="text-align:left;padding:10px 14px;font-weight:700;color:#666">建立日期</th>
+          <th style="text-align:right;padding:10px 14px;font-weight:700;color:#666">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php foreach ($pendingSubdomains as $p):
+          $_psub = $p['subdomain'] ?: $p['slug'];
+        ?>
+        <tr style="border-top:1px solid #fff3e0">
+          <td style="padding:10px 14px"><strong><?= h($p['brand_name']) ?></strong> <span style="color:#999;font-size:.8em">#<?= $p['id'] ?></span></td>
+          <td style="padding:10px 14px"><code><?= h($_psub) ?>.gomag.com.tw</code></td>
+          <td style="padding:10px 14px;color:#888;font-size:.85em"><?= date('Y/m/d', strtotime($p['created_at'])) ?></td>
+          <td style="padding:10px 14px;text-align:right;white-space:nowrap">
+            <button type="button" onclick="navigator.clipboard.writeText('<?= h($_psub) ?>').then(()=>this.textContent='✓ 已複製')"
+                    style="padding:4px 10px;background:#fff;border:1px solid #ccc;border-radius:5px;cursor:pointer;font-size:.78rem;margin-right:4px">📋 複製</button>
+            <a href="<?= BASE_URL ?>/admin/pages/settings.php?client_id=<?= $p['id'] ?>"
+               style="padding:5px 12px;background:#e65100;color:#fff;border-radius:5px;text-decoration:none;font-size:.78rem;font-weight:700">設定 →</a>
+          </td>
+        </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+  <details style="margin-top:14px;font-size:.85rem">
+    <summary style="cursor:pointer;color:#5d4037;font-weight:700">📖 手動 SOP（Claude 不在或想自己做時用）</summary>
+    <ol style="margin-top:10px;padding-left:24px;line-height:1.9;color:#5d4037">
+      <li>登入 <a href="https://hpanel.hostinger.com/websites" target="_blank">hPanel Websites</a></li>
+      <li>右上紫色「<strong>新增網站</strong>」→ 選「<strong>客製化 PHP/HTML 網站</strong>」</li>
+      <li>輸入完整子網域（例 <code>{slug}.gomag.com.tw</code>）→ dropdown 點「<strong>Use it</strong>」→「<strong>下一個</strong>」</li>
+      <li>跑出「將您的網域指向 Hostinger」改 NS 頁 → <strong>⚠️ 直接點右上 X 關掉</strong>（不要改 NS）</li>
+      <li>SSH 進主機，把 website docroot 改 symlink：
+        <pre style="margin:6px 0;padding:10px;background:#fff8e1;border-radius:4px;font-size:.82em;overflow-x:auto;">SUB={slug}
+mv ~/domains/$SUB.gomag.com.tw/public_html ~/domains/$SUB.gomag.com.tw/public_html.bak
+ln -s ~/domains/gomag.com.tw/public_html ~/domains/$SUB.gomag.com.tw/public_html</pre>
+      </li>
+      <li>等 5-10 分鐘 Let's Encrypt SSL 自動簽好</li>
+      <li>瀏覽器訪問 <code>https://{slug}.gomag.com.tw/</code> 看到 mini-site → 回該客戶 settings 勾「hPanel 子網域已設定」</li>
+    </ol>
+    <p style="margin-top:8px;color:#888;font-size:.82em">📖 詳細 SOP：<code>docs/HPANEL_SUBDOMAIN_SOP.md</code></p>
+  </details>
+</div>
+<?php endif; ?>
 
 <!-- ═══════ 編輯入口（行銷頁 vs 小官網）═══════ -->
 <?php if ($client): ?>

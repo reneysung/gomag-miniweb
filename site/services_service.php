@@ -7,12 +7,7 @@
  * 上文已備好：$site, $sub, $client, $services, $lineUrl, $phone
  */
 $photos = servicePhotoSet();
-$svcList = !empty($services) ? $services : [
-    ['id' => 0, 'name' => '居家深度清潔', 'short_desc' => '針對廚房、衛浴、窗軌等容易積污區域進行全面深層清潔。', 'image_path' => null, '__photo' => $photos['kitchen']],
-    ['id' => 0, 'name' => '裝潢後細清', 'short_desc' => '裝潢完工後的精細清潔，去除粉塵、矽利康、油漆殘跡，讓新家煥然一新。', 'image_path' => null, '__photo' => $photos['living']],
-    ['id' => 0, 'name' => '搬遷清潔', 'short_desc' => '搬入前或搬出後的全屋清潔，確保乾淨完整交接。', 'image_path' => null, '__photo' => $photos['bathroom']],
-    ['id' => 0, 'name' => '玻璃外窗清潔', 'short_desc' => '高樓層外窗、紗窗、軌道全面清洗，視野通透。', 'image_path' => null, '__photo' => $photos['window']],
-];
+$svcList = $services ?? [];  // 不再 hardcode 假資料 — DB 空 → 顯示「整理中」
 
 $svcPhotoMap = [
     '裝潢' => $photos['living'], '細清' => $photos['living'],
@@ -41,6 +36,19 @@ require __DIR__ . '/layout_head.php';
 
 <!-- ══ 2. 服務項目 Grid ═════════════════════════════════════════════ -->
 <section class="prosvc-grid-section">
+  <?php if (empty($svcList)): ?>
+    <div style="max-width:600px;margin:60px auto;padding:48px 24px;text-align:center;background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.06)">
+      <div style="font-size:3rem;margin-bottom:14px">🛠️</div>
+      <h3 style="font-size:1.2rem;font-weight:800;color:var(--g-ink);margin-bottom:8px">服務項目整理中</h3>
+      <p style="color:#888;font-size:.95rem;margin-bottom:24px">歡迎來電或 LINE 諮詢，我們將為您詳細說明服務內容。</p>
+      <?php if($phone): ?>
+        <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$phone)) ?>" class="btn btn-primary" style="margin:4px">📞 <?= h($phone) ?></a>
+      <?php endif; ?>
+      <?php if($lineUrl): ?>
+        <a href="<?= h($lineUrl) ?>" target="_blank" class="btn btn-accent" style="margin:4px">💬 LINE 諮詢</a>
+      <?php endif; ?>
+    </div>
+  <?php else: ?>
   <div class="prosvc-grid">
     <?php foreach ($svcList as $i => $svc):
       // 圖：DB image_path > 名字關鍵字 match > default photo
@@ -57,8 +65,20 @@ require __DIR__ . '/layout_head.php';
         <span class="prosvc-card-num"><?= str_pad((string)($i+1), 2, '0', STR_PAD_LEFT) ?></span>
       </div>
       <div class="prosvc-card-meta">
-        <h3 class="prosvc-card-name"><?= h($svc['name']) ?></h3>
+        <?php $svcDetailUrl = !empty($svc['slug']) ? (siteUrl($sub, 'services') . '/' . rawurlencode($svc['slug'])) : null; ?>
+        <h3 class="prosvc-card-name">
+          <?php if ($svcDetailUrl): ?>
+            <a href="<?= h($svcDetailUrl) ?>" style="color:inherit;text-decoration:none"><?= h($svc['name']) ?></a>
+          <?php else: ?>
+            <?= h($svc['name']) ?>
+          <?php endif; ?>
+        </h3>
         <p class="prosvc-card-desc"><?= h($svc['short_desc'] ?? '') ?></p>
+        <?php if ($svcDetailUrl): ?>
+        <a href="<?= h($svcDetailUrl) ?>" class="prosvc-card-link" style="margin-bottom:8px">
+          了解更多 <span>→</span>
+        </a>
+        <?php endif; ?>
         <?php if($lineUrl): ?>
         <a href="<?= h($lineUrl) ?>" class="prosvc-card-link" target="_blank">
           詢問報價 <span>→</span>
@@ -68,6 +88,7 @@ require __DIR__ . '/layout_head.php';
     </article>
     <?php endforeach; ?>
   </div>
+  <?php endif; /* svcList empty */ ?>
 </section>
 
 <!-- ══ 3. 為什麼選我們 — 4 信任 pillars ═══════════════════════════════ -->

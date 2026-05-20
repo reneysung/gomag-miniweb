@@ -67,7 +67,11 @@ $cases = $site['cases'] ?? [];
 ?>
 <article class="ed-case animate-in" id="case-<?= $c['id'] ?>">
   <div class="ed-case-meta">CASE STUDY · <?= sprintf('%02d', $idx + 1) ?></div>
-  <h2><?= h($c['title']) ?></h2>
+  <?php $caseDetailUrl = !empty($c['slug']) ? (siteUrl($sub ?? $slug, 'cases') . '/' . rawurlencode($c['slug'])) : null; ?>
+  <h2>
+    <?php if ($caseDetailUrl): ?><a href="<?= h($caseDetailUrl) ?>" style="color:inherit;text-decoration:none"><?= h($c['title']) ?></a>
+    <?php else: ?><?= h($c['title']) ?><?php endif; ?>
+  </h2>
   <div class="case-stats">
     <?php if (!empty($c['location'])): ?>
     <div class="stat">地點 <strong><?= h($c['location']) ?></strong></div>
@@ -94,6 +98,9 @@ $cases = $site['cases'] ?? [];
     </div>
     <?php endif; ?>
   </div>
+  <?php endif; ?>
+  <?php if ($caseDetailUrl): ?>
+  <div style="margin-top:24px"><a href="<?= h($caseDetailUrl) ?>" style="font-size:.9rem;color:#c8a57a;text-decoration:none;letter-spacing:.08em;font-weight:600">閱讀完整案例 →</a></div>
   <?php endif; ?>
 </article>
 <?php endforeach; ?>

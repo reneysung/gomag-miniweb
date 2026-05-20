@@ -83,7 +83,11 @@ $tagline = $client['tagline'] ?? '';
     <?php endif; ?>
     <div class="ed-svc-text">
       <div class="ed-svc-num"><?= sprintf('%02d', $i + 1) ?></div>
-      <h2><?= h($svc['name']) ?></h2>
+      <?php $svcDetailUrl = !empty($svc['slug']) ? (siteUrl($sub ?? $slug, 'services') . '/' . rawurlencode($svc['slug'])) : null; ?>
+      <h2>
+        <?php if ($svcDetailUrl): ?><a href="<?= h($svcDetailUrl) ?>" style="color:inherit;text-decoration:none"><?= h($svc['name']) ?></a>
+        <?php else: ?><?= h($svc['name']) ?><?php endif; ?>
+      </h2>
       <?php if (!empty($svc['short_desc'])): ?>
       <div class="short"><?= h($svc['short_desc']) ?></div>
       <?php endif; ?>
@@ -92,6 +96,9 @@ $tagline = $client['tagline'] ?? '';
       <?php endif; ?>
       <?php if (!empty($svc['price_text'])): ?>
       <div class="price"><?= h($svc['price_text']) ?></div>
+      <?php endif; ?>
+      <?php if ($svcDetailUrl): ?>
+      <div style="margin-top:18px"><a href="<?= h($svcDetailUrl) ?>" style="font-size:.85rem;color:#c8a57a;text-decoration:none;letter-spacing:.08em;font-weight:600">了解更多 →</a></div>
       <?php endif; ?>
     </div>
   </div>
