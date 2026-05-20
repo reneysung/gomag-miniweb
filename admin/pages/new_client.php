@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../../includes/config.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/helpers.php';
+require_once __DIR__ . '/../../includes/front_functions.php';  // deriveCitySlug()
 requireLogin();
 
 // 只有 super admin 可以用
@@ -40,8 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             // 1. 建立客戶（含新欄位：category_id / has_minisite / external_website_url / legacy_store_id）
             $db->prepare("INSERT INTO clients
-                (subdomain,slug,brand_name,tagline,industry,category_id,phone,email,address,external_website_url,about_text,has_minisite,legacy_store_id)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)")
+                (subdomain,slug,brand_name,tagline,industry,category_id,phone,email,address,city_slug,external_website_url,about_text,has_minisite,legacy_store_id)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
                ->execute([
                    $subdomain,
                    $subdomain,
@@ -52,6 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                    trim($_POST['phone']    ?? ''),
                    trim($_POST['email']    ?? ''),
                    trim($_POST['address']  ?? ''),
+                   deriveCitySlug(trim($_POST['address'] ?? '')),
                    trim($_POST['external_website_url'] ?? ''),
                    trim($_POST['about_text'] ?? ''),
                    isset($_POST['has_minisite']) ? 1 : 0,

@@ -41,6 +41,22 @@ function getCityMap(): array {
 }
 
 /**
+ * 從 address 推導縣市 slug（取代到處 address LIKE '台中市%' 的脆弱比對）。
+ * 台/臺 正規化後對 cities 表的 full_name；非 12 對映縣市（雲林/彰化…）回 null。
+ * 用於 migration backfill + admin 存檔時重算 clients.city_slug。
+ */
+function deriveCitySlug(string $address): ?string {
+    $address = trim($address);
+    if ($address === '') return null;
+    static $nameToSlug = null;
+    if ($nameToSlug === null) $nameToSlug = array_flip(getCityMap());
+    $re = '/^(臺北市|台北市|新北市|桃園市|臺中市|台中市|臺南市|台南市|高雄市|基隆市|新竹市|新竹縣|苗栗縣|彰化縣|南投縣|雲林縣|嘉義市|嘉義縣|屏東縣|宜蘭縣|花蓮縣|臺東縣|台東縣|澎湖縣|金門縣|連江縣)/u';
+    if (!preg_match($re, $address, $m)) return null;
+    $name = str_replace('臺', '台', $m[1]);
+    return $nameToSlug[$name] ?? null;
+}
+
+/**
  * 偵測目前要顯示哪個客戶的子網域
  *
  * 優先順序：

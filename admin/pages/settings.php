@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../../includes/config.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/helpers.php';
+require_once __DIR__ . '/../../includes/front_functions.php';  // deriveCitySlug()
 requireLogin();
 
 $pageTitle = '基本資訊設定';
@@ -27,6 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'business_hours'         => trim($_POST['business_hours'] ?? ''),
         'email'                  => trim($_POST['email'] ?? ''),
         'address'                => trim($_POST['address'] ?? ''),
+        'city_slug'              => deriveCitySlug(trim($_POST['address'] ?? '')),  // 第 6 步：地址改→重算
         // SEO schema 細欄位（旭森風格 — 拆 PostalAddress + geo + opening hours）
         'address_street'         => trim($_POST['address_street'] ?? '') ?: null,
         'address_district'       => trim($_POST['address_district'] ?? '') ?: null,

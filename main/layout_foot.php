@@ -32,7 +32,6 @@ $contactPhone = getPlatformSetting('contact_phone', '');
       <h4>店家專區</h4>
       <ul>
         <li><a href="mailto:<?= h($contactEmail) ?>">合作上架</a></li>
-        <li><a href="<?= BASE_URL ?>/admin/">店家後台</a></li>
       </ul>
     </div>
 

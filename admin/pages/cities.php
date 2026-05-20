@@ -50,8 +50,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // 全部城市清單 + 各城市店家數
 $cities = $db->query("SELECT * FROM cities ORDER BY sort_order, id")->fetchAll();
 foreach ($cities as &$c) {
-    $cnt = $db->prepare("SELECT COUNT(*) FROM clients WHERE is_active=1 AND address LIKE ?");
-    $cnt->execute([$c['full_name'] . '%']);
+    $cnt = $db->prepare("SELECT COUNT(*) FROM clients WHERE is_active=1 AND city_slug = ?");
+    $cnt->execute([$c['slug']]);
     $c['store_count'] = (int)$cnt->fetchColumn();
     $c['highlights_arr'] = json_decode($c['highlights'] ?? '[]', true) ?: [];
     $c['areas_arr']      = json_decode($c['areas']      ?? '[]', true) ?: [];

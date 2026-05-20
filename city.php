@@ -118,9 +118,9 @@ $sql = "
            c.id AS cat_id, c.name AS cat_name, c.icon AS cat_icon, c.slug AS cat_slug
     FROM clients cl
     LEFT JOIN categories c ON cl.category_id = c.id
-    WHERE cl.is_active = 1 AND cl.address LIKE ? AND cl.slug NOT IN ($dupPh)
+    WHERE cl.is_active = 1 AND cl.city_slug = ? AND cl.slug NOT IN ($dupPh)
 ";
-$params = array_merge([$cityName . '%'], $dupSkip);
+$params = array_merge([$slug], $dupSkip);
 if ($q !== '') {
     $sql .= " AND (cl.brand_name LIKE ? OR cl.tagline LIKE ? OR c.name LIKE ?)";
     $kw = '%' . $q . '%';
@@ -376,10 +376,10 @@ $hotStmt = $db->prepare("
          cl.has_minisite, cl.external_website_url,
          cl.address, c.name AS cat_name, c.icon AS cat_icon, c.slug AS cat_slug
   FROM clients cl LEFT JOIN categories c ON cl.category_id=c.id
-  WHERE cl.is_active=1 AND COALESCE(cl.is_placeholder,0)=0 AND cl.address LIKE ?
+  WHERE cl.is_active=1 AND COALESCE(cl.is_placeholder,0)=0 AND cl.city_slug = ?
     AND cl.is_featured=1 AND cl.slug NOT IN ($dupPh)
   ORDER BY cl.id DESC LIMIT 4");
-$hotStmt->execute(array_merge([$cityName . '%'], $dupSkip));
+$hotStmt->execute(array_merge([$slug], $dupSkip));
 $hotStores = $hotStmt->fetchAll();
 
 $latestStmt = $db->prepare("
@@ -387,20 +387,20 @@ $latestStmt = $db->prepare("
          cl.has_minisite, cl.external_website_url,
          cl.address, c.name AS cat_name, c.icon AS cat_icon, c.slug AS cat_slug
   FROM clients cl LEFT JOIN categories c ON cl.category_id=c.id
-  WHERE cl.is_active=1 AND COALESCE(cl.is_placeholder,0)=0 AND cl.address LIKE ?
+  WHERE cl.is_active=1 AND COALESCE(cl.is_placeholder,0)=0 AND cl.city_slug = ?
     AND cl.slug NOT IN ($dupPh)
   ORDER BY cl.created_at DESC, cl.id DESC LIMIT 4");
-$latestStmt->execute(array_merge([$cityName . '%'], $dupSkip));
+$latestStmt->execute(array_merge([$slug], $dupSkip));
 $latestStores = $latestStmt->fetchAll();
 
 $cityReviewsStmt = $db->prepare("
   SELECT t.reviewer_name, t.rating, t.content, cl.brand_name, cl.subdomain, cl.slug,
          cl.has_minisite, cl.external_website_url
   FROM testimonials t JOIN clients cl ON t.client_id = cl.id
-  WHERE t.is_active=1 AND cl.is_active=1 AND cl.address LIKE ?
+  WHERE t.is_active=1 AND cl.is_active=1 AND cl.city_slug = ?
     AND cl.slug NOT IN ($dupPh)
   ORDER BY t.rating DESC, t.id DESC LIMIT 6");
-$cityReviewsStmt->execute(array_merge([$cityName . '%'], $dupSkip));
+$cityReviewsStmt->execute(array_merge([$slug], $dupSkip));
 $cityReviews = $cityReviewsStmt->fetchAll();
 
 // 共用 render 卡片 helper

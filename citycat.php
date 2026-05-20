@@ -48,12 +48,12 @@ $sql = "
            cl.has_minisite, cl.external_website_url, cl.hero_image_path,
            cl.address, cl.phone, cl.is_placeholder
     FROM clients cl
-    WHERE cl.is_active = 1 AND cl.category_id = ? AND cl.address LIKE ?
+    WHERE cl.is_active = 1 AND cl.category_id = ? AND cl.city_slug = ?
       AND cl.slug NOT IN ($dupPh)
     ORDER BY cl.is_placeholder ASC, cl.id DESC
 ";
 $stmt = $db->prepare($sql);
-$stmt->execute(array_merge([$catId, $cityName . '%'], $dupSkip));
+$stmt->execute(array_merge([$catId, $slug], $dupSkip));
 $clients = $stmt->fetchAll();
 
 $totalStores = count($clients);

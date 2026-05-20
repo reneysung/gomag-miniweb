@@ -113,9 +113,9 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
             $geoCells[$g['city_slug'] . '|' . (int)$g['category_id']] = true;
     } catch (\Throwable $e) { /* 表未建時略過 */ }
     $dupPhCross = implode(',', array_fill(0, count($dupSkip), '?'));
-    $cellStmt = $db->prepare("SELECT category_id, SUM(COALESCE(is_placeholder,0)=0) AS rc FROM clients WHERE is_active=1 AND address LIKE ? AND slug NOT IN ($dupPhCross) AND category_id IS NOT NULL GROUP BY category_id");
+    $cellStmt = $db->prepare("SELECT category_id, SUM(COALESCE(is_placeholder,0)=0) AS rc FROM clients WHERE is_active=1 AND city_slug = ? AND slug NOT IN ($dupPhCross) AND category_id IS NOT NULL GROUP BY category_id");
     foreach (getCityMap() as $cSlug => $cName):
-        $cellStmt->execute(array_merge([$cName . '%'], $dupSkip));
+        $cellStmt->execute(array_merge([$cSlug], $dupSkip));
         $counts = [];
         foreach ($cellStmt->fetchAll() as $r) $counts[(int)$r['category_id']] = (int)$r['rc'];
         foreach ($catIdToSlug as $cid => $catSlugX):
