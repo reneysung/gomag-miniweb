@@ -129,6 +129,31 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
   </url>
   <?php endforeach; endforeach; ?>
 
+  <!-- 攻略文總覽 + 各 published 攻略文 -->
+  <?php
+    $guideRows = [];
+    try {
+        $guideRows = $db->query("SELECT slug, COALESCE(updated_at, published_at) AS modified FROM guides WHERE status='published' ORDER BY published_at DESC")->fetchAll();
+    } catch (\Throwable $e) { $guideRows = []; /* 表未建時略過 */ }
+    if ($guideRows):
+  ?>
+  <url>
+    <loc><?= htmlspecialchars($baseUrl) ?>/guide</loc>
+    <lastmod><?= $today ?></lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <?php foreach ($guideRows as $gr):
+        $gMod = $gr['modified'] ? date('Y-m-d', strtotime($gr['modified'])) : $today;
+  ?>
+  <url>
+    <loc><?= htmlspecialchars($baseUrl) ?>/guide/<?= htmlspecialchars($gr['slug']) ?></loc>
+    <lastmod><?= $gMod ?></lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <?php endforeach; endif; ?>
+
   <!-- 各客戶行銷頁（所有客戶都有；有 mini-site 的客戶 mini-site 在下方獨立列） -->
   <?php foreach ($clients as $cl):
       $sub = $cl['subdomain'] ?: $cl['slug'];

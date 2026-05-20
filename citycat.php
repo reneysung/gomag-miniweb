@@ -234,6 +234,35 @@ $breadcrumbLd = [
 </section>
 <?php endif; ?>
 
+<!-- ═══ 相關攻略文（內容層互鏈，第 5 步）═══ -->
+<?php
+$relGuides = [];
+try {
+    $rg = $db->prepare("SELECT slug, title, excerpt, cover_image FROM guides WHERE status='published' AND (city_slug = ? OR category_id = ?) ORDER BY published_at DESC, id DESC LIMIT 4");
+    $rg->execute([$slug, $catId]);
+    $relGuides = $rg->fetchAll();
+} catch (\Throwable $e) { $relGuides = []; }
+if ($relGuides):
+?>
+<section class="g-section">
+  <div class="g-section-head"><div><h2 class="g-section-title">📖 <?= h($cityShort) ?><?= h($catName) ?>攻略</h2></div></div>
+  <div class="g-store-grid">
+    <?php foreach ($relGuides as $gd):
+        $gUrl = (IS_LOCAL || IS_STAGING) ? BASE_URL . '/guide.php?slug=' . urlencode($gd['slug']) : 'https://www.gomag.com.tw/guide/' . urlencode($gd['slug']);
+        $gc = $gd['cover_image'] ?: '';
+    ?>
+    <a class="g-store-card" href="<?= h($gUrl) ?>">
+      <div class="g-store-img" <?= $gc ? 'style="background-image:url(\''.h($gc).'\')"' : '' ?>>
+        <?php if (!$gc): ?><div class="g-store-img-fallback"><span class="icon">📖</span><span class="label">攻略</span></div><?php endif; ?>
+      </div>
+      <div class="g-store-meta-top"><div class="g-store-name"><?= h($gd['title']) ?></div></div>
+      <?php if ($gd['excerpt']): ?><div class="g-store-loc"><?= h(mb_strimwidth($gd['excerpt'], 0, 50, '…', 'UTF-8')) ?></div><?php endif; ?>
+    </a>
+    <?php endforeach; ?>
+  </div>
+</section>
+<?php endif; ?>
+
 <!-- ═══ 內鏈：回縣市 / 看全台分類 ═══ -->
 <section class="g-section" style="padding-top:0;">
   <div style="display:flex; flex-wrap:wrap; gap:12px;">
