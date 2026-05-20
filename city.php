@@ -398,7 +398,7 @@ $cityReviewsStmt = $db->prepare("
          cl.has_minisite, cl.external_website_url
   FROM testimonials t JOIN clients cl ON t.client_id = cl.id
   WHERE t.is_active=1 AND cl.is_active=1 AND cl.city_slug = ?
-    AND cl.slug NOT IN ($dupPh)
+    AND cl.slug NOT IN ($dupPh) AND COALESCE(t.source,'') <> 'demo'
   ORDER BY t.rating DESC, t.id DESC LIMIT 6");
 $cityReviewsStmt->execute(array_merge([$slug], $dupSkip));
 $cityReviews = $cityReviewsStmt->fetchAll();

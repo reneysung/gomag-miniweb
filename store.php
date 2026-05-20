@@ -83,11 +83,11 @@ if ($isPlaceholder) {
     // 新系統：清空舊變數（block 區塊由 renderStoreBlocks() 負責），僅保留 testimonials/評價
     $services = $cases = [];
 
-    $testimonials = $db->prepare("SELECT * FROM testimonials WHERE client_id=? AND is_active=1 ORDER BY sort_order, id LIMIT 3");
+    $testimonials = $db->prepare("SELECT * FROM testimonials WHERE client_id=? AND is_active=1 AND COALESCE(source,'') <> 'demo' ORDER BY sort_order, id LIMIT 3");
     $testimonials->execute([$cid]);
     $testimonials = $testimonials->fetchAll();
 
-    $avgRating = $db->prepare("SELECT AVG(rating) AS avg, COUNT(*) AS cnt FROM testimonials WHERE client_id=? AND is_active=1");
+    $avgRating = $db->prepare("SELECT AVG(rating) AS avg, COUNT(*) AS cnt FROM testimonials WHERE client_id=? AND is_active=1 AND COALESCE(source,'') <> 'demo'");
     $avgRating->execute([$cid]);
     $rating = $avgRating->fetch();
 
@@ -102,12 +102,12 @@ if ($isPlaceholder) {
     $cases->execute([$cid]);
     $cases = $cases->fetchAll();
 
-    $testimonials = $db->prepare("SELECT * FROM testimonials WHERE client_id=? AND is_active=1 ORDER BY sort_order, id LIMIT 3");
+    $testimonials = $db->prepare("SELECT * FROM testimonials WHERE client_id=? AND is_active=1 AND COALESCE(source,'') <> 'demo' ORDER BY sort_order, id LIMIT 3");
     $testimonials->execute([$cid]);
     $testimonials = $testimonials->fetchAll();
 
     // 計算評價平均
-    $avgRating = $db->prepare("SELECT AVG(rating) AS avg, COUNT(*) AS cnt FROM testimonials WHERE client_id=? AND is_active=1");
+    $avgRating = $db->prepare("SELECT AVG(rating) AS avg, COUNT(*) AS cnt FROM testimonials WHERE client_id=? AND is_active=1 AND COALESCE(source,'') <> 'demo'");
     $avgRating->execute([$cid]);
     $rating = $avgRating->fetch();
 

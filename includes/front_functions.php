@@ -200,7 +200,7 @@ function loadSiteData(string $sub): array {
     $cases = $ca->fetchAll();
 
     // 評價
-    $te = $db->prepare('SELECT t.*, s.name AS svc_name, s.slug AS svc_slug FROM testimonials t LEFT JOIN services s ON t.service_id=s.id WHERE t.client_id=? AND t.is_active=1 ORDER BY t.sort_order,t.id');
+    $te = $db->prepare("SELECT t.*, s.name AS svc_name, s.slug AS svc_slug FROM testimonials t LEFT JOIN services s ON t.service_id=s.id WHERE t.client_id=? AND t.is_active=1 AND COALESCE(t.source,'') <> 'demo' ORDER BY t.sort_order,t.id");
     $te->execute([$cid]);
     $testimonials = $te->fetchAll();
 
