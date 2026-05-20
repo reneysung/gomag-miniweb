@@ -167,7 +167,7 @@ if (!empty($client['email'])) $jsonLd['email'] = $client['email'];
 if (!empty($client['address'])) {
     // 從地址自動抓城市（嘉義市/嘉義縣/台南市/高雄市/...），抓不到 fallback 台南市
     $locality = '台南市';
-    if (preg_match('/(臺?[北中南東]市|新北市|桃園市|高雄市|嘉義[市縣]|新竹[市縣]|苗栗[市縣]|彰化縣|南投縣|雲林縣|屏東縣|宜蘭縣|花蓮縣|台東縣|澎湖縣|金門縣|連江縣|基隆市)/u', $client['address'], $m)) {
+    if (preg_match('/([台臺][北中南東]市|新北市|桃園市|高雄市|嘉義[市縣]|新竹[市縣]|苗栗[市縣]|彰化縣|南投縣|雲林縣|屏東縣|宜蘭縣|花蓮縣|台東縣|澎湖縣|金門縣|連江縣|基隆市)/u', $client['address'], $m)) {
         $locality = str_replace('臺', '台', $m[1]);
     }
     $jsonLd['address'] = [
@@ -190,7 +190,7 @@ if (!empty($client['updated_at'])) {
 $_breadcrumbCity = null;
 $_breadcrumbCitySlug = null;
 $_cityNameToSlug = array_flip(getCityMap());  // 唯一來源：cities 表
-if (!empty($client['address']) && preg_match('/^(臺?[北中南東]市|新北市|桃園市|高雄市|嘉義[市縣]|新竹[市縣]|苗栗縣|彰化縣|南投縣|雲林縣|屏東縣|宜蘭縣|花蓮縣|台東縣|基隆市)/u', $client['address'], $_m)) {
+if (!empty($client['address']) && preg_match('/^([台臺][北中南東]市|新北市|桃園市|高雄市|嘉義[市縣]|新竹[市縣]|苗栗縣|彰化縣|南投縣|雲林縣|屏東縣|宜蘭縣|花蓮縣|台東縣|基隆市)/u', $client['address'], $_m)) {
     $_breadcrumbCity = str_replace('臺', '台', $_m[1]);
     $_breadcrumbCitySlug = $_cityNameToSlug[$_breadcrumbCity] ?? null;
 }
