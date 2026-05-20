@@ -18,7 +18,7 @@ PHP 主站 + miniweb 子網域 + 後台管理。207 家在地客戶。Hostinger 
 Host: 145.79.14.161
 Port: 65002
 User: u331306067
-Pass: !fX5vlQhlt9jIgi1   ← Reney 設的，做完事後建議 reset
+Pass: <已移除明文，請 reset 後存到密碼管理器 / 1Password；勿再寫回此檔>
 Web root: /home/u331306067/domains/aqua-elephant-856571.hostingersite.com/public_html
 ```
 
@@ -28,7 +28,7 @@ Web root: /home/u331306067/domains/aqua-elephant-856571.hostingersite.com/public
 
 `includes/config.php` 用 `IS_LOCAL` / `IS_STAGING` / `IS_PROD` 三段切換。
 - 本機：MAMP localhost:8889 / root / root
-- Staging / Prod：u331306067_miniweb / `Mw2026_K8sP3zXq!`
+- Staging / Prod：u331306067_miniweb / `<已移除明文，見 server 端 includes/config.php>`
 - ⚠️ `includes/config.php` 已 .gitignore（含密碼），有 `config.example.php` 範本
 
 ## Git 狀態
