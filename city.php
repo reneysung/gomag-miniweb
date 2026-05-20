@@ -11,21 +11,8 @@ $slug = strtolower(trim($_GET['slug'] ?? ''));
 $dupSkip = getDuplicateSkipSlugs();
 $dupPh   = implode(',', array_fill(0, count($dupSkip), '?'));
 
-// ─── slug → 縣市中文名 對映 ─────────────────────────────────
-$cityMap = [
-    'tainan'    => '台南市',
-    'kaohsiung' => '高雄市',
-    'chiayi'    => '嘉義市',
-    'taichung'  => '台中市',
-    'taipei'    => '台北市',
-    'newtaipei' => '新北市',
-    'taoyuan'   => '桃園市',
-    'taitung'   => '台東縣',
-    'pingtung'  => '屏東縣',
-    'hsinchu'   => '新竹市',
-    'yilan'     => '宜蘭縣',
-    'hualien'   => '花蓮縣',
-];
+// ─── slug → 縣市中文名 對映（唯一來源：cities 表，見 getCityMap()）──
+$cityMap = getCityMap();
 $cityNameToSlug = array_flip($cityMap);
 
 // ─── 縣市專屬內文 — 從 cities 表讀取（取代寫死 PHP array）──

@@ -20,6 +20,26 @@ function getDuplicateSkipSlugs(): array {
 }
 
 /**
+ * 縣市 slug ↔ 中文全名對映的「唯一來源」（取代寫死在 city/sitemap/store/index 的 array）。
+ * 讀 cities 表全部 row（不濾 is_active：這是路由對映，與「是否顯示城市介紹」無關）。
+ * 回傳 [slug => full_name]，名→slug 由呼叫端 array_flip()。
+ * 開新縣市 = cities 表新增一筆 row，不動程式碼。
+ */
+function getCityMap(): array {
+    static $map = null;
+    if ($map !== null) return $map;
+    $map = [];
+    try {
+        foreach (getDB()->query("SELECT slug, full_name FROM cities ORDER BY sort_order, id") as $r) {
+            $map[$r['slug']] = $r['full_name'];
+        }
+    } catch (\Throwable $e) {
+        $map = [];  // cities 表還不存在時不致命
+    }
+    return $map;
+}
+
+/**
  * 偵測目前要顯示哪個客戶的子網域
  *
  * 優先順序：

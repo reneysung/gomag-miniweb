@@ -2,6 +2,7 @@
 // index.php  ─  主站 www.gomag.com.tw 首頁
 require_once __DIR__ . '/includes/config.php';
 require_once __DIR__ . '/includes/helpers.php';
+require_once __DIR__ . '/includes/front_functions.php';  // getCityMap()
 
 $db = getDB();
 
@@ -54,12 +55,7 @@ $newThisMonth = $db->query("
 $totalClients = (int)$db->query("SELECT COUNT(*) FROM clients WHERE is_active=1")->fetchColumn();
 
 // ─── 縣市分布（用於首頁縣市選單）──────────────────
-$cityNameToSlug = [
-    '台南市' => 'tainan', '高雄市' => 'kaohsiung', '嘉義市' => 'chiayi',
-    '台中市' => 'taichung', '台北市' => 'taipei', '新北市' => 'newtaipei',
-    '桃園市' => 'taoyuan', '台東縣' => 'taitung', '屏東縣' => 'pingtung',
-    '新竹市' => 'hsinchu', '宜蘭縣' => 'yilan', '花蓮縣' => 'hualien',
-];
+$cityNameToSlug = array_flip(getCityMap());  // 唯一來源：cities 表
 $cityRegex = '臺北市|台北市|新北市|桃園市|臺中市|台中市|臺南市|台南市|高雄市|基隆市|新竹市|新竹縣|苗栗縣|彰化縣|南投縣|雲林縣|嘉義市|嘉義縣|屏東縣|宜蘭縣|花蓮縣|臺東縣|台東縣';
 $cityRows = $db->query("SELECT address FROM clients WHERE is_active=1 AND address IS NOT NULL AND address != ''")->fetchAll();
 $cityCounts = [];

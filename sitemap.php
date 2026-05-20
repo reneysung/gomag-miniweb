@@ -12,7 +12,7 @@ $db = getDB();
 // 排除重複客戶（同店多筆 → 已 301 到主檔）— 集中於 getDuplicateSkipSlugs()
 $dupSkip = getDuplicateSkipSlugs();
 $ph = implode(',', array_fill(0, count($dupSkip), '?'));
-$stmt = $db->prepare("SELECT subdomain, slug, has_minisite, updated_at FROM clients WHERE is_active=1 AND slug NOT IN ($ph) ORDER BY id");
+$stmt = $db->prepare("SELECT subdomain, slug, has_minisite, updated_at FROM clients WHERE is_active=1 AND COALESCE(is_placeholder, 0) = 0 AND slug NOT IN ($ph) ORDER BY id");
 $stmt->execute($dupSkip);
 $clients = $stmt->fetchAll();
 $cats = $db->query('SELECT slug FROM categories WHERE is_active=1')->fetchAll();
@@ -60,12 +60,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
 
   <!-- 各縣市落地頁（依 DB 動態抓有 ≥3 家店家的縣市）-->
   <?php
-    $cityNameToSlug = [
-        '台南市' => 'tainan', '高雄市' => 'kaohsiung', '嘉義市' => 'chiayi',
-        '台中市' => 'taichung', '台北市' => 'taipei', '新北市' => 'newtaipei',
-        '桃園市' => 'taoyuan', '台東縣' => 'taitung', '屏東縣' => 'pingtung',
-        '新竹市' => 'hsinchu', '宜蘭縣' => 'yilan', '花蓮縣' => 'hualien',
-    ];
+    $cityNameToSlug = array_flip(getCityMap());  // 唯一來源：cities 表
     $cityListRegex = '臺北市|台北市|新北市|桃園市|臺中市|台中市|臺南市|台南市|高雄市|基隆市|新竹市|新竹縣|苗栗縣|彰化縣|南投縣|雲林縣|嘉義市|嘉義縣|屏東縣|宜蘭縣|花蓮縣|臺東縣|台東縣|澎湖縣|金門縣|連江縣';
     $cityRows = $db->query("SELECT address FROM clients WHERE is_active=1 AND address IS NOT NULL AND address != ''")->fetchAll();
     $cityCounts = [];

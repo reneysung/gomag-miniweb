@@ -19,6 +19,7 @@ $metaDesc   = $metaDesc  ?? $defaultMetaDesc;
 $ogImage    = $ogImage   ?? ($defaultOgImage ?: BASE_URL . '/assets/images/main-og.jpg');
 $canonical  = $canonical ?? BASE_URL . $_SERVER['REQUEST_URI'];
 $metaKeywords = $metaKeywords ?? '';
+$metaRobots = $metaRobots ?? '';  // 個別頁面設 'noindex,follow' 即可擋索引（placeholder / 薄頁閘門）
 $currentPage = basename($_SERVER['PHP_SELF'], '.php');
 ?>
 <!DOCTYPE html>
@@ -28,6 +29,9 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><?= h($pageTitle) ?></title>
 <meta name="description" content="<?= h($metaDesc) ?>">
+<?php if ($metaRobots): ?>
+<meta name="robots" content="<?= h($metaRobots) ?>">
+<?php endif; ?>
 <?php if ($metaKeywords): ?>
 <meta name="keywords" content="<?= h($metaKeywords) ?>">
 <?php endif; ?>

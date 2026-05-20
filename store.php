@@ -3,6 +3,7 @@
 require_once __DIR__ . '/includes/config.php';
 require_once __DIR__ . '/includes/helpers.php';
 require_once __DIR__ . '/includes/block_helpers.php';
+require_once __DIR__ . '/includes/front_functions.php';  // getCityMap()
 
 $db = getDB();
 $sub = strtolower(trim($_GET['sub'] ?? $_GET['store'] ?? ''));
@@ -90,11 +91,8 @@ if ($isPlaceholder) {
     $avgRating->execute([$cid]);
     $rating = $avgRating->fetch();
 
+    // 行銷頁不顯示 Google 評價（API 成本 + 需逐家 place_id + 無法濾掉負評）— 改用站內 testimonials
     $googleReviews = null;
-    if (!empty($client['google_place_id'])) {
-        require_once __DIR__ . '/includes/google_reviews.php';
-        try { $googleReviews = getGoogleReviews($client['google_place_id']); } catch (\Throwable $e) { $googleReviews = null; }
-    }
 } else {
     $services = $db->prepare("SELECT * FROM services WHERE client_id=? AND is_active=1 ORDER BY sort_order, id LIMIT 6");
     $services->execute([$cid]);
@@ -113,12 +111,8 @@ if ($isPlaceholder) {
     $avgRating->execute([$cid]);
     $rating = $avgRating->fetch();
 
-    // 取 Google 評價（如果有 place_id 跟 API key，且未禁用）
+    // 行銷頁不顯示 Google 評價（API 成本 + 需逐家 place_id + 無法濾掉負評）— 改用站內 testimonials
     $googleReviews = null;
-    if (!empty($client['google_place_id'])) {
-        require_once __DIR__ . '/includes/google_reviews.php';
-        $googleReviews = getGoogleReviews($client['google_place_id']);
-    }
 }
 
 // 主 CTA URL：mini-site > 外部官網 > none
@@ -145,6 +139,11 @@ $ogImage = !empty($client['store_og_image'])
 $canonical = IS_LOCAL
     ? BASE_URL . '/store.php?sub=' . urlencode($sub)
     : 'https://www.gomag.com.tw/store/' . urlencode($sub);
+
+// Placeholder（資料整理中）為薄頁 → noindex，但保留 follow 讓內連權重續流
+if ($isPlaceholder) {
+    $metaRobots = 'noindex,follow';
+}
 
 // 如果用新 blocks 系統，載 gomag.css 樣式
 if ($useBlocks) {
@@ -178,24 +177,7 @@ if (!empty($client['address'])) {
         'addressCountry' => 'TW',
     ];
 }
-// Google 評價優先（更具公信力），沒有才 fallback testimonials
-if ($googleReviews && $googleReviews['rating'] > 0) {
-    $jsonLd['aggregateRating'] = [
-        '@type' => 'AggregateRating',
-        'ratingValue' => $googleReviews['rating'],
-        'reviewCount' => $googleReviews['userRatingCount'],
-        'bestRating' => 5,
-        'worstRating' => 1,
-    ];
-} elseif ($rating && (int)$rating['cnt'] > 0 && (float)$rating['avg'] > 0) {
-    $jsonLd['aggregateRating'] = [
-        '@type' => 'AggregateRating',
-        'ratingValue' => round((float)$rating['avg'], 1),
-        'reviewCount' => (int)$rating['cnt'],
-        'bestRating' => 5,
-        'worstRating' => 1,
-    ];
-}
+// 不輸出 aggregateRating：行銷頁評價為站內 testimonials（店家自填），對 Google 宣稱星等屬 self-serving，故不放 schema
 if (!empty($client['updated_at'])) {
     $jsonLd['dateModified'] = date('c', strtotime($client['updated_at']));
 }
@@ -207,12 +189,7 @@ if (!empty($client['updated_at'])) {
 // 從 address 抓縣市供麵包屑用
 $_breadcrumbCity = null;
 $_breadcrumbCitySlug = null;
-$_cityNameToSlug = [
-    '台南市' => 'tainan', '高雄市' => 'kaohsiung', '嘉義市' => 'chiayi',
-    '台中市' => 'taichung', '台北市' => 'taipei', '新北市' => 'newtaipei',
-    '桃園市' => 'taoyuan', '台東縣' => 'taitung', '屏東縣' => 'pingtung',
-    '新竹市' => 'hsinchu', '宜蘭縣' => 'yilan', '花蓮縣' => 'hualien',
-];
+$_cityNameToSlug = array_flip(getCityMap());  // 唯一來源：cities 表
 if (!empty($client['address']) && preg_match('/^(臺?[北中南東]市|新北市|桃園市|高雄市|嘉義[市縣]|新竹[市縣]|苗栗縣|彰化縣|南投縣|雲林縣|屏東縣|宜蘭縣|花蓮縣|台東縣|基隆市)/u', $client['address'], $_m)) {
     $_breadcrumbCity = str_replace('臺', '台', $_m[1]);
     $_breadcrumbCitySlug = $_cityNameToSlug[$_breadcrumbCity] ?? null;
