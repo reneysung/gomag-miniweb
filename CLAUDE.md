@@ -115,6 +115,16 @@ c7cf5e3 Initial commit + Phase A: gomag design system foundation
 - 檢視：https://claude.ai/code/routines/trig_016eD7EhaW3degQzWrRzaNgD
 - secret key 寫在 routine prompt 裡 — rotate 時要同時改 `analytics/search.php` 的 `SEARCH_LOG_SECRET` 跟 routine prompt
 
+## 每日內容 Routine（雲端，2026-05-20 建）
+
+- Routine ID: `trig_018NsW31y3EZmHXcBB9KMax9`
+- 名稱：「gomag 每日交叉頁內容草稿」
+- 週期：`0 1 * * *`（每天 UTC 01:00 = 台北 09:00）
+- 行為：照內建優先清單產 **1 篇** sanfeng 城市×分類在地內容**草稿**（intro_html + 5 FAQ + meta），貼在 routines page；**不寫 DB、不部署**。
+- Reney 流程：複製 → 後台「🧭 交叉頁內容」建立該城市×分類 → 貼上 → 改行情 → 啟用。
+- 刻意「草稿不自動上線」：避 Google scaled-content 懲罰 + 行情數字要人工確認；重質不重量、一天 1 篇。
+- 檢視：https://claude.ai/code/routines/trig_018NsW31y3EZmHXcBB9KMax9
+
 ## DB 架構
 
 ### 主表（207 客戶）
