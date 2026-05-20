@@ -240,6 +240,41 @@ require_once __DIR__ . '/main/layout_head.php';
 </section>
 <?php endif; ?>
 
+<!-- ═══════ 在地服務指南（有寫內容的城市×分類交叉頁）═══════ -->
+<?php
+$guidePages = [];
+try {
+    $gp = $db->query("SELECT g.city_slug, g.meta_title, c.slug AS cat_slug, c.icon AS cat_icon, c.name AS cat_name
+        FROM geo_category_pages g JOIN categories c ON g.category_id = c.id
+        WHERE g.is_active = 1 AND (COALESCE(g.intro_html,'') <> '' OR JSON_LENGTH(COALESCE(g.faqs,'[]')) > 0)
+        ORDER BY g.updated_at DESC LIMIT 12");
+    $guidePages = $gp->fetchAll();
+} catch (\Throwable $e) { $guidePages = []; }
+$_cmap = getCityMap();
+if ($guidePages):
+?>
+<section class="g-section">
+  <div class="g-section-head">
+    <div>
+      <h2 class="g-section-title">🧭 在地服務指南</h2>
+      <p class="g-section-sub">各地服務的選店重點、行情與在地商家</p>
+    </div>
+  </div>
+  <div class="g-store-grid" style="grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));">
+    <?php foreach ($guidePages as $gpg):
+        $cityNm = $_cmap[$gpg['city_slug']] ?? $gpg['city_slug'];
+        $label  = !empty($gpg['meta_title']) ? trim(explode('｜', $gpg['meta_title'])[0]) : ($cityNm . ($gpg['cat_name'] ?? ''));
+    ?>
+    <a class="g-store-card" href="<?= BASE_URL ?>/city/<?= h($gpg['city_slug']) ?>/<?= h($gpg['cat_slug']) ?>">
+      <div class="g-store-img" style="aspect-ratio:1.6; background:linear-gradient(135deg, var(--g-bg-alt), var(--g-bg)); display:grid; place-items:center; font-size:40px;"><?= h($gpg['cat_icon'] ?? '🧭') ?></div>
+      <div class="g-store-meta-top"><div class="g-store-name"><?= h($label) ?></div></div>
+      <div class="g-store-loc">📍 <?= h($cityNm) ?>・選店指南</div>
+    </a>
+    <?php endforeach; ?>
+  </div>
+</section>
+<?php endif; ?>
+
 <!-- ═══════ 分類精選店家（依分類分組）═══════ -->
 <?php if (!empty($featuredByCategory)): ?>
 <section class="g-section">
