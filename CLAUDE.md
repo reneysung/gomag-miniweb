@@ -1,6 +1,6 @@
 # 店家好口碑（gomag.com.tw）— Claude Code Handoff
 
-> **最後更新**：2026-05-02（Phase A + B + C + D Day 1+2+3+3.1 完成）
+> **最後更新**：2026-05-20（多縣市 IA 落地 1–6 完成並上線正式站）
 
 ## 專案概觀
 
@@ -8,9 +8,9 @@ PHP 主站 + miniweb 子網域 + 後台管理。207 家在地客戶。Hostinger 
 
 - **本機開發**：`/Users/songmingwei/Sites/localhost/miniweb/`
 - **MAMP**：`/Applications/MAMP/htdocs/miniweb` → symlink 到上面
-- **Production (staging)**：`https://aqua-elephant-856571.hostingersite.com`
-- **正式網域**（DNS 切換後）：`www.gomag.com.tw`
-- **目前還在 demo 階段，尚未掛正式網域**
+- **Staging（測試區）**：`https://aqua-elephant-856571.hostingersite.com` — 平常先部署/驗證這裡
+- **Production（正式公開站，已上線）**：`https://www.gomag.com.tw`
+- ⚠️ staging 與正式站是**同帳號下兩個獨立 docroot、共用同一個 DB**，兩份程式碼會各自分歧。部署＝staging 先驗 → 再 promote 到正式站（見下「部署紀律」）。
 
 ## SSH / Production 操作
 
@@ -19,7 +19,8 @@ Host: 145.79.14.161
 Port: 65002
 User: u331306067
 Pass: <已移除明文，請 reset 後存到密碼管理器 / 1Password；勿再寫回此檔>
-Web root: /home/u331306067/domains/aqua-elephant-856571.hostingersite.com/public_html
+Web root (staging): /home/u331306067/domains/aqua-elephant-856571.hostingersite.com/public_html
+Web root (正式站 www.gomag.com.tw): /home/u331306067/domains/gomag.com.tw/public_html   ← 含舊系統 062051129/ 子資料夾（勿動）
 ```
 
 部署用 rsync 即可。Backups 自動存在 `_backups/` 子目錄。
@@ -29,12 +30,12 @@ Web root: /home/u331306067/domains/aqua-elephant-856571.hostingersite.com/public
 ssh -i ~/.ssh/id_ed25519_hostinger -o IdentitiesOnly=yes -p 65002 u331306067@145.79.14.161
 ```
 
-### 部署紀律（2026-05-20 收斂後）
-1. **一律從 `main` 部署**。`main` 已對齊線上實際狀態（git == production）。
-2. **部署前先 diff**：rsync 前先把線上對應檔抓下來跟要推的版本比對，確認沒有把線上較新的東西蓋掉。歷史教訓見 memory `gomag-repo-divergence`。
-3. **覆蓋前先備份**到 `_backups/<name>_YYYYMMDD-HHMMSS/`。
-4. **在 box 上跑 DB CLI 腳本要前綴** `HTTP_HOST=aqua-elephant-856571.hostingersite.com`（否則 config.php 當成 local→連 root/root 失敗）。
-5. 線上原本是多分支拼裝體，已收斂；別再從零散 feature 分支直接 rsync 上線。
+### 部署紀律（2026-05-20 更新）
+1. **兩個 docroot、同一個 DB**：staging（aqua-elephant）與正式站（gomag.com.tw）是兩份獨立程式碼、共用同一 DB → migration 跑一次兩邊都生效，promote 只需搬「程式碼」。
+2. **流程**：本機 `main`（== staging）→ 部署 staging 驗證 → diff 正式站 vs staging → 備份正式站 → promote（覆蓋 app 檔）。**不碰** config.php / 舊系統 `062051129/` / `upload/` / `_backups/` / `_logs/`。
+3. **部署前務必 diff**：staging 與正式站會各自分歧，直接整檔覆蓋會弄丟對方獨有的東西（教訓：`.htaccess` 正式站有 `/cases/(taichung|changhua)` 規則 staging 沒有 → 要外科手術只加新規則）。歷史見 memory `gomag-repo-divergence`、`gomag-deploy-infra`。
+4. **覆蓋前先備份**到該 docroot 的 `_backups/<name>_YYYYMMDD-HHMMSS/`。
+5. **box 上跑 DB CLI 腳本要前綴 `HTTP_HOST`**（staging 用 `aqua-elephant-856571.hostingersite.com`、正式站用 `www.gomag.com.tw`），否則 config.php 當成 local → 連 root/root 失敗。
 
 ## 環境變數判斷
 
