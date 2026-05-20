@@ -92,6 +92,41 @@ if (!$slug) {
     </section>
 
     <?php
+    // 更多服務地區：有交叉頁內容、但店家 < 3 的縣市（sanfeng 內容縣市）
+    $contentCities = [];
+    try {
+        $ccRows = $db->query("SELECT DISTINCT city_slug FROM geo_category_pages WHERE is_active=1 AND (COALESCE(intro_html,'') <> '' OR JSON_LENGTH(COALESCE(faqs,'[]')) > 0)")->fetchAll(PDO::FETCH_COLUMN);
+        foreach ($ccRows as $cs) {
+            if (!isset($cityMap[$cs])) continue;
+            $cn = $cityMap[$cs];
+            if (($stats[$cn] ?? 0) >= 3) continue;  // 已在上方店家清單就不重複
+            $contentCities[$cs] = $cn;
+        }
+    } catch (\Throwable $e) { $contentCities = []; }
+    if ($contentCities):
+    ?>
+    <section class="g-section">
+      <div class="g-section-head">
+        <div>
+          <h2 class="g-section-title">更多服務地區</h2>
+          <p class="g-section-sub">這些地區的在地服務專頁</p>
+        </div>
+      </div>
+      <div class="g-store-grid" style="grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));">
+        <?php foreach ($contentCities as $cs => $cn): ?>
+        <a class="g-store-card" href="<?= BASE_URL ?>/city.php?slug=<?= h($cs) ?>" style="text-align:center;">
+          <div class="g-store-img" style="aspect-ratio:1.4; background:var(--g-bg-alt); display:grid; place-items:center; font-size:40px;">🧭</div>
+          <div class="g-store-meta-top" style="justify-content:center;">
+            <div class="g-store-name" style="font-size:17px;"><?= h($cn) ?></div>
+          </div>
+          <div class="g-store-loc" style="color:var(--g-ink-muted);">在地服務專頁</div>
+        </a>
+        <?php endforeach; ?>
+      </div>
+    </section>
+    <?php endif; ?>
+
+    <?php
     require_once __DIR__ . '/main/layout_foot.php';
     exit;
 }
@@ -158,14 +193,22 @@ if ($q !== '') {
     }
 }
 
-if (empty($clients)) {
-    if ($q !== '') {
-        // 搜尋無結果不要 404，讓使用者看到搜尋 banner + 清空連結
-        // fallthrough：下方靠 if (!$clients) 的判斷退出主要 SECTION，但 hero/intro/banner 仍會渲染
-    } else {
-        http_response_code(404);
-        die("「{$cityName}」目前尚未收錄店家");
-    }
+// 該縣市「有寫內容」的交叉頁（即使沒店也要在城市頁露出入口；解決 sanfeng 內容縣市的站內可逛性）
+$contentCells = [];
+try {
+    $ccStmt = $db->prepare("SELECT c.slug AS cat_slug, c.name AS cat_name, c.icon AS cat_icon
+        FROM geo_category_pages g JOIN categories c ON g.category_id = c.id
+        WHERE g.city_slug = ? AND g.is_active = 1
+          AND (COALESCE(g.intro_html,'') <> '' OR JSON_LENGTH(COALESCE(g.faqs,'[]')) > 0)
+        ORDER BY c.sort_order, c.id");
+    $ccStmt->execute([$slug]);
+    $contentCells = $ccStmt->fetchAll();
+} catch (\Throwable $e) { $contentCells = []; }
+
+// 沒店、沒內容、又非搜尋 → 才 404；有內容（如沒店的彰化）仍渲染
+if (empty($clients) && empty($contentCells) && $q === '') {
+    http_response_code(404);
+    die("「{$cityName}」目前尚未收錄店家");
 }
 
 // 按分類分組
@@ -200,10 +243,15 @@ $totalPlaceholder = count(array_filter($clients, fn($c) => !empty($c['is_placeho
 $totalReal        = $totalStores - $totalPlaceholder;
 $totalCategories  = count($catCounts);
 
-// SEO
-$pageTitle  = "{$cityName}店家推薦｜共 {$totalStores} 家口碑商家整理";
-$metaDesc   = ($intro['tagline'] ?? '') . '。';
-$metaDesc  .= "{$cityName} {$totalStores} 家店家精選：" . implode('、', array_keys($catCounts)) . "。";
+// SEO（沒店但有內容的縣市改用服務導向標題，避免「共 0 家」）
+if ($totalStores > 0) {
+    $pageTitle  = "{$cityName}店家推薦｜共 {$totalStores} 家口碑商家整理";
+    $metaDesc   = ($intro['tagline'] ?? '') . '。';
+    $metaDesc  .= "{$cityName} {$totalStores} 家店家精選：" . implode('、', array_keys($catCounts)) . "。";
+} else {
+    $pageTitle  = "{$cityName}在地服務｜店家好口碑";
+    $metaDesc   = "{$cityName}在地服務專頁：" . implode('、', array_map(fn($c) => $c['cat_name'], $contentCells)) . "的選店指南與在地資訊。";
+}
 $canonical  = (IS_LOCAL || IS_STAGING) ? BASE_URL . '/city.php?slug=' . urlencode($slug) : 'https://www.gomag.com.tw/city/' . urlencode($slug);
 
 require_once __DIR__ . '/main/layout_head.php';
@@ -448,6 +496,33 @@ function renderCityStoreCard(array $cl): void {
       <div class="g-explore-card-overlay">
         <div class="g-explore-card-name"><?= h(str_replace(['市','縣'], '', $cityName)) ?>・<?= h($catName) ?></div>
         <div class="g-explore-card-count"><?= count($catClients) ?> 家店家</div>
+      </div>
+      <div class="g-explore-card-arrow">→</div>
+    </a>
+    <?php endforeach; ?>
+  </div>
+</section>
+<?php endif; ?>
+
+<!-- ═══ 在地服務專頁（有寫內容的交叉頁；含沒店的城市，補站內可逛性）═══ -->
+<?php
+$extraCells = ($q === '') ? array_filter($contentCells, fn($cc) => !isset($byCat[$cc['cat_name']])) : [];
+if ($extraCells):
+?>
+<section class="g-section">
+  <div class="g-section-head">
+    <div>
+      <h2 class="g-section-title"><?= h($cityName) ?>在地服務專頁</h2>
+      <p class="g-section-sub">這些服務的在地選店指南</p>
+    </div>
+  </div>
+  <div class="g-explore-grid">
+    <?php foreach ($extraCells as $cc): ?>
+    <a class="g-explore-card" href="<?= BASE_URL ?>/city/<?= h($slug) ?>/<?= h($cc['cat_slug']) ?>">
+      <div class="g-explore-card-fallback"><?= h($cc['cat_icon']) ?></div>
+      <div class="g-explore-card-overlay">
+        <div class="g-explore-card-name"><?= h(str_replace(['市','縣'], '', $cityName)) ?>・<?= h($cc['cat_name']) ?></div>
+        <div class="g-explore-card-count">在地選店指南</div>
       </div>
       <div class="g-explore-card-arrow">→</div>
     </a>
