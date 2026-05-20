@@ -61,10 +61,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'published_at' => $publishedAt,
     ];
 
+    // 撈舊封面（替換時要刪舊檔）
+    $oldCover = '';
+    if ($editId) {
+        $ex = $db->prepare('SELECT cover_image FROM articles WHERE id=? AND client_id=?');
+        $ex->execute([$editId, $clientId]);
+        $oldCover = $ex->fetchColumn() ?: '';
+    }
+
     // 封面上傳
     if (!empty($_FILES['cover_image']['name'])) {
         $path = uploadImage($_FILES['cover_image'], 'article');
-        if ($path) $data['cover_image'] = $path;
+        if ($path) {
+            // 上傳成功 → 刪舊封面
+            if ($oldCover && $oldCover !== $path) deleteImage($oldCover);
+            $data['cover_image'] = $path;
+        }
     } elseif (!empty($_POST['cover_image_existing'])) {
         $data['cover_image'] = $_POST['cover_image_existing'];
     }

@@ -49,6 +49,10 @@ function handleBlockImageUpload(string $fieldKey, string $fallbackPath, string $
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrf();
 
+    // 取出舊區塊的圖檔路徑（替換 / 移除時要刪檔）
+    $_oldBlockData = ($block && !empty($block['data'])) ? (json_decode($block['data'], true) ?: []) : [];
+    $_oldImagePaths = collectBlockImagePaths($_oldBlockData);
+
     $title = trim($_POST['title'] ?? '');
     $sortOrder = (int)($_POST['sort_order'] ?? 0);
 
@@ -149,6 +153,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $savedId = saveStoreBlock($clientId, $type, $data, $sortOrder, $blockId ?: null);
+
+    // 對比新舊圖路徑，刪掉被移除/替換的舊圖檔
+    $_newImagePaths = collectBlockImagePaths($data);
+    $_removedImages = array_diff($_oldImagePaths, $_newImagePaths);
+    foreach ($_removedImages as $_p) {
+        if ($_p) deleteImage($_p);
+    }
+
     setFlash('success', '✅ 區塊已儲存');
     redirect(BASE_URL . '/admin/pages/store_blocks.php');
 }

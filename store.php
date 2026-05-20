@@ -153,15 +153,12 @@ $metaKeywords = !empty($client['store_keywords']) ? $client['store_keywords'] : 
 $ogImage = !empty($client['store_og_image'])
     ? (str_starts_with($client['store_og_image'], 'http') ? $client['store_og_image'] : BASE_URL . '/' . $client['store_og_image'])
     : ($client['hero_image_path'] ? BASE_URL . '/' . $client['hero_image_path'] : '');
+// 設計策略：行銷頁（/store/{slug}）= 平台店家口碑頁，與 mini-site（{slug}.gomag.com.tw）共存為兩個 SEO 入口
+//   - 行銷頁 canonical 永遠指向自己（不指 mini-site）
+//   - 兩個 URL 都被 Google 索引，但內容角度不同（平台介紹 vs 品牌官網）
 $canonical = IS_LOCAL
     ? BASE_URL . '/store.php?sub=' . urlencode($sub)
     : 'https://www.gomag.com.tw/store/' . urlencode($sub);
-
-// ── 有啟用 mini-site 的客戶：canonical 指向 mini-site，集中 SEO 權重 ──
-// 避免主站 /store/{sub} 與 {sub}.gomag.com.tw duplicate content 內耗
-if ($miniSiteUrl) {
-    $canonical = $miniSiteUrl;
-}
 
 // 如果用新 blocks 系統，載 gomag.css 樣式
 if ($useBlocks) {
@@ -551,11 +548,22 @@ if ($client['about_text'] || ($aboutTags && is_array($aboutTags))):
   <div class="m-container" style="max-width:800px;">
     <div class="landing-content" style="line-height:1.8;">
       <?php
-      // 行銷頁 HTML 輸出前安全過濾：補圖片 alt（SEO + 無障礙）
+      // 行銷頁 HTML 輸出前安全過濾
       $_landing = $client['landing_extra_content'];
       $_brand = $client['brand_name'];
       $_alt = $_brand . ($client['cat_name'] ? ' - ' . $client['cat_name'] : '');
-      // 補上沒有 alt 的 <img>
+
+      // ⚠️ 防禦：客戶有時會把整份 <!DOCTYPE html><html><head>...</head><body>...</body></html>
+      //    貼進來。把不該在 body 出現的標籤通通拔掉，避免重複 <title>/<meta> 影響 SEO。
+      $_landing = preg_replace('/<!DOCTYPE[^>]*>/i', '', $_landing);
+      $_landing = preg_replace('/<\/?(html|head|body)\b[^>]*>/i', '', $_landing);
+      $_landing = preg_replace('/<title\b[^>]*>.*?<\/title>/is', '', $_landing);
+      $_landing = preg_replace('/<meta\b[^>]*>/i', '', $_landing);
+      $_landing = preg_replace('/<link\b[^>]*>/i', '', $_landing);
+      // <script type="application/ld+json"> 整段砍（防止 client 加自己的 schema 跟系統衝突）
+      $_landing = preg_replace('/<script\b[^>]*type=["\']application\/ld\+json["\'][^>]*>.*?<\/script>/is', '', $_landing);
+
+      // 補上沒有 alt 的 <img>（SEO + 無障礙）
       $_landing = preg_replace_callback('/<img\b([^>]*)>/i', function($m) use ($_alt) {
           $attrs = $m[1];
           if (preg_match('/\balt\s*=/i', $attrs)) return $m[0]; // 已有 alt 就不動
@@ -919,6 +927,37 @@ if ($useBlocks && $testimonials) {
     </div>
   </div>
 </section>
+<?php endif; ?>
+
+<!-- ═══════ FB Page Plugin（後台勾選自動嵌入）═══════ -->
+<?php
+$_social_stmt = $db->prepare('SELECT fb_page_url, fb_embed_enabled FROM client_social WHERE client_id=? LIMIT 1');
+$_social_stmt->execute([$cid]);
+$_social = $_social_stmt->fetch();
+if ($_social && !empty($_social['fb_page_url']) && !empty($_social['fb_embed_enabled'])):
+?>
+<section class="m-section" style="background:var(--m-bg-alt); border-top:1px solid var(--m-border); padding:48px 0;">
+  <div class="m-container" style="max-width:560px; text-align:center;">
+    <h2 class="m-section-title" style="margin-bottom:8px;">📘 追蹤 <?= h($client['brand_name']) ?> Facebook</h2>
+    <p style="color:#666; margin-bottom:24px; font-size:.95rem;">看最新案例、優惠資訊——我們 FB 發什麼，這裡同步顯示</p>
+    <div class="fb-page"
+         data-href="<?= h($_social['fb_page_url']) ?>"
+         data-tabs="timeline"
+         data-width="500"
+         data-height="600"
+         data-small-header="false"
+         data-adapt-container-width="true"
+         data-hide-cover="false"
+         data-show-facepile="true"
+         style="max-width:100%; margin:0 auto; display:block;">
+      <blockquote cite="<?= h($_social['fb_page_url']) ?>" class="fb-xfbml-parse-ignore">
+        <a href="<?= h($_social['fb_page_url']) ?>" target="_blank" rel="noopener">前往 <?= h($client['brand_name']) ?> Facebook 粉絲團</a>
+      </blockquote>
+    </div>
+  </div>
+</section>
+<div id="fb-root"></div>
+<script async defer crossorigin="anonymous" src="https://connect.facebook.net/zh_TW/sdk.js#xfbml=1&version=v18.0"></script>
 <?php endif; ?>
 
 <?php require_once __DIR__ . '/main/layout_foot.php'; ?>

@@ -12,6 +12,12 @@ $db = getDB();
 // 儲存
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrf();
+
+    // 撈舊圖片路徑 — 上傳新圖時要刪舊檔，避免伺服器囤積孤兒檔
+    $_oldImagesStmt = $db->prepare("SELECT logo_path, hero_image_path, owner_avatar, photos FROM clients WHERE id=?");
+    $_oldImagesStmt->execute([$clientId]);
+    $_oldImages = $_oldImagesStmt->fetch(PDO::FETCH_ASSOC) ?: [];
+
     $fields = [
         'brand_name'             => trim($_POST['brand_name'] ?? ''),
         'tagline'                => trim($_POST['tagline'] ?? ''),
@@ -33,6 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'about_text'             => trim($_POST['about_text'] ?? ''),
         'landing_extra_content'  => trim($_POST['landing_extra_content'] ?? ''),
         'has_minisite'           => isset($_POST['has_minisite']) ? 1 : 0,
+        'is_featured'            => isset($_POST['is_featured']) ? 1 : 0,
+        'is_placeholder'         => isset($_POST['is_placeholder']) ? 1 : 0,
         'subdomain_provisioned'  => isset($_POST['subdomain_provisioned']) ? 1 : 0,
         'legacy_store_id'        => trim($_POST['legacy_store_id'] ?? ''),
         'google_maps_embed'      => trim($_POST['google_maps_embed'] ?? ''),
@@ -51,20 +59,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'owner_intro'            => trim($_POST['owner_intro'] ?? ''),
     ];
 
-    // Logo 上傳
+    $_uploadErrors = [];  // 收集上傳失敗原因，存檔後一起顯示
+
+    // Logo 上傳 — 成功後刪舊檔
     if (!empty($_FILES['logo']['name'])) {
-        $path = uploadImage($_FILES['logo'], 'brand');
-        if ($path) $fields['logo_path'] = $path;
+        $path = uploadImageX($_FILES['logo'], 'brand', $_r);
+        if ($path) {
+            if (!empty($_oldImages['logo_path']) && $_oldImages['logo_path'] !== $path) {
+                deleteImage($_oldImages['logo_path']);
+            }
+            $fields['logo_path'] = $path;
+        } elseif ($_r) {
+            $_uploadErrors[] = "Logo：{$_r}";
+        }
     }
-    // Hero 圖片上傳
+    // Hero 圖片上傳 — 成功後刪舊檔
     if (!empty($_FILES['hero_image']['name'])) {
-        $path = uploadImage($_FILES['hero_image'], 'brand');
-        if ($path) $fields['hero_image_path'] = $path;
+        $path = uploadImageX($_FILES['hero_image'], 'brand', $_r);
+        if ($path) {
+            if (!empty($_oldImages['hero_image_path']) && $_oldImages['hero_image_path'] !== $path) {
+                deleteImage($_oldImages['hero_image_path']);
+            }
+            $fields['hero_image_path'] = $path;
+        } elseif ($_r) {
+            $_uploadErrors[] = "Hero 主圖：{$_r}";
+        }
     }
-    // Phase C: Owner avatar 上傳
+    // Phase C: Owner avatar 上傳 — 成功後刪舊檔
     if (!empty($_FILES['owner_avatar']['name'])) {
-        $path = uploadImage($_FILES['owner_avatar'], 'brand');
-        if ($path) $fields['owner_avatar'] = $path;
+        $path = uploadImageX($_FILES['owner_avatar'], 'brand', $_r);
+        if ($path) {
+            if (!empty($_oldImages['owner_avatar']) && $_oldImages['owner_avatar'] !== $path) {
+                deleteImage($_oldImages['owner_avatar']);
+            }
+            $fields['owner_avatar'] = $path;
+        } elseif ($_r) {
+            $_uploadErrors[] = "老闆頭像：{$_r}";
+        }
     }
     // Phase C: Photo gallery 多檔上傳
     $existingPhotos = !empty($_POST['existing_photos']) ? json_decode($_POST['existing_photos'], true) : [];
@@ -76,6 +107,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   'size' => $_FILES['photos']['size'][$i], 'error' => $_FILES['photos']['error'][$i]];
             $p = uploadImage($f, 'brand');
             if ($p) $existingPhotos[] = $p;
+        }
+    }
+    // Photo gallery — 對比新舊，刪掉被移除的（後台勾刪除）
+    $_oldPhotos = !empty($_oldImages['photos']) ? json_decode($_oldImages['photos'], true) : [];
+    if (is_array($_oldPhotos)) {
+        $_removedPhotos = array_diff($_oldPhotos, $existingPhotos);
+        foreach ($_removedPhotos as $_p) {
+            if ($_p) deleteImage($_p);
         }
     }
     $fields['photos'] = $existingPhotos ? json_encode(array_values(array_unique($existingPhotos)), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : null;
@@ -114,7 +153,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt = $db->prepare("UPDATE clients SET $sets WHERE id = :id");
     $stmt->execute(array_merge($fields, ['id' => $clientId]));
 
-    setFlash('success', '✅ 基本資訊已儲存！');
+    if ($_uploadErrors) {
+        // 有圖片上傳失敗 → 顯示明確原因（其他欄位已存好）
+        setFlash('error', '⚠️ 資料已存，但有圖片沒上傳成功：' . implode('；', $_uploadErrors));
+    } else {
+        setFlash('success', '✅ 基本資訊已儲存！');
+    }
     redirect(BASE_URL . '/admin/pages/settings.php?saved=1');
 }
 
@@ -263,6 +307,36 @@ body[data-current-tab="minisite"] .tab-section[data-tab="store"] { display:none;
       <div class="hint" style="margin-top:6px;margin-left:30px;">
         ☑ 啟用 → 子網域顯示完整 mini-site（含服務、案例、評價）<br>
         ☐ 不啟用 → 子網域自動跳到外部官網或主站行銷頁
+      </div>
+    </div>
+
+    <!-- 首頁精選展示 -->
+    <div class="form-group-admin" style="background:#fffbeb;padding:14px;border-radius:8px;border:1.5px solid #fcd34d;margin-top:10px;">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;">
+        <input type="checkbox" name="is_featured" value="1"
+               <?= !empty($client['is_featured']) ? 'checked' : '' ?>
+               style="width:20px;height:20px;cursor:pointer;">
+        <span>🌟 在 gomag.com.tw 首頁「精選店家」區展示</span>
+      </label>
+      <div class="hint" style="margin-top:6px;margin-left:30px;">
+        ☑ 勾起來 → 首頁該分類的精選區會顯示這家（<strong>每分類最多取 4 家</strong>，依最新建檔順序）<br>
+        ☐ 不勾 → 不會出現在首頁精選區（但 city / category / search 還是看得到）<br>
+        💡 也會優先出現在縣市頁的「本週熱門」區
+      </div>
+    </div>
+
+    <!-- Placeholder 占位 -->
+    <div class="form-group-admin" style="background:#fef2f2;padding:14px;border-radius:8px;border:1.5px solid #fca5a5;margin-top:10px;">
+      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;">
+        <input type="checkbox" name="is_placeholder" value="1"
+               <?= !empty($client['is_placeholder']) ? 'checked' : '' ?>
+               style="width:20px;height:20px;cursor:pointer;">
+        <span>📋 標記為「占位客戶」（資料整理中）</span>
+      </label>
+      <div class="hint" style="margin-top:6px;margin-left:30px;">
+        ☑ 勾起來 → 前台卡片會顯示橘色「📋 資料整理中」徽章。適用於剛簽約還沒給資料的客戶，或想充版面的展示用客戶。<br>
+        ☐ 不勾（正常客戶）→ 不顯示徽章，前台呈現完整資料。<br>
+        ⚠️ Placeholder 客戶<strong>不會出現在「本週熱門」、「最新加入」</strong>區段，避免誤導訪客。
       </div>
     </div>
 
@@ -677,6 +751,16 @@ modeRich.addEventListener('click', () => {
     <p style="font-size:.85rem; color:var(--muted); margin-bottom:14px;">
       影響子網域 <code><?= h($client['subdomain'] ?: $client['slug']) ?>.gomag.com.tw</code> 的 Google 呈現。<strong>留空 = 自動用品牌名 + tagline / about_text</strong>。
     </p>
+
+    <div style="background:#fef3c7; border:1.5px solid #f59e0b; border-radius:8px; padding:14px 16px; margin-bottom:18px; font-size:.88rem; line-height:1.6;">
+      <strong>⚠️ SEO 雙曝光戰略 — 兩頁要寫不一樣！</strong><br>
+      <span style="color:#78350f;">這個店家有兩個被 Google 索引的 URL，內容要差異化才能雙雙上榜：</span>
+      <ul style="margin:8px 0 0 18px; color:#78350f;">
+        <li><strong>行銷頁</strong>（<code>/store/{slug}</code>）→ 主打<strong>關鍵字搜尋</strong>（例：「台中裝潢細清推薦」）</li>
+        <li><strong>小官網</strong>（<code>{slug}.gomag.com.tw</code>）→ 主打<strong>品牌搜尋</strong>（例：搜店名）</li>
+      </ul>
+      <span style="color:#78350f;">兩頁的 meta title / desc <strong>不能一字不差複製貼上</strong>，否則 Google 會挑一個冷藏另一個。</span>
+    </div>
 
     <div class="form-group-admin">
       <label>Meta Title（自訂搜尋標題）</label>

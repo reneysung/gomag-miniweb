@@ -17,8 +17,10 @@ $categories = $db->query("
     ORDER BY c.sort_order, c.name
 ")->fetchAll();
 
-// ─── 精選店家：每分類取 1 家（優先有圖、最新）──
-$featuredClients = [];
+// ─── 精選店家：依分類分組，每分類最多 4 家（只挑 is_featured=1 的客戶）──
+// 後台「在首頁精選展示」checkbox 控制；沒勾的客戶不會出現在首頁精選區
+// RWD：桌機 4 / 平板 2 / 手機 1，所以每組 4 家剛好填滿一整列
+$featuredByCategory = [];
 $pickStmt = $db->prepare("
     SELECT cl.id, cl.subdomain, cl.slug, cl.brand_name, cl.tagline, cl.industry,
            cl.has_minisite, cl.external_website_url, cl.hero_image_path,
@@ -26,15 +28,22 @@ $pickStmt = $db->prepare("
            c.name AS cat_name, c.icon AS cat_icon, c.slug AS cat_slug
     FROM clients cl
     LEFT JOIN categories c ON cl.category_id = c.id
-    WHERE cl.is_active = 1 AND cl.category_id = ?
+    WHERE cl.is_active = 1 AND cl.is_featured = 1 AND cl.category_id = ?
     ORDER BY (cl.hero_image_path IS NULL OR cl.hero_image_path = '') ASC, cl.id DESC
-    LIMIT 1
+    LIMIT 4
 ");
 foreach ($categories as $cat) {
     if ($cat['client_count'] == 0) continue;
     $pickStmt->execute([$cat['id']]);
-    $row = $pickStmt->fetch();
-    if ($row) $featuredClients[] = $row;
+    $rows = $pickStmt->fetchAll();
+    if (!$rows) continue;  // 該分類沒有精選客戶就跳過
+    $featuredByCategory[] = [
+        'cat_id'      => $cat['id'],
+        'cat_name'    => $cat['name'],
+        'cat_slug'    => $cat['slug'],
+        'cat_icon'    => $cat['icon'],
+        'clients'     => $rows,
+    ];
 }
 
 // ─── 本月新加入店家（依 created_at）─────────────────
@@ -236,39 +245,54 @@ require_once __DIR__ . '/main/layout_head.php';
 </section>
 <?php endif; ?>
 
-<!-- ═══════ 分類精選店家 ═══════ -->
-<?php if (!empty($featuredClients)): ?>
+<!-- ═══════ 分類精選店家（依分類分組）═══════ -->
+<?php if (!empty($featuredByCategory)): ?>
 <section class="g-section">
   <div class="g-section-head">
     <div>
       <h2 class="g-section-title">分類精選</h2>
-      <p class="g-section-sub">每個分類為您挑選一家代表店家</p>
+      <p class="g-section-sub">每個分類的口碑代表店家</p>
     </div>
   </div>
-  <div class="g-store-grid">
-    <?php foreach ($featuredClients as $cl):
-      $heroImg = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
-      $linkUrl = clientPublicUrl($cl);
-    ?>
-    <a class="g-store-card" href="<?= $linkUrl ?>">
-      <div class="g-store-img" <?= $heroImg ? 'style="background-image:url(\''.$heroImg.'\')"' : '' ?>>
-        <?php if (!$heroImg): ?>
-        <div class="g-store-img-fallback">
-          <span class="icon"><?= h($cl['cat_icon'] ?? '🏪') ?></span>
-          <span class="label"><?= h($cl['cat_name'] ?? '') ?></span>
+
+  <?php foreach ($featuredByCategory as $catGroup): ?>
+  <div class="g-cat-featured-group" style="margin-bottom:40px;">
+    <!-- 分類小標 -->
+    <div class="g-section-head" style="margin-bottom:16px; padding-bottom:10px; border-bottom:2px solid var(--g-border);">
+      <div>
+        <h3 class="g-section-title" style="font-size:1.25rem; margin-bottom:2px;">
+          <?= h($catGroup['cat_icon']) ?> <?= h($catGroup['cat_name']) ?>
+        </h3>
+      </div>
+      <a href="<?= BASE_URL ?>/category.php?slug=<?= h($catGroup['cat_slug']) ?>" class="g-section-link">看全部 <?= h($catGroup['cat_name']) ?></a>
+    </div>
+
+    <!-- 該分類的精選店家（最多 4 家）-->
+    <div class="g-store-grid">
+      <?php foreach ($catGroup['clients'] as $cl):
+        $heroImg = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
+        $linkUrl = clientStoreUrl($cl);
+      ?>
+      <a class="g-store-card" href="<?= $linkUrl ?>">
+        <div class="g-store-img" <?= $heroImg ? 'style="background-image:url(\''.$heroImg.'\')"' : '' ?>>
+          <?php if (!$heroImg): ?>
+          <div class="g-store-img-fallback">
+            <span class="icon"><?= h($catGroup['cat_icon']) ?></span>
+            <span class="label"><?= h($catGroup['cat_name']) ?></span>
+          </div>
+          <?php endif; ?>
         </div>
+        <div class="g-store-meta-top">
+          <div class="g-store-name"><?= h($cl['brand_name']) ?></div>
+        </div>
+        <?php if ($cl['tagline']): ?>
+        <div class="g-store-cat-label"><?= h(mb_strimwidth($cl['tagline'], 0, 36, '…', 'UTF-8')) ?></div>
         <?php endif; ?>
-      </div>
-      <div class="g-store-meta-top">
-        <div class="g-store-name"><?= h($cl['brand_name']) ?></div>
-      </div>
-      <div class="g-store-loc"><?= h($cl['cat_icon'] ?? '') ?> <?= h($cl['cat_name'] ?? '') ?></div>
-      <?php if ($cl['tagline']): ?>
-      <div class="g-store-cat-label"><?= h(mb_strimwidth($cl['tagline'], 0, 36, '…', 'UTF-8')) ?></div>
-      <?php endif; ?>
-    </a>
-    <?php endforeach; ?>
+      </a>
+      <?php endforeach; ?>
+    </div>
   </div>
+  <?php endforeach; ?>
 </section>
 <?php endif; ?>
 
@@ -284,7 +308,7 @@ require_once __DIR__ . '/main/layout_head.php';
   <div class="g-store-grid">
     <?php foreach ($newThisMonth as $cl):
       $heroImg = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
-      $linkUrl = clientPublicUrl($cl);
+      $linkUrl = clientStoreUrl($cl);
       $daysAgo = (int)((time() - strtotime($cl['created_at'])) / 86400);
       $timeLabel = $daysAgo == 0 ? '今天' : ($daysAgo == 1 ? '昨天' : "{$daysAgo} 天前");
     ?>
@@ -318,7 +342,7 @@ require_once __DIR__ . '/main/layout_head.php';
     <div class="g-banner-text">
       <div class="g-banner-eyebrow">B2B Partnership</div>
       <h3 class="g-banner-title">想讓店家曝光？</h3>
-      <p class="g-banner-desc">加入店家好口碑，專屬行銷頁 + 小官網一次擁有・月費 NT$300 起。業務團隊到店服務，零學習成本。</p>
+      <p class="g-banner-desc">加入店家好口碑，專屬行銷頁 + 小官網一次擁有。業務團隊到店服務，零學習成本。</p>
     </div>
     <a href="mailto:<?= h(getPlatformSetting('contact_email', 'contact@gomag.com.tw')) ?>" class="g-banner-btn">立即聯絡 →</a>
   </div>
@@ -329,7 +353,7 @@ require_once __DIR__ . '/main/layout_head.php';
   <div class="g-cta-inner">
     <div class="g-cta-eyebrow">Make it Yours</div>
     <h2 class="g-cta-title">把生意做大，<br>從找到對的客人開始。</h2>
-    <p class="g-cta-desc">店家好口碑專注在地口碑曝光 — 月費 NT$300 起，業務團隊到店服務，幫你把生意做大。</p>
+    <p class="g-cta-desc">店家好口碑專注在地口碑曝光，業務團隊到店服務，幫你把生意做大。</p>
     <div class="g-cta-btns">
       <a href="mailto:<?= h(getPlatformSetting('contact_email', 'contact@gomag.com.tw')) ?>" class="g-cta-btn g-cta-btn-primary">立即聯絡</a>
       <a href="<?= BASE_URL ?>/category.php" class="g-cta-btn g-cta-btn-secondary">瀏覽店家</a>

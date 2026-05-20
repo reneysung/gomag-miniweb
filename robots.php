@@ -21,6 +21,11 @@ Disallow: /admin/
 Disallow: /includes/
 Disallow: /install.php
 
+# 禁止爬 2022 年被 hack 殘留的 spam 路徑（GSC 5xx/404 大宗來源）
+Disallow: /edm/
+Disallow: /shopx.php
+Disallow: /coupon_show.php
+
 # Sitemap
 Sitemap: <?= $sitemapUrl ?>
 
