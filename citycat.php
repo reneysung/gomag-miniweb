@@ -337,8 +337,13 @@ if ($navServices):
 <?php
 $relGuides = [];
 try {
-    $rg = $db->prepare("SELECT slug, title, excerpt, cover_image FROM guides WHERE status='published' AND (city_slug = ? OR category_id = ?) ORDER BY published_at DESC, id DESC LIMIT 4");
-    $rg->execute([$slug, $catId]);
+    // 攻略需「分類相符（或通用）」且「城市相符（或通用）」，避免跨分類/跨城外溢；城市專屬優先
+    $rg = $db->prepare("SELECT slug, title, excerpt, cover_image FROM guides
+        WHERE status='published'
+          AND (category_id = ? OR category_id IS NULL)
+          AND (city_slug = ? OR city_slug IS NULL OR city_slug = '')
+        ORDER BY (city_slug = ?) DESC, published_at DESC, id DESC LIMIT 4");
+    $rg->execute([$catId, $slug, $slug]);
     $relGuides = $rg->fetchAll();
 } catch (\Throwable $e) { $relGuides = []; }
 if ($relGuides):
