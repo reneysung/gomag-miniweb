@@ -50,6 +50,11 @@ function deriveCitySlug(string $address): ?string {
     if ($address === '') return null;
     static $nameToSlug = null;
     if ($nameToSlug === null) $nameToSlug = array_flip(getCityMap());
+    // 去掉開頭雜訊再比對：郵遞區號（3-6 碼）、「台灣/臺灣」前綴
+    // 例：「709台灣臺南市安南區…」→「臺南市安南區…」；保持開頭錨定避免誤判中間出現的城市名
+    $address = preg_replace('/^\s*\d{3,6}\s*/u', '', $address);
+    $address = preg_replace('/^\s*(台灣|臺灣)\s*/u', '', $address);
+    $address = ltrim($address);
     $re = '/^(臺北市|台北市|新北市|桃園市|臺中市|台中市|臺南市|台南市|高雄市|基隆市|新竹市|新竹縣|苗栗縣|彰化縣|南投縣|雲林縣|嘉義市|嘉義縣|屏東縣|宜蘭縣|花蓮縣|臺東縣|台東縣|澎湖縣|金門縣|連江縣)/u';
     if (!preg_match($re, $address, $m)) return null;
     $name = str_replace('臺', '台', $m[1]);
