@@ -155,6 +155,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt = $db->prepare("UPDATE clients SET $sets WHERE id = :id");
     $stmt->execute(array_merge($fields, ['id' => $clientId]));
 
+    // 服務關鍵字標籤同步（client_service_keywords）— 決定這家店出現在哪些子服務頁
+    try {
+        $kwCatId = (int)($fields['category_id'] ?? 0);
+        $selKw   = array_unique(array_map('intval', (array)($_POST['service_kw'] ?? [])));
+        $db->prepare("DELETE FROM client_service_keywords WHERE client_id = ?")->execute([$clientId]);
+        if ($selKw && $kwCatId) {
+            $valid = $db->prepare("SELECT id FROM service_keywords WHERE category_id = ? AND id = ?");
+            $insK  = $db->prepare("INSERT IGNORE INTO client_service_keywords (client_id, service_keyword_id) VALUES (?, ?)");
+            foreach ($selKw as $kid) {
+                if ($kid <= 0) continue;
+                $valid->execute([$kwCatId, $kid]);
+                if ($valid->fetchColumn()) $insK->execute([$clientId, $kid]);
+            }
+        }
+    } catch (\Throwable $e) { /* service_keywords 表未建時略過 */ }
+
     if ($_uploadErrors) {
         // 有圖片上傳失敗 → 顯示明確原因（其他欄位已存好）
         setFlash('error', '⚠️ 資料已存，但有圖片沒上傳成功：' . implode('；', $_uploadErrors));
@@ -168,6 +184,20 @@ $client = getClientData($clientId);
 
 // 載入所有分類給下拉選單
 $categories = $db->query("SELECT id, name, icon, slug FROM categories WHERE is_active=1 ORDER BY sort_order, name")->fetchAll();
+
+// 服務關鍵字：該店大分類的關鍵字池 + 目前已標
+$kwPool = []; $kwChecked = [];
+try {
+    $stCat = (int)($client['category_id'] ?? 0);
+    if ($stCat) {
+        $kp = $db->prepare("SELECT id, slug, name, page_slug FROM service_keywords WHERE category_id = ? AND is_active = 1 ORDER BY sort_order, id");
+        $kp->execute([$stCat]);
+        $kwPool = $kp->fetchAll();
+    }
+    $kc = $db->prepare("SELECT service_keyword_id FROM client_service_keywords WHERE client_id = ?");
+    $kc->execute([$clientId]);
+    $kwChecked = array_map('intval', $kc->fetchAll(PDO::FETCH_COLUMN));
+} catch (\Throwable $e) { $kwPool = []; $kwChecked = []; }
 
 // 預覽 URL（依環境正確切換）
 $previewSub = $client['subdomain'] ?? $client['slug'];
@@ -819,6 +849,41 @@ modeRich.addEventListener('click', () => {
              placeholder="台南火鍋, 永康區聚餐, 平價吃到飽"
              value="<?= h($client['store_keywords'] ?? '') ?>">
       <div class="hint">3-7 個店家相關關鍵字。Google 用得不多但 AI 搜尋用</div>
+    </div>
+
+    <div class="form-group-admin">
+      <label>🧭 服務關鍵字（決定這家店出現在哪些子服務頁；建議勾 3 個內）</label>
+      <?php if ($kwPool): ?>
+      <div id="svc-kw-box" style="display:flex; flex-wrap:wrap; gap:8px;">
+        <?php foreach ($kwPool as $kw):
+            $checked = in_array((int)$kw['id'], $kwChecked, true);
+            $isSyn   = $kw['page_slug'] !== '';
+        ?>
+        <label style="display:inline-flex; align-items:center; gap:6px; padding:7px 12px; border:1px solid <?= $checked ? '#FF5A36' : 'var(--border)' ?>; border-radius:8px; cursor:pointer; <?= $checked ? 'background:#FFEDE8;' : '' ?>">
+          <input type="checkbox" class="svc-kw-cb" name="service_kw[]" value="<?= (int)$kw['id'] ?>" <?= $checked ? 'checked' : '' ?>>
+          <?= h($kw['name']) ?><?= $isSyn ? ' <span style="color:var(--muted); font-size:.8em;">(同義→' . h($kw['page_slug']) . ')</span>' : '' ?>
+        </label>
+        <?php endforeach; ?>
+      </div>
+      <div class="hint">勾選後這家店會出現在對應「城市×子服務」頁（例：勾「清潔」→ 出現在 <code>/city/{城市}/home-service/cleaning</code>）。同義詞會折進主頁。預設勾 3 個內。</div>
+      <script>
+      (function(){
+        var box=document.getElementById('svc-kw-box'); if(!box) return;
+        box.addEventListener('change',function(e){
+          if(!e.target.classList.contains('svc-kw-cb')) return;
+          var on=box.querySelectorAll('.svc-kw-cb:checked');
+          if(on.length>3){ e.target.checked=false; alert('建議一家店勾 3 個服務關鍵字內，聚焦比較有效。'); }
+          box.querySelectorAll('.svc-kw-cb').forEach(function(cb){
+            var l=cb.closest('label');
+            if(cb.checked){ l.style.borderColor='#FF5A36'; l.style.background='#FFEDE8'; }
+            else { l.style.borderColor='var(--border)'; l.style.background=''; }
+          });
+        });
+      })();
+      </script>
+      <?php else: ?>
+      <div class="hint">此分類尚未設定服務關鍵字池。<a href="<?= BASE_URL ?>/admin/pages/service_keywords.php">前往設定關鍵字池</a>。</div>
+      <?php endif; ?>
     </div>
 
     <div class="form-group-admin">

@@ -37,20 +37,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'add') {
         $cs  = trim($_POST['city_slug'] ?? '');
         $cid = (int)($_POST['category_id'] ?? 0);
+        // 子服務 slug：空=大分類樞紐層；填=子服務頁（清潔→cleaning）。只留 a-z0-9-
+        $svc = preg_replace('/[^a-z0-9-]/', '', strtolower(trim($_POST['service_slug'] ?? '')));
+        $svn = trim($_POST['service_name'] ?? '');
         if (!isset($cityMap[$cs]) || !isset($catById[$cid])) {
             setFlash('error', '城市或分類無效');
             redirect(BASE_URL . '/admin/pages/geo_category.php');
         }
         try {
-            $ins = $db->prepare("INSERT INTO geo_category_pages (city_slug, category_id, is_active) VALUES (?, ?, 1)");
-            $ins->execute([$cs, $cid]);
+            $ins = $db->prepare("INSERT INTO geo_category_pages (city_slug, category_id, service_slug, service_name, is_active) VALUES (?, ?, ?, ?, 1)");
+            $ins->execute([$cs, $cid, $svc, $svn]);
             setFlash('success', '✅ 已建立，開始編輯內容');
             redirect(BASE_URL . '/admin/pages/geo_category.php?edit=' . $db->lastInsertId());
         } catch (PDOException $e) {
-            $ex = $db->prepare("SELECT id FROM geo_category_pages WHERE city_slug = ? AND category_id = ?");
-            $ex->execute([$cs, $cid]);
+            $ex = $db->prepare("SELECT id FROM geo_category_pages WHERE city_slug = ? AND category_id = ? AND service_slug = ?");
+            $ex->execute([$cs, $cid, $svc]);
             $exId = (int)$ex->fetchColumn();
-            setFlash('error', '此城市×分類已存在，直接編輯');
+            setFlash('error', '此城市×分類×子服務已存在，直接編輯');
             redirect(BASE_URL . '/admin/pages/geo_category.php' . ($exId ? '?edit=' . $exId : ''));
         }
     } else {
@@ -66,6 +69,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($q !== '') $faqs[] = ['q' => $q, 'a' => $a];
         }
         $fields = [
+            'service_slug' => preg_replace('/[^a-z0-9-]/', '', strtolower(trim($_POST['service_slug'] ?? ''))),
+            'service_name' => trim($_POST['service_name'] ?? ''),
             'intro_html' => trim($_POST['intro_html'] ?? ''),
             'faqs'       => json_encode($faqs, JSON_UNESCAPED_UNICODE),
             'hero_image' => trim($_POST['hero_image'] ?? ''),
@@ -74,15 +79,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'is_active'  => isset($_POST['is_active']) ? 1 : 0,
         ];
         $sets = implode(', ', array_map(fn($k) => "`$k` = :$k", array_keys($fields)));
-        $stmt = $db->prepare("UPDATE geo_category_pages SET $sets WHERE id = :id");
-        $stmt->execute(array_merge($fields, ['id' => $id]));
-        setFlash('success', '✅ 交叉頁內容已儲存');
+        try {
+            $stmt = $db->prepare("UPDATE geo_category_pages SET $sets WHERE id = :id");
+            $stmt->execute(array_merge($fields, ['id' => $id]));
+            setFlash('success', '✅ 交叉頁內容已儲存');
+        } catch (PDOException $e) {
+            setFlash('error', '儲存失敗：同城市×分類×子服務已存在（子服務 slug 重複）');
+            redirect(BASE_URL . '/admin/pages/geo_category.php?edit=' . $id);
+        }
         redirect(BASE_URL . '/admin/pages/geo_category.php');
     }
 }
 
 // ─── 列表 ─────────────────────────────────────────────────
-$rows = $db->query("SELECT * FROM geo_category_pages ORDER BY city_slug, category_id")->fetchAll();
+$rows = $db->query("SELECT * FROM geo_category_pages ORDER BY city_slug, category_id, service_slug")->fetchAll();
 
 require_once __DIR__ . '/../includes/layout_head.php';
 ?>
@@ -90,7 +100,7 @@ require_once __DIR__ . '/../includes/layout_head.php';
 <div class="page-header">
   <div>
     <h1>🧭 交叉頁內容</h1>
-    <p style="color:var(--muted); margin-top:6px;">編輯（城市×產業）交叉頁的在地內文 + FAQ — 對應前台 <code>/city/{city}/{cat}</code>。有內容即可索引上線（即使該城該類沒店）。</p>
+    <p style="color:var(--muted); margin-top:6px;">編輯（城市×產業×<strong>子服務</strong>）交叉頁的在地內文 + FAQ — 對應前台 <code>/city/{city}/{cat}</code>（樞紐）或 <code>/city/{city}/{cat}/{子服務}</code>（如 home-service/cleaning）。有內容即可索引上線（即使該城該類沒店）。</p>
   </div>
 </div>
 
@@ -103,6 +113,9 @@ require_once __DIR__ . '/../includes/layout_head.php';
     $eCityName = $cityMap[$editing['city_slug']] ?? $editing['city_slug'];
     $eFaqs = json_decode($editing['faqs'] ?? '[]', true) ?: [];
     $faqsText = implode("\n", array_map(fn($f) => ($f['q'] ?? '') . ' ||| ' . ($f['a'] ?? ''), $eFaqs));
+    $eSvc  = $editing['service_slug'] ?? '';
+    $eSvcN = $editing['service_name'] ?? '';
+    $ePath = '/city/' . $editing['city_slug'] . '/' . ($eCat['slug'] ?? '') . ($eSvc !== '' ? '/' . $eSvc : '');
 ?>
 <!-- ════════ 編輯表單 ════════ -->
 <form method="POST">
@@ -112,9 +125,24 @@ require_once __DIR__ . '/../includes/layout_head.php';
 
   <div class="card">
     <div class="card-header">
-      <h2>📝 <?= h($eCityName) ?> × <?= h($eCat['name'] ?? '?') ?>　<code>/city/<?= h($editing['city_slug']) ?>/<?= h($eCat['slug'] ?? '') ?></code></h2>
+      <h2>📝 <?= h($eCityName) ?> × <?= h($eCat['name'] ?? '?') ?><?= $eSvc !== '' ? ' › ' . h($eSvcN ?: $eSvc) : '' ?>　<code><?= h($ePath) ?></code></h2>
     </div>
     <div class="card-body">
+
+      <div class="form-group" style="background:var(--bg); padding:14px; border-radius:8px;">
+        <label style="font-weight:700;">子服務（決定這是大分類樞紐頁還是子服務頁）</label>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:6px;">
+          <div style="flex:1; min-width:180px;">
+            <input type="text" name="service_slug" value="<?= h($eSvc) ?>" class="form-control" placeholder="留空＝大分類樞紐頁；例 cleaning">
+            <small style="color:var(--muted);">子服務 slug（網址用，只能 a-z 0-9 -）。留空＝大分類層。</small>
+          </div>
+          <div style="flex:1; min-width:180px;">
+            <input type="text" name="service_name" value="<?= h($eSvcN) ?>" class="form-control" placeholder="例 清潔">
+            <small style="color:var(--muted);">子服務顯示名（標籤/麵包屑用）。</small>
+          </div>
+        </div>
+        <small style="color:var(--muted);">例：居家服務底下開「清潔」→ slug <code>cleaning</code>、名稱 <code>清潔</code>，網址變 <code>/city/{city}/home-service/cleaning</code>。</small>
+      </div>
 
       <div class="form-group">
         <label>在地內文（intro_html，可用 HTML）</label>
@@ -149,7 +177,7 @@ require_once __DIR__ . '/../includes/layout_head.php';
   <div class="form-actions" style="margin-top:24px; display:flex; gap:10px;">
     <button type="submit" class="btn btn-primary btn-lg">💾 儲存</button>
     <a href="<?= BASE_URL ?>/admin/pages/geo_category.php" class="btn btn-ghost btn-lg">取消</a>
-    <a href="<?= BASE_URL ?>/city/<?= h($editing['city_slug']) ?>/<?= h($eCat['slug'] ?? '') ?>" target="_blank" rel="noopener" class="btn btn-ghost btn-lg" style="margin-left:auto;">🔍 預覽前台</a>
+    <a href="<?= BASE_URL ?><?= h($ePath) ?>" target="_blank" rel="noopener" class="btn btn-ghost btn-lg" style="margin-left:auto;">🔍 預覽前台</a>
   </div>
 </form>
 
@@ -176,6 +204,14 @@ require_once __DIR__ . '/../includes/layout_head.php';
           <option value="<?= (int)$c['id'] ?>"><?= h($c['icon']) ?> <?= h($c['name']) ?></option>
           <?php endforeach; ?>
         </select>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label>子服務 slug（可空）</label>
+        <input type="text" name="service_slug" class="form-control" placeholder="留空＝大分類；例 cleaning" style="width:170px;">
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label>子服務名稱（可空）</label>
+        <input type="text" name="service_name" class="form-control" placeholder="例 清潔" style="width:130px;">
       </div>
       <button type="submit" class="btn btn-primary">建立並編輯</button>
     </form>
@@ -205,11 +241,13 @@ require_once __DIR__ . '/../includes/layout_head.php';
         $rCity = $cityMap[$r['city_slug']] ?? $r['city_slug'];
         $rFaqs = json_decode($r['faqs'] ?? '[]', true) ?: [];
         $hasIntro = trim((string)$r['intro_html']) !== '';
+        $rSvc  = $r['service_slug'] ?? '';
+        $rPath = '/city/' . $r['city_slug'] . '/' . ($rCat['slug'] ?? '') . ($rSvc !== '' ? '/' . $rSvc : '');
       ?>
       <tr style="border-bottom:1px solid var(--border);<?= !$r['is_active'] ? ' opacity:.5' : '' ?>">
         <td style="padding:12px;">
-          <div style="font-weight:700;"><?= h($rCity) ?> × <?= h($rCat['name'] ?? '?') ?></div>
-          <div style="font-size:.78rem; color:var(--muted);"><code>/city/<?= h($r['city_slug']) ?>/<?= h($rCat['slug'] ?? '') ?></code></div>
+          <div style="font-weight:700;"><?= h($rCity) ?> × <?= h($rCat['name'] ?? '?') ?><?= $rSvc !== '' ? ' › ' . h(($r['service_name'] ?? '') ?: $rSvc) : ' <span style="font-weight:400; color:var(--muted); font-size:.78rem;">(樞紐頁)</span>' ?></div>
+          <div style="font-size:.78rem; color:var(--muted);"><code><?= h($rPath) ?></code></div>
         </td>
         <td style="padding:12px; text-align:center;"><?= $hasIntro ? '✅' : '—' ?></td>
         <td style="padding:12px; text-align:center;"><?= count($rFaqs) ?: '—' ?></td>
@@ -221,7 +259,7 @@ require_once __DIR__ . '/../includes/layout_head.php';
           <?php endif; ?>
         </td>
         <td style="padding:12px; text-align:right; white-space:nowrap;">
-          <a href="<?= BASE_URL ?>/city/<?= h($r['city_slug']) ?>/<?= h($rCat['slug'] ?? '') ?>" target="_blank" rel="noopener" class="btn btn-sm btn-ghost">🔍 預覽</a>
+          <a href="<?= BASE_URL ?><?= h($rPath) ?>" target="_blank" rel="noopener" class="btn btn-sm btn-ghost">🔍 預覽</a>
           <a href="?edit=<?= (int)$r['id'] ?>" class="btn btn-sm btn-primary">編輯</a>
         </td>
       </tr>

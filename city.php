@@ -196,11 +196,12 @@ if ($q !== '') {
 // 該縣市「有寫內容」的交叉頁（即使沒店也要在城市頁露出入口；解決 sanfeng 內容縣市的站內可逛性）
 $contentCells = [];
 try {
-    $ccStmt = $db->prepare("SELECT c.slug AS cat_slug, c.name AS cat_name, c.icon AS cat_icon, g.meta_title
+    $ccStmt = $db->prepare("SELECT c.slug AS cat_slug, c.name AS cat_name, c.icon AS cat_icon,
+            g.service_slug, g.service_name, g.meta_title
         FROM geo_category_pages g JOIN categories c ON g.category_id = c.id
         WHERE g.city_slug = ? AND g.is_active = 1
           AND (COALESCE(g.intro_html,'') <> '' OR JSON_LENGTH(COALESCE(g.faqs,'[]')) > 0)
-        ORDER BY c.sort_order, c.id");
+        ORDER BY c.sort_order, c.id, g.service_slug");
     $ccStmt->execute([$slug]);
     $contentCells = $ccStmt->fetchAll();
 } catch (\Throwable $e) { $contentCells = []; }
@@ -242,6 +243,36 @@ $totalStores      = count($clients);
 $totalPlaceholder = count(array_filter($clients, fn($c) => !empty($c['is_placeholder'])));
 $totalReal        = $totalStores - $totalPlaceholder;
 $totalCategories  = count($catCounts);
+
+// ═══ 服務關鍵字標籤（該城市所有交叉頁內鏈；秀在 intro 粉紅區，給消費者分類 + SEO 內鏈）═══
+$cityShort   = str_replace(['市', '縣'], '', $cityName);
+$serviceTags = [];   // key => ['label'=>, 'cat'=>, 'svc'=>]
+$catsWithSub = [];   // 已有子服務標籤的 cat_slug（避免再加大分類層標籤而重複）
+// 有寫內容的交叉頁 → 子服務頁用 service_name（台中清潔）；大分類層內容取 meta_title 短標
+foreach ($contentCells as $cc) {
+    $cs = $cc['cat_slug'] ?? '';
+    if ($cs === '') continue;
+    if (!empty($cc['service_slug'])) {
+        $svcN = ($cc['service_name'] ?? '') !== '' ? $cc['service_name'] : $cc['service_slug'];
+        $lbl  = $cityShort . $svcN;
+        $key  = $cs . '/' . $cc['service_slug'];
+        $serviceTags[$key] = ['label' => $lbl, 'cat' => $cs, 'svc' => $cc['service_slug']];
+        $catsWithSub[$cs] = true;
+    } else {
+        $lbl = '';
+        if (!empty($cc['meta_title'])) {
+            $lbl = trim(preg_replace('/(公司)?推薦.*$/u', '', explode('｜', $cc['meta_title'])[0]));
+        }
+        if ($lbl === '') $lbl = $cityShort . ($cc['cat_name'] ?? '');
+        $serviceTags[$cs] = ['label' => $lbl, 'cat' => $cs, 'svc' => ''];
+    }
+}
+// 有店家、但沒寫內容、也沒子服務的分類 → 大分類層標籤（城市+分類名）
+foreach ($byCat as $cName => $catClients) {
+    $cs2 = $catClients[0]['cat_slug'] ?? '';
+    if (!$cs2 || isset($serviceTags[$cs2]) || isset($catsWithSub[$cs2])) continue;
+    $serviceTags[$cs2] = ['label' => $cityShort . $cName, 'cat' => $cs2, 'svc' => ''];
+}
 
 // SEO（沒店但有內容的縣市改用服務導向標題，避免「共 0 家」）
 if ($totalStores > 0) {
@@ -372,10 +403,11 @@ $breadcrumbLd = [
     <div class="g-city-intro-eyebrow">Explore <?= h($cityName) ?></div>
     <h2 class="g-city-intro-title">探索<?= h($cityName) ?><br>在地優質店家</h2>
     <p class="g-city-intro-text"><?= h($intro['intro']) ?></p>
-    <?php if (!empty($intro['highlights'])): ?>
+    <?php if ($serviceTags): ?>
     <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:18px;">
-      <?php foreach ($intro['highlights'] as $hl): ?>
-      <span class="g-city-meta-tag" style="background:var(--g-accent-light); color:var(--g-accent); border-color:var(--g-accent-light);">✨ <?= h($hl) ?></span>
+      <?php foreach ($serviceTags as $st):
+          $stUrl = BASE_URL . '/city/' . h($slug) . '/' . h($st['cat']) . ($st['svc'] !== '' ? '/' . h($st['svc']) : ''); ?>
+      <a href="<?= $stUrl ?>" class="g-city-meta-tag" style="background:var(--g-accent-light); color:var(--g-accent); border-color:var(--g-accent-light); text-decoration:none;"><?= h($st['label']) ?></a>
       <?php endforeach; ?>
     </div>
     <?php endif; ?>
@@ -414,6 +446,18 @@ $breadcrumbLd = [
     </div>
     <?php endif; ?>
   </aside>
+</section>
+<?php endif; ?>
+
+<?php /* 內容型縣市（無 cities intro，如彰化）→ 仍在頂部秀服務關鍵字標籤 */ ?>
+<?php if (!$intro && $q === '' && $serviceTags): ?>
+<section class="g-section" style="padding-top:14px; padding-bottom:0;">
+  <div style="display:flex; flex-wrap:wrap; gap:8px;">
+    <?php foreach ($serviceTags as $st):
+        $stUrl = BASE_URL . '/city/' . h($slug) . '/' . h($st['cat']) . ($st['svc'] !== '' ? '/' . h($st['svc']) : ''); ?>
+    <a href="<?= $stUrl ?>" class="g-city-meta-tag" style="background:var(--g-accent-light); color:var(--g-accent); border-color:var(--g-accent-light); text-decoration:none;"><?= h($st['label']) ?></a>
+    <?php endforeach; ?>
+  </div>
 </section>
 <?php endif; ?>
 
@@ -467,45 +511,6 @@ function renderCityStoreCard(array $cl): void {
   <?php
 }
 ?>
-
-<!-- ═══ 在地服務指南（緊湊標籤；該城市所有交叉頁內鏈，給 SEO + 可逛，產業多也不爆版）═══ -->
-<?php
-$cityShort = str_replace(['市', '縣'], '', $cityName);
-$serviceTags = [];  // cat_slug => 標籤文字
-// 有寫內容的交叉頁 → 取 meta_title 的關鍵字短標（如「台中清潔」）
-foreach ($contentCells as $cc) {
-    $lbl = '';
-    if (!empty($cc['meta_title'])) {
-        $lbl = trim(preg_replace('/(公司)?推薦.*$/u', '', explode('｜', $cc['meta_title'])[0]));
-    }
-    if ($lbl === '') $lbl = $cityShort . ($cc['cat_name'] ?? '');
-    if (!empty($cc['cat_slug'])) $serviceTags[$cc['cat_slug']] = $lbl;
-}
-// 有店家、但沒寫內容的分類交叉頁 → 城市+分類名
-foreach ($byCat as $cName => $catClients) {
-    $cs2 = $catClients[0]['cat_slug'] ?? '';
-    if (!$cs2 || isset($serviceTags[$cs2])) continue;
-    $serviceTags[$cs2] = $cityShort . $cName;
-}
-if ($q === '' && $serviceTags):
-?>
-<section class="g-section" style="padding-top:8px;">
-  <div class="g-section-head">
-    <div>
-      <h2 class="g-section-title">🧭 <?= h($cityName) ?>在地服務指南</h2>
-      <p class="g-section-sub">點選服務看在地選店重點、行情與商家</p>
-    </div>
-  </div>
-  <div style="display:flex; flex-wrap:wrap; gap:10px;">
-    <?php foreach ($serviceTags as $cs2 => $lbl): ?>
-    <a href="<?= BASE_URL ?>/city/<?= h($slug) ?>/<?= h($cs2) ?>"
-       style="display:inline-flex; align-items:center; gap:6px; font-size:.95rem; font-weight:600; padding:9px 18px; border:1px solid var(--g-border); border-radius:999px; color:var(--g-ink); background:var(--g-bg-alt); text-decoration:none;">
-      <?= h($lbl) ?> <span style="color:var(--g-accent);">→</span>
-    </a>
-    <?php endforeach; ?>
-  </div>
-</section>
-<?php endif; ?>
 
 <?php if ($q === '' && $hotStores): ?>
 <!-- ═══ 本週熱門 ═══ -->

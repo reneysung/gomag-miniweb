@@ -103,14 +103,14 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
   </url>
   <?php endforeach; ?>
 
-  <!-- 城市×產業 交叉頁（索引條件：≥3 真實店 或 有 geo 內容）-->
+  <!-- 城市×產業 交叉頁（樞紐：≥3 真實店 或 有大分類內容 或 有子服務；子服務頁：皆有內容必收）-->
   <?php
     $catIdToSlug = [];
     foreach ($db->query("SELECT id, slug FROM categories WHERE is_active=1") as $cc) $catIdToSlug[(int)$cc['id']] = $cc['slug'];
-    $geoCells = [];
+    $geoSvc = [];  // "city|cid" => [service_slug, ...]（'' = 大分類層）
     try {
-        foreach ($db->query("SELECT city_slug, category_id FROM geo_category_pages WHERE is_active=1") as $g)
-            $geoCells[$g['city_slug'] . '|' . (int)$g['category_id']] = true;
+        foreach ($db->query("SELECT city_slug, category_id, service_slug FROM geo_category_pages WHERE is_active=1") as $g)
+            $geoSvc[$g['city_slug'] . '|' . (int)$g['category_id']][] = (string)$g['service_slug'];
     } catch (\Throwable $e) { /* 表未建時略過 */ }
     $dupPhCross = implode(',', array_fill(0, count($dupSkip), '?'));
     $cellStmt = $db->prepare("SELECT category_id, SUM(COALESCE(is_placeholder,0)=0) AS rc FROM clients WHERE is_active=1 AND city_slug = ? AND slug NOT IN ($dupPhCross) AND category_id IS NOT NULL GROUP BY category_id");
@@ -119,7 +119,13 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
         $counts = [];
         foreach ($cellStmt->fetchAll() as $r) $counts[(int)$r['category_id']] = (int)$r['rc'];
         foreach ($catIdToSlug as $cid => $catSlugX):
-            if ((($counts[$cid] ?? 0) < 3) && !isset($geoCells[$cSlug . '|' . $cid])) continue;
+            $svcList = $geoSvc[$cSlug . '|' . $cid] ?? [];
+            $hasCatContent = in_array('', $svcList, true);
+            $subs = array_values(array_filter($svcList, fn($s) => $s !== ''));
+            $rc = $counts[$cid] ?? 0;
+            $emitHub = ($rc >= 3) || $hasCatContent || count($subs) > 0;
+            // 樞紐頁
+            if ($emitHub):
   ?>
   <url>
     <loc><?= htmlspecialchars($baseUrl) ?>/city/<?= htmlspecialchars($cSlug) ?>/<?= htmlspecialchars($catSlugX) ?></loc>
@@ -127,6 +133,15 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
+  <?php endif; ?>
+  <?php foreach ($subs as $svSlug): // 子服務頁（皆有內容） ?>
+  <url>
+    <loc><?= htmlspecialchars($baseUrl) ?>/city/<?= htmlspecialchars($cSlug) ?>/<?= htmlspecialchars($catSlugX) ?>/<?= htmlspecialchars($svSlug) ?></loc>
+    <lastmod><?= $today ?></lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <?php endforeach; ?>
   <?php endforeach; endforeach; ?>
 
   <!-- 攻略文總覽 + 各 published 攻略文 -->
