@@ -196,7 +196,7 @@ if ($q !== '') {
 // 該縣市「有寫內容」的交叉頁（即使沒店也要在城市頁露出入口；解決 sanfeng 內容縣市的站內可逛性）
 $contentCells = [];
 try {
-    $ccStmt = $db->prepare("SELECT c.slug AS cat_slug, c.name AS cat_name, c.icon AS cat_icon
+    $ccStmt = $db->prepare("SELECT c.slug AS cat_slug, c.name AS cat_name, c.icon AS cat_icon, g.meta_title
         FROM geo_category_pages g JOIN categories c ON g.category_id = c.id
         WHERE g.city_slug = ? AND g.is_active = 1
           AND (COALESCE(g.intro_html,'') <> '' OR JSON_LENGTH(COALESCE(g.faqs,'[]')) > 0)
@@ -468,63 +468,39 @@ function renderCityStoreCard(array $cl): void {
 }
 ?>
 
-<?php if ($q === '' && count($byCat) >= 2): ?>
-<!-- ═══ 依分類探索（Phase D Day 2） ═══ -->
-<section class="g-section">
-  <div class="g-section-head">
-    <div>
-      <h2 class="g-section-title">依分類探索<?= h($cityName) ?></h2>
-      <p class="g-section-sub"><?= count($byCat) ?> 個分類，找到你需要的<?= h(str_replace(['市','縣'], '', $cityName)) ?>服務</p>
-    </div>
-  </div>
-  <div class="g-explore-grid">
-    <?php foreach ($byCat as $catName => $catClients):
-        $first = $catClients[0];
-        $catSlug = $first['cat_slug'] ?? '';
-        $catIcon = $first['cat_icon'] ?? '🏪';
-        $cover = $catCovers[$catName] ?? '';
-        $coverUrl = $cover ? BASE_URL . '/' . $cover : '';
-        // 升級成交叉頁真連結 /city/{city}/{cat}（第 4 步）；無 cat_slug 才退回頁內錨點
-        $anchor = $catSlug ? BASE_URL . '/city/' . urlencode($slug) . '/' . urlencode($catSlug) : '#';
-    ?>
-    <a class="g-explore-card" href="<?= h($anchor) ?>">
-      <?php if ($coverUrl): ?>
-      <div class="g-explore-card-img" style="background-image:url('<?= h($coverUrl) ?>');"></div>
-      <?php else: ?>
-      <div class="g-explore-card-fallback"><?= h($catIcon) ?></div>
-      <?php endif; ?>
-      <div class="g-explore-card-overlay">
-        <div class="g-explore-card-name"><?= h(str_replace(['市','縣'], '', $cityName)) ?>・<?= h($catName) ?></div>
-        <div class="g-explore-card-count"><?= count($catClients) ?> 家店家</div>
-      </div>
-      <div class="g-explore-card-arrow">→</div>
-    </a>
-    <?php endforeach; ?>
-  </div>
-</section>
-<?php endif; ?>
-
-<!-- ═══ 在地服務專頁（有寫內容的交叉頁；含沒店的城市，補站內可逛性）═══ -->
+<!-- ═══ 在地服務指南（緊湊標籤；該城市所有交叉頁內鏈，給 SEO + 可逛，產業多也不爆版）═══ -->
 <?php
-$extraCells = ($q === '') ? array_filter($contentCells, fn($cc) => !isset($byCat[$cc['cat_name']])) : [];
-if ($extraCells):
+$cityShort = str_replace(['市', '縣'], '', $cityName);
+$serviceTags = [];  // cat_slug => 標籤文字
+// 有寫內容的交叉頁 → 取 meta_title 的關鍵字短標（如「台中清潔」）
+foreach ($contentCells as $cc) {
+    $lbl = '';
+    if (!empty($cc['meta_title'])) {
+        $lbl = trim(preg_replace('/(公司)?推薦.*$/u', '', explode('｜', $cc['meta_title'])[0]));
+    }
+    if ($lbl === '') $lbl = $cityShort . ($cc['cat_name'] ?? '');
+    if (!empty($cc['cat_slug'])) $serviceTags[$cc['cat_slug']] = $lbl;
+}
+// 有店家、但沒寫內容的分類交叉頁 → 城市+分類名
+foreach ($byCat as $cName => $catClients) {
+    $cs2 = $catClients[0]['cat_slug'] ?? '';
+    if (!$cs2 || isset($serviceTags[$cs2])) continue;
+    $serviceTags[$cs2] = $cityShort . $cName;
+}
+if ($q === '' && $serviceTags):
 ?>
-<section class="g-section">
+<section class="g-section" style="padding-top:8px;">
   <div class="g-section-head">
     <div>
-      <h2 class="g-section-title"><?= h($cityName) ?>在地服務專頁</h2>
-      <p class="g-section-sub">這些服務的在地選店指南</p>
+      <h2 class="g-section-title">🧭 <?= h($cityName) ?>在地服務指南</h2>
+      <p class="g-section-sub">點選服務看在地選店重點、行情與商家</p>
     </div>
   </div>
-  <div class="g-explore-grid">
-    <?php foreach ($extraCells as $cc): ?>
-    <a class="g-explore-card" href="<?= BASE_URL ?>/city/<?= h($slug) ?>/<?= h($cc['cat_slug']) ?>">
-      <div class="g-explore-card-fallback"><?= h($cc['cat_icon']) ?></div>
-      <div class="g-explore-card-overlay">
-        <div class="g-explore-card-name"><?= h(str_replace(['市','縣'], '', $cityName)) ?>・<?= h($cc['cat_name']) ?></div>
-        <div class="g-explore-card-count">在地選店指南</div>
-      </div>
-      <div class="g-explore-card-arrow">→</div>
+  <div style="display:flex; flex-wrap:wrap; gap:10px;">
+    <?php foreach ($serviceTags as $cs2 => $lbl): ?>
+    <a href="<?= BASE_URL ?>/city/<?= h($slug) ?>/<?= h($cs2) ?>"
+       style="display:inline-flex; align-items:center; gap:6px; font-size:.95rem; font-weight:600; padding:9px 18px; border:1px solid var(--g-border); border-radius:999px; color:var(--g-ink); background:var(--g-bg-alt); text-decoration:none;">
+      <?= h($lbl) ?> <span style="color:var(--g-accent);">→</span>
     </a>
     <?php endforeach; ?>
   </div>
