@@ -307,6 +307,15 @@ if ($navServices):
     <?php endforeach; ?>
   </div>
 </section>
+<?php else: ?>
+<!-- 0 店空狀態：有內容但本區尚無收錄商家 → B2B 歡迎上架（隨有沒有店自動切換）-->
+<section class="g-section g-cat-anchor">
+  <div class="g-section-head"><div><h2 class="g-section-title"><?= h($catIcon) ?> <?= h($cityName) ?><?= h($pageLabel) ?>店家</h2></div></div>
+  <div style="padding:32px 24px; border:1px dashed var(--g-border); border-radius:14px; text-align:center; background:var(--g-bg-alt);">
+    <p style="margin:0 0 16px; color:var(--g-ink-soft);">本區<?= h($pageLabel) ?>商家陸續收錄中。你是在地<?= h($pageLabel) ?>業者嗎？</p>
+    <a href="<?= BASE_URL ?>/" class="g-cta-btn g-cta-btn-primary">免費上架，被更多<?= h($cityShort) ?>客人找到 →</a>
+  </div>
+</section>
 <?php endif; ?>
 
 <!-- ═══ FAQ（有才顯示）═══ -->
