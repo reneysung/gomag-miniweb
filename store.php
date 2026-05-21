@@ -141,14 +141,23 @@ if ($client['has_minisite']) {
 }
 
 // SEO：客戶自定 > 自動產生
-$pageTitle = !empty($client['store_meta_title'])
-    ? $client['store_meta_title']
-    : $client['brand_name'] . '｜' . ($client['tagline'] ?? '台南' . ($client['cat_name'] ?? '') . '店家');
-$metaDesc = !empty($client['store_meta_desc'])
-    ? $client['store_meta_desc']
-    : ($client['about_text']
+// 行銷頁 SEO 預設：有小官網的客戶 → 行銷頁走「口碑/評價」角度，與小官網(品牌/服務)錯開，避免兩頁互搶排名(cannibalization)
+if (!empty($client['store_meta_title'])) {
+    $pageTitle = $client['store_meta_title'];
+} elseif (!empty($client['has_minisite'])) {
+    $pageTitle = $client['brand_name'] . '評價・口碑推薦｜真實客戶評論' . ($client['cat_name'] ? '・' . $client['cat_name'] : '');
+} else {
+    $pageTitle = $client['brand_name'] . '｜' . ($client['tagline'] ?? '台南' . ($client['cat_name'] ?? '') . '店家');
+}
+if (!empty($client['store_meta_desc'])) {
+    $metaDesc = $client['store_meta_desc'];
+} elseif (!empty($client['has_minisite'])) {
+    $metaDesc = $client['brand_name'] . '的真實評價與客戶口碑整理：服務心得、Google 評論與推薦，看實際口碑再決定。';
+} else {
+    $metaDesc = $client['about_text']
         ? mb_strimwidth(strip_tags($client['about_text']), 0, 150, '…')
-        : "台南{$client['cat_name']}店家：{$client['brand_name']}");
+        : "台南{$client['cat_name']}店家：{$client['brand_name']}";
+}
 $metaKeywords = !empty($client['store_keywords']) ? $client['store_keywords'] : '';
 $ogImage = !empty($client['store_og_image'])
     ? (str_starts_with($client['store_og_image'], 'http') ? $client['store_og_image'] : BASE_URL . '/' . $client['store_og_image'])
