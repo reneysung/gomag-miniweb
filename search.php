@@ -2,6 +2,7 @@
 // search.php  ─  主站搜尋 /search?q=xxx
 require_once __DIR__ . '/includes/config.php';
 require_once __DIR__ . '/includes/helpers.php';
+require_once __DIR__ . '/includes/front_functions.php';
 
 $db = getDB();
 $q = trim($_GET['q'] ?? '');
@@ -97,7 +98,7 @@ require_once __DIR__ . '/main/layout_head.php';
       <?php foreach ($results as $cl): ?>
       <?php
         $heroImg = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
-        $linkUrl = BASE_URL . '/store.php?sub=' . urlencode($cl['subdomain'] ?? $cl['slug']);
+        $linkUrl = clientStoreUrl($cl);  // 統一指向 /store/{slug} 行銷頁（prod 用 pretty URL）
       ?>
       <a class="m-store-card" href="<?= $linkUrl ?>">
         <div class="cover" <?= $heroImg ? 'style="background-image:url(\''.$heroImg.'\')"' : '' ?>>
