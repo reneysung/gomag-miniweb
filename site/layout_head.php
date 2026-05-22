@@ -58,6 +58,22 @@ $_columnUrl = (IS_LOCAL || IS_STAGING)
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<?php
+// favicon：客戶專屬方形圖示 > 客戶 logo > gomag 預設（讓 Google/分頁顯示店家自己的 logo）
+// 用本子網域 host（非 www），Google favicon 需與頁面同 host 才會採用
+$_favSlug = $client['subdomain'] ?: ($client['slug'] ?? '');
+$_favHost = (IS_LOCAL || IS_STAGING) ? BASE_URL : 'https://' . $_favSlug . '.' . MINISITE_DOMAIN;
+$_favFile = 'uploads/brand/favicon-' . $_favSlug . '.png';
+if ($_favSlug && is_file(dirname(__DIR__) . '/' . $_favFile)) {
+    $_favUrl = $_favHost . '/' . $_favFile;
+} elseif (!empty($client['logo_path'])) {
+    $_favUrl = $_favHost . '/' . $client['logo_path'];
+} else {
+    $_favUrl = $_favHost . '/favicon.svg';
+}
+?>
+<link rel="icon" href="<?= h($_favUrl) ?>">
+<link rel="apple-touch-icon" href="<?= h($_favUrl) ?>">
 <title><?= h($metaTitle) ?></title>
 <meta name="description" content="<?= h($metaDesc) ?>">
 <link rel="canonical" href="<?= h($canonicalUrl) ?>">
