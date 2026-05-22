@@ -9,6 +9,7 @@ $db = getDB();
 // ─── 取分類列表（含每個分類的客戶數）────────────────
 $categories = $db->query("
     SELECT c.id, c.name, c.slug, c.icon, c.description, c.banner_image_path,
+           COALESCE(c.home_featured, 0) AS home_featured,
            COUNT(cl.id) AS client_count
     FROM categories c
     LEFT JOIN clients cl ON cl.category_id = c.id AND cl.is_active = 1
@@ -33,6 +34,7 @@ $pickStmt = $db->prepare("
     LIMIT 4
 ");
 foreach ($categories as $cat) {
+    if (empty($cat['home_featured'])) continue;  // 只顯示後台勾選「首頁精選」的分類
     if ($cat['client_count'] == 0) continue;
     $pickStmt->execute([$cat['id']]);
     $rows = $pickStmt->fetchAll();
@@ -224,72 +226,55 @@ require_once __DIR__ . '/main/layout_head.php';
     </div>
     <a href="<?= BASE_URL ?>/city.php" class="g-section-link">所有縣市</a>
   </div>
-  <div class="g-store-grid" style="grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));">
+  <div style="display:flex; flex-wrap:wrap; gap:10px;">
     <?php foreach ($cityCounts as $cityName => $cnt):
       $citySlug = $cityNameToSlug[$cityName];
     ?>
-    <a class="g-store-card" href="<?= BASE_URL ?>/city.php?slug=<?= h($citySlug) ?>" style="text-align:center;">
-      <div class="g-store-img" style="aspect-ratio:1.4; background:linear-gradient(135deg, var(--g-bg-alt), var(--g-bg)); display:grid; place-items:center; font-size:48px;">📍</div>
-      <div class="g-store-meta-top" style="justify-content:center;">
-        <div class="g-store-name" style="font-size:18px;"><?= h($cityName) ?></div>
-      </div>
-      <div class="g-store-loc" style="font-family:var(--g-font-num); font-weight:700; color:var(--g-accent);"><?= $cnt ?> 家店家</div>
+    <a class="g-cat-pill" href="<?= BASE_URL ?>/city.php?slug=<?= h($citySlug) ?>">
+      📍 <?= h($cityName) ?>
+      <span class="g-cat-pill-count"><?= $cnt ?></span>
     </a>
     <?php endforeach; ?>
   </div>
 </section>
 <?php endif; ?>
 
-<!-- ═══════ 分類精選店家（依分類分組）═══════ -->
-<?php if (!empty($featuredByCategory)): ?>
+<!-- ═══════ 精選分類（後台勾選 home_featured 的分類，可多個）═══════ -->
+<?php foreach ($featuredByCategory as $catGroup): ?>
 <section class="g-section">
   <div class="g-section-head">
     <div>
-      <h2 class="g-section-title">分類精選</h2>
-      <p class="g-section-sub">每個分類的口碑代表店家</p>
+      <h2 class="g-section-title"><?= h($catGroup['cat_icon']) ?> <?= h($catGroup['cat_name']) ?>精選</h2>
+      <p class="g-section-sub">在地口碑代表店家</p>
     </div>
+    <a href="<?= BASE_URL ?>/category.php?slug=<?= h($catGroup['cat_slug']) ?>" class="g-section-link">看全部 <?= h($catGroup['cat_name']) ?></a>
   </div>
 
-  <?php foreach ($featuredByCategory as $catGroup): ?>
-  <div class="g-cat-featured-group" style="margin-bottom:40px;">
-    <!-- 分類小標 -->
-    <div class="g-section-head" style="margin-bottom:16px; padding-bottom:10px; border-bottom:2px solid var(--g-border);">
-      <div>
-        <h3 class="g-section-title" style="font-size:1.25rem; margin-bottom:2px;">
-          <?= h($catGroup['cat_icon']) ?> <?= h($catGroup['cat_name']) ?>
-        </h3>
-      </div>
-      <a href="<?= BASE_URL ?>/category.php?slug=<?= h($catGroup['cat_slug']) ?>" class="g-section-link">看全部 <?= h($catGroup['cat_name']) ?></a>
-    </div>
-
-    <!-- 該分類的精選店家（最多 4 家）-->
-    <div class="g-store-grid">
-      <?php foreach ($catGroup['clients'] as $cl):
-        $heroImg = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
-        $linkUrl = clientStoreUrl($cl);
-      ?>
-      <a class="g-store-card" href="<?= $linkUrl ?>">
-        <div class="g-store-img" <?= $heroImg ? 'style="background-image:url(\''.$heroImg.'\')"' : '' ?>>
-          <?php if (!$heroImg): ?>
-          <div class="g-store-img-fallback">
-            <span class="icon"><?= h($catGroup['cat_icon']) ?></span>
-            <span class="label"><?= h($catGroup['cat_name']) ?></span>
-          </div>
-          <?php endif; ?>
+  <div class="g-store-grid">
+    <?php foreach ($catGroup['clients'] as $cl):
+      $heroImg = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
+      $linkUrl = clientStoreUrl($cl);
+    ?>
+    <a class="g-store-card" href="<?= $linkUrl ?>">
+      <div class="g-store-img" <?= $heroImg ? 'style="background-image:url(\''.$heroImg.'\')"' : '' ?>>
+        <?php if (!$heroImg): ?>
+        <div class="g-store-img-fallback">
+          <span class="icon"><?= h($catGroup['cat_icon']) ?></span>
+          <span class="label"><?= h($catGroup['cat_name']) ?></span>
         </div>
-        <div class="g-store-meta-top">
-          <div class="g-store-name"><?= h($cl['brand_name']) ?></div>
-        </div>
-        <?php if ($cl['tagline']): ?>
-        <div class="g-store-cat-label"><?= h(mb_strimwidth($cl['tagline'], 0, 36, '…', 'UTF-8')) ?></div>
         <?php endif; ?>
-      </a>
-      <?php endforeach; ?>
-    </div>
+      </div>
+      <div class="g-store-meta-top">
+        <div class="g-store-name"><?= h($cl['brand_name']) ?></div>
+      </div>
+      <?php if ($cl['tagline']): ?>
+      <div class="g-store-cat-label"><?= h(mb_strimwidth($cl['tagline'], 0, 36, '…', 'UTF-8')) ?></div>
+      <?php endif; ?>
+    </a>
+    <?php endforeach; ?>
   </div>
-  <?php endforeach; ?>
 </section>
-<?php endif; ?>
+<?php endforeach; ?>
 
 <!-- ═══════ 本月新加入 ═══════ -->
 <?php if (!empty($newThisMonth)): ?>
@@ -339,7 +324,10 @@ require_once __DIR__ . '/main/layout_head.php';
       <h3 class="g-banner-title">想讓店家曝光？</h3>
       <p class="g-banner-desc">加入店家好口碑，專屬行銷頁 + 小官網一次擁有。業務團隊到店服務，零學習成本。</p>
     </div>
-    <a href="mailto:<?= h(getPlatformSetting('contact_email', 'contact@gomag.com.tw')) ?>" class="g-banner-btn">立即聯絡 →</a>
+    <a href="https://lin.ee/N0z1eq9" class="g-line-btn" target="_blank" rel="noopener">
+      <svg class="g-line-btn-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.486 2 2 5.797 2 10.49c0 4.205 3.56 7.726 8.37 8.392.326.07.77.215.882.494.1.252.066.647.033.901l-.143.857c-.043.253-.2.99.868.54 1.07-.45 5.766-3.397 7.866-5.814C21.46 14.166 22 12.42 22 10.49 22 5.797 17.514 2 12 2z"/></svg>
+      <span>LINE 線上諮詢</span>
+    </a>
   </div>
 </div>
 
@@ -350,7 +338,10 @@ require_once __DIR__ . '/main/layout_head.php';
     <h2 class="g-cta-title">把生意做大，<br>從找到對的客人開始。</h2>
     <p class="g-cta-desc">店家好口碑專注在地口碑曝光，業務團隊到店服務，幫你把生意做大。</p>
     <div class="g-cta-btns">
-      <a href="mailto:<?= h(getPlatformSetting('contact_email', 'contact@gomag.com.tw')) ?>" class="g-cta-btn g-cta-btn-primary">立即聯絡</a>
+      <a href="https://lin.ee/N0z1eq9" class="g-line-btn" target="_blank" rel="noopener">
+        <svg class="g-line-btn-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.486 2 2 5.797 2 10.49c0 4.205 3.56 7.726 8.37 8.392.326.07.77.215.882.494.1.252.066.647.033.901l-.143.857c-.043.253-.2.99.868.54 1.07-.45 5.766-3.397 7.866-5.814C21.46 14.166 22 12.42 22 10.49 22 5.797 17.514 2 12 2z"/></svg>
+        <span>LINE 線上諮詢</span>
+      </a>
       <a href="<?= BASE_URL ?>/category.php" class="g-cta-btn g-cta-btn-secondary">瀏覽店家</a>
     </div>
   </div>

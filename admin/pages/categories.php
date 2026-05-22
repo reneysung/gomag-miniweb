@@ -21,6 +21,13 @@ try {
     // 已存在就忽略
 }
 
+// 自動加上 home_featured 欄位（首頁精選分類，若不存在）
+try {
+    $db->exec("ALTER TABLE categories ADD COLUMN home_featured TINYINT(1) NOT NULL DEFAULT 0 AFTER is_active");
+} catch (PDOException $e) {
+    // 已存在就忽略
+}
+
 // 處理 banner 上傳的 helper
 function handleCategoryBannerUpload(?string $existingPath): ?string {
     if (empty($_FILES['banner_image']['tmp_name'])) {
@@ -62,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         if ($action === 'create') {
             $bannerPath = handleCategoryBannerUpload(null);
-            $stmt = $db->prepare("INSERT INTO categories (name, slug, icon, banner_image_path, description, sort_order, is_active) VALUES (?,?,?,?,?,?,?)");
+            $stmt = $db->prepare("INSERT INTO categories (name, slug, icon, banner_image_path, description, sort_order, is_active, home_featured) VALUES (?,?,?,?,?,?,?,?)");
             $stmt->execute([
                 trim($_POST['name'] ?? ''),
                 preg_replace('/[^a-z0-9-]/', '', strtolower(trim($_POST['slug'] ?? ''))),
@@ -71,6 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 trim($_POST['description'] ?? ''),
                 (int)($_POST['sort_order'] ?? 0),
                 isset($_POST['is_active']) ? 1 : 0,
+                isset($_POST['home_featured']) ? 1 : 0,
             ]);
             setFlash('success', '✅ 分類新增成功');
         }
@@ -83,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $bannerPath = handleCategoryBannerUpload($existingPath);
 
-            $stmt = $db->prepare("UPDATE categories SET name=?, slug=?, icon=?, banner_image_path=?, description=?, sort_order=?, is_active=? WHERE id=?");
+            $stmt = $db->prepare("UPDATE categories SET name=?, slug=?, icon=?, banner_image_path=?, description=?, sort_order=?, is_active=?, home_featured=? WHERE id=?");
             $stmt->execute([
                 trim($_POST['name'] ?? ''),
                 preg_replace('/[^a-z0-9-]/', '', strtolower(trim($_POST['slug'] ?? ''))),
@@ -92,6 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 trim($_POST['description'] ?? ''),
                 (int)($_POST['sort_order'] ?? 0),
                 isset($_POST['is_active']) ? 1 : 0,
+                isset($_POST['home_featured']) ? 1 : 0,
                 $id
             ]);
             setFlash('success', '✅ 分類已更新');
@@ -176,6 +185,7 @@ require_once __DIR__ . '/../includes/layout_head.php';
             <th style="padding:10px;text-align:center;width:70px;">客戶數</th>
             <th style="padding:10px;text-align:center;width:60px;">排序</th>
             <th style="padding:10px;text-align:center;width:70px;">狀態</th>
+            <th style="padding:10px;text-align:center;width:80px;">首頁精選</th>
             <th style="padding:10px;text-align:right;width:140px;">操作</th>
           </tr>
         </thead>
@@ -205,6 +215,13 @@ require_once __DIR__ . '/../includes/layout_head.php';
               <span style="color:#16a34a;font-weight:700;">●  啟用</span>
               <?php else: ?>
               <span style="color:#999;">○ 停用</span>
+              <?php endif; ?>
+            </td>
+            <td style="padding:10px;text-align:center;">
+              <?php if (!empty($r['home_featured'])): ?>
+              <span title="首頁精選分類" style="font-size:1.1rem;">🌟</span>
+              <?php else: ?>
+              <span style="color:#ccc;">—</span>
               <?php endif; ?>
             </td>
             <td style="padding:10px;text-align:right;">
@@ -296,6 +313,18 @@ require_once __DIR__ . '/../includes/layout_head.php';
                      style="width:18px;height:18px;">
               <span>啟用此分類</span>
             </label>
+          </div>
+
+          <div class="form-group-admin" style="background:#fffbeb;padding:12px;border-radius:6px;border:1.5px solid #fcd34d;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:700;">
+              <input type="checkbox" name="home_featured" value="1"
+                     <?= !empty($editing['home_featured']) ? 'checked' : '' ?>
+                     style="width:18px;height:18px;">
+              <span>🌟 在首頁顯示「精選」區塊</span>
+            </label>
+            <div class="hint" style="margin-top:6px;margin-left:26px;">
+              勾起來 → 首頁會出現「<?= h($editing['name'] ?? '分類名稱') ?>精選」區，顯示此分類有勾「首頁精選展示」的店家（最多 4 家）。可同時勾多個分類。
+            </div>
           </div>
 
           <div style="display:flex;gap:8px;margin-top:14px;">

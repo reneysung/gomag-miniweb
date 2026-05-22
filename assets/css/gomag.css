@@ -498,6 +498,36 @@
 }
 .g-cta-btn-secondary:hover { background: rgba(255,255,255,0.1); }
 
+/* ════ LINE 聯絡按鈕（品牌綠，取代官方促銷圖）════ */
+.g-line-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 30px;
+  border-radius: 100px;
+  background: #06C755;
+  color: #fff;
+  font-family: var(--g-font);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-decoration: none;
+  border: 0;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(6,199,85,0.35);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+.g-line-btn:hover {
+  background: #05b54c;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(6,199,85,0.45);
+}
+.g-line-btn:active { transform: translateY(0); box-shadow: 0 4px 12px rgba(6,199,85,0.35); }
+.g-line-btn-icon { width: 22px; height: 22px; flex-shrink: 0; }
+.g-line-btn--sm { padding: 11px 22px; font-size: 14px; gap: 8px; }
+.g-line-btn--sm .g-line-btn-icon { width: 19px; height: 19px; }
+
 /* ════ Placeholder 卡片 ════ */
 .g-store-card-ph .g-store-img { opacity: 0.85; }
 .g-store-card-ph .g-store-name::after {
@@ -723,6 +753,7 @@
     padding: 24px;
   }
   .g-banner-btn { width: 100%; text-align: center; }
+  .g-banner .g-line-btn { width: 100%; justify-content: center; }
   .g-cta { padding: 64px 20px; }
   .g-section { padding: 32px 16px; }
   .g-breadcrumb-wrap { padding: 16px 16px 0; }

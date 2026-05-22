@@ -1,0 +1,9 @@
+# 禁止從 web 直接存取本資料夾（SSH / CLI 不受影響）
+# 加固 2026-05-22：migration 檔被直接訪問會被執行，必須只允許 CLI 跑
+<IfModule mod_authz_core.c>
+  Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+  Order allow,deny
+  Deny from all
+</IfModule>
