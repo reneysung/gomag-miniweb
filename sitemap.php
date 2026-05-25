@@ -77,23 +77,26 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
     <priority>0.8</priority>
   </url>
 
-  <!-- 各縣市落地頁（依 DB 動態抓有 ≥3 家店家的縣市）-->
+  <!-- 各縣市落地頁（city_slug ≥3 真實店 或 有交叉頁內容）-->
   <?php
-    $cityNameToSlug = array_flip(getCityMap());  // 唯一來源：cities 表
-    $cityListRegex = '臺北市|台北市|新北市|桃園市|臺中市|台中市|臺南市|台南市|高雄市|基隆市|新竹市|新竹縣|苗栗縣|彰化縣|南投縣|雲林縣|嘉義市|嘉義縣|屏東縣|宜蘭縣|花蓮縣|臺東縣|台東縣|澎湖縣|金門縣|連江縣';
-    $cityRows = $db->query("SELECT address FROM clients WHERE is_active=1 AND address IS NOT NULL AND address != ''")->fetchAll();
+    // 店數用已正規化的 clients.city_slug（排除重複客戶與 placeholder）
+    $dupPhCityL = implode(',', array_fill(0, count($dupSkip), '?'));
+    $ccStmt = $db->prepare("SELECT city_slug, COUNT(*) c FROM clients
+        WHERE is_active=1 AND COALESCE(is_placeholder,0)=0 AND COALESCE(city_slug,'')<>''
+          AND slug NOT IN ($dupPhCityL) GROUP BY city_slug");
+    $ccStmt->execute($dupSkip);
     $cityCounts = [];
-    foreach ($cityRows as $r) {
-        if (preg_match('/^(' . $cityListRegex . ')/u', $r['address'], $m)) {
-            $c = str_replace('臺', '台', $m[1]);
-            $cityCounts[$c] = ($cityCounts[$c] ?? 0) + 1;
-        }
-    }
-    foreach ($cityCounts as $cityName => $cnt):
-        if ($cnt < 3) continue;
-        if (!isset($cityNameToSlug[$cityName])) continue;
-        $citySlug = $cityNameToSlug[$cityName];
-        $prio = $cnt >= 5 ? '0.85' : '0.65';
+    foreach ($ccStmt->fetchAll() as $r) $cityCounts[$r['city_slug']] = (int)$r['c'];
+    // 有交叉頁內容的縣市（內容型縣市即使 <3 店也收錄）
+    $citiesWithContent = [];
+    try {
+        foreach ($db->query("SELECT DISTINCT city_slug FROM geo_category_pages WHERE is_active=1") as $g)
+            $citiesWithContent[$g['city_slug']] = true;
+    } catch (\Throwable $e) { /* 表未建時略過 */ }
+    foreach (getCityMap() as $citySlug => $cityName):
+        $cnt = $cityCounts[$citySlug] ?? 0;
+        if ($cnt < 3 && empty($citiesWithContent[$citySlug])) continue;
+        $prio = $cnt >= 5 ? '0.85' : ($cnt >= 3 ? '0.65' : '0.55');
   ?>
   <url>
     <loc><?= htmlspecialchars($baseUrl) ?>/city/<?= htmlspecialchars($citySlug) ?></loc>
