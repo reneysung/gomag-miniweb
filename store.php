@@ -22,6 +22,7 @@ $slug_redirects = [
     'modifiedcars3'      => 'modifiedcars',         // 光點線專業汽車大燈（id=195 → 46）
     'gourmetrestaurant1' => 'gourmetrestaurant2',   // 來道好食雞（id=76 → 145）
     '065957487'          => '062263168',            // 二鍋壽喜燒（id=90 → 13）
+    'cleaningcompany5'   => 'sanfengclean',         // 三峰清潔公司（id=197 → 218）
 ];
 if (isset($slug_redirects[$sub])) {
     $newSub = $slug_redirects[$sub];
