@@ -708,10 +708,16 @@ while (count($currentTags) < 4) $currentTags[] = '';
   </div>
   <div class="card-body">
     <div class="form-group-admin">
+      <div class="landing-split">
       <textarea name="landing_extra_content" id="landingTextarea" rows="18"
         style="width:100%;padding:14px;border:1.5px solid var(--border);border-radius:7px;font-family:'SF Mono','Menlo','Consolas',monospace;font-size:.78rem;line-height:1.55;background:#fafbfc;tab-size:2"
         placeholder="<!-- 貼 HTML 程式碼 / 一頁式 layout 程式碼 -->&#10;&#10;<section class=&quot;hero&quot; style=&quot;background:#1a1a1a;color:#fff;padding:60px 20px;text-align:center;border-radius:10px&quot;>&#10;  <h2 style=&quot;font-size:2rem;font-weight:900;margin-bottom:10px&quot;>專業團隊・10 年經驗</h2>&#10;  <p>台南在地・5,000+ 位滿意客戶</p>&#10;</section>"
       ><?= h($client['landing_extra_content'] ?? '') ?></textarea>
+      <div class="landing-preview-pane">
+        <div class="landing-preview-bar">👁️ 即時預覽（store 頁實際長相，邊打邊看）</div>
+        <iframe id="landingPreview" title="即時預覽"></iframe>
+      </div>
+      </div><!-- /.landing-split -->
       <div class="hint" id="landingHint" style="margin-top:8px;padding:10px 14px;background:#fff8e1;border:1px solid #ffd54f;border-radius:6px;color:#5d4037">
         <strong>HTML 原始碼模式</strong>（目前模式）<br>
         ✅ 直接貼一頁式 HTML、含 inline style / 自訂 class / Grid / Flex 都可。<br>
@@ -735,6 +741,14 @@ while (count($currentTags) < 4) $currentTags[] = '';
   </div>
 </div>
 
+<style>
+.landing-split { display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:stretch; }
+.landing-split #landingTextarea { min-height:480px; resize:vertical; }
+.landing-preview-pane { display:flex; flex-direction:column; border:1.5px solid var(--border); border-radius:7px; overflow:hidden; background:#fff; min-height:480px; }
+.landing-preview-bar { padding:7px 12px; font-size:.72rem; font-weight:700; color:var(--muted); background:#f4f5f7; border-bottom:1px solid var(--border); }
+#landingPreview { flex:1; width:100%; border:0; background:#fff; }
+@media (max-width:900px){ .landing-split { grid-template-columns:1fr; } }
+</style>
 <script>
 // === 一頁式範本（HTML snippets）===
 const SNIPPETS = {
@@ -771,8 +785,39 @@ modeRaw.addEventListener('click', () => {
   hint.style.background = '#fff8e1'; hint.style.borderColor = '#ffd54f'; hint.style.color = '#5d4037';
 });
 modeRich.addEventListener('click', () => {
-  alert('富文本模式由 Quill 接管，但會 strip 複雜 HTML（無 section/inline style）。\n\n建議：用「HTML 原始碼模式」貼一頁式內容比較自由。\n\n如真要切換到富文本，請存檔後重整頁面（會抓回欄位內容）。');
+  alert('富文本模式由 Quill 接管，但會 strip 複雜 HTML（無 section/inline style）。\n\n建議：用「HTML 原始碼模式」配合右側「即時預覽」最自由——邊打邊看結果，找到要改的字/圖直接改。');
 });
+
+// ── 即時預覽：把 landing_extra_content 用實際 store 樣式即時渲染在右側 ──
+(function(){
+  var pvTa = document.getElementById('landingTextarea');
+  var pv   = document.getElementById('landingPreview');
+  if (!pvTa || !pv) return;
+  var CSS = '<?= BASE_URL ?>/assets/css/gomag.css';
+  function buildDoc(html){
+    var body = (html && html.trim())
+      ? html
+      : '<p style="color:#9aa;text-align:center;padding:48px 0">（這裡會即時顯示你打的內容）</p>';
+    return '<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="utf-8">'
+      + '<meta name="viewport" content="width=device-width,initial-scale=1">'
+      + '<link rel="stylesheet" href="' + CSS + '">'
+      + '<style>:root{--m-primary:#0f172a;--m-accent:#d4a853;--m-bg:#f8fafc;--m-bg-alt:#fff;--m-text:#0f172a;--m-text-muted:#64748b;--m-border:#e2e8f0;--m-radius:12px}'
+      + '*,*::before,*::after{box-sizing:border-box}'
+      + 'body{margin:0;padding:20px;font-family:"Noto Sans TC",-apple-system,BlinkMacSystemFont,sans-serif;color:var(--m-text);line-height:1.8;background:#fff}'
+      + '.landing-content{max-width:800px;margin:0 auto;line-height:1.8}'
+      + 'img{max-width:100%;height:auto}a{pointer-events:none}'
+      + '</style></head><body><div class="landing-content">' + body + '</div></body></html>';
+  }
+  var pvTimer = null;
+  function pvRender(){ pv.srcdoc = buildDoc(pvTa.value); }
+  function pvSchedule(){ clearTimeout(pvTimer); pvTimer = setTimeout(pvRender, 250); }
+  pvTa.addEventListener('input', pvSchedule);
+  // 點「貼範本」按鈕後也即時更新（既有 handler 會先把內容塞進 textarea）
+  document.querySelectorAll('.snippet-btn').forEach(function(b){
+    b.addEventListener('click', function(){ setTimeout(pvRender, 0); });
+  });
+  pvRender();
+})();
 </script>
 
 <!-- ═══════ Mini-site SEO 設定（{sub}.gomag.com.tw 專用）═══════ -->
