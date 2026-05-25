@@ -8,10 +8,11 @@ require_once __DIR__ . '/../includes/front_functions.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-// 只接受 POST
+// 這是聯絡表單的 POST 處理端點，不是給人瀏覽的頁面。
+// 用瀏覽器直接開(GET)→ 導回小官網首頁(避免看到 JSON / 405 被當空頁)。
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['ok'=>false,'msg'=>'方法不允許']);
+    $sub = getSubdomain();
+    header('Location: ' . ($sub ? siteUrl($sub) : (BASE_URL . '/')), true, 302);
     exit;
 }
 
