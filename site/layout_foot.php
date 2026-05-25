@@ -51,7 +51,7 @@ $client  = $site['client'];
     </div>
     <div class="footer-bottom">
       © <?= date('Y') ?> <?= h($client['brand_name']) ?> · 版權所有
-      &nbsp;|&nbsp; 網站由 <a href="https://repulab.tw" style="color:rgba(255,255,255,.6)">店家好口碑</a> 製作
+      &nbsp;|&nbsp; 網站由 <a href="https://wmf.com.tw" target="_blank" rel="noopener" style="color:rgba(255,255,255,.7);text-decoration:underline">口碑製造所</a> 製作
     </div>
   </div>
 </footer>
