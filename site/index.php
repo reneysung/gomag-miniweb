@@ -98,6 +98,9 @@ require __DIR__ . '/layout_head.php';
 $heroImg = !empty($client['hero_image_path'])
     ? BASE_URL . '/' . h($client['hero_image_path'])
     : industryDefaultHero($client['industry'] ?? '');
+// 多張首頁 banner 輪播：clients.hero_images（JSON 陣列相對路徑），>1 張才自動輪播
+$heroImages = !empty($client['hero_images'] ?? '') ? json_decode($client['hero_images'], true) : [];
+$heroImages = is_array($heroImages) ? array_values(array_filter($heroImages)) : [];
 $rating = $heroStats[3][0] ?? '4.9★';
 $ratingNum = preg_replace('/[★\s]/u', '', $rating) ?: '4.9';
 ?>
@@ -353,7 +356,14 @@ $ratingNum = preg_replace('/[★\s]/u', '', $rating) ?: '4.9';
 <?php else: ?>
 <!-- ─── 服務業 PrettyClean 風 Hero（亮色照片 + 雙 CTA + marquee）─── -->
 <section class="hero-pro">
-  <div class="hero-pro-bg" style="background-image:url('<?= h($heroImg) ?>');"></div>
+  <?php if (count($heroImages) > 1): ?>
+    <?php foreach ($heroImages as $_hi => $_himg): ?>
+    <div class="hero-pro-slide<?= $_hi === 0 ? ' is-active' : '' ?>" style="background-image:url('<?= h(BASE_URL . '/' . $_himg) ?>');"></div>
+    <?php endforeach; ?>
+    <script>(function(){var s=document.querySelectorAll('.hero-pro .hero-pro-slide');if(s.length<2)return;var i=0;setInterval(function(){s[i].classList.remove('is-active');i=(i+1)%s.length;s[i].classList.add('is-active');},5000);})();</script>
+  <?php else: ?>
+    <div class="hero-pro-bg" style="background-image:url('<?= h($heroImg) ?>');"></div>
+  <?php endif; ?>
   <div class="hero-pro-overlay"></div>
 
   <div class="container hero-pro-content">
@@ -436,6 +446,14 @@ $ratingNum = preg_replace('/[★\s]/u', '', $rating) ?: '4.9';
   from { transform: scale(1.04); }
   to   { transform: scale(1.12); }
 }
+.hero-pro-slide {
+  position: absolute; inset: 0;
+  background-size: cover; background-position: center;
+  opacity: 0; transition: opacity 1.4s ease;
+  transform: scale(1.04);
+  animation: hero-pro-zoom 24s ease-in-out infinite alternate;
+}
+.hero-pro-slide.is-active { opacity: 0.55; }
 .hero-pro-overlay {
   position: absolute; inset: 0;
   background:
@@ -843,7 +861,8 @@ if($featured): ?>
           <!-- 沒有 FB 粉絲頁：地圖放大 -->
           <div style="border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.1);min-height:400px">
             <?php if($client['google_maps_embed']): ?>
-              <iframe src="<?= h($client['google_maps_embed']) ?>" width="100%" height="500" style="border:0" allowfullscreen loading="lazy"></iframe>
+              <?php $_e = $client['google_maps_embed']; $_s = (preg_match('/<iframe[^>]*\bsrc=[\'"]([^\'"]+)[\'"]/', $_e, $_m) ? $_m[1] : $_e); ?>
+              <iframe src="<?= h($_s) ?>" width="100%" height="500" style="border:0" allowfullscreen loading="lazy"></iframe>
             <?php else: ?>
               <div style="height:400px;background:var(--g-bg-alt);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px">
                 <div style="font-size:3rem;margin-bottom:12px">🗺️</div>
@@ -886,7 +905,8 @@ if($featured): ?>
         <!-- 地圖 -->
         <div style="margin-top:24px;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.1);height:280px">
           <?php if($client['google_maps_embed']): ?>
-            <iframe src="<?= h($client['google_maps_embed']) ?>" width="100%" height="100%" style="border:0;min-height:280px" allowfullscreen loading="lazy"></iframe>
+            <?php $_e2 = $client['google_maps_embed']; $_s2 = (preg_match('/<iframe[^>]*\bsrc=[\'"]([^\'"]+)[\'"]/', $_e2, $_m2) ? $_m2[1] : $_e2); ?>
+            <iframe src="<?= h($_s2) ?>" width="100%" height="100%" style="border:0;min-height:280px" allowfullscreen loading="lazy"></iframe>
           <?php else: ?>
             <div style="height:100%;background:var(--g-bg-alt);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px">
               <div style="font-size:3rem;margin-bottom:12px">🗺️</div>
