@@ -137,6 +137,13 @@ c7cf5e3 Initial commit + Phase A: gomag design system foundation
 - `category_block_suggestions` — 12 分類 → block 建議對映 (31 條)
 - `cities` — 4 城 SEO 文案（取代 city.php 寫死 array）
 
+### 子服務 IA 新增表（2026-05-21，見「子服務 IA」段）
+- `geo_category_pages` — 城市×分類×**子服務**交叉頁內容（intro_html + faqs JSON + meta + `service_slug`/`service_name`）。`service_slug=''`＝大分類樞紐層；填值＝子服務頁。unique key `(city_slug, category_id, service_slug)`。
+- `service_keywords` — 關鍵字池（`category_id, slug, name, page_slug, sort, is_active`）。`page_slug=''`＝獨立頁；填值＝同義詞折進該頁（避 doorway）。
+- `client_service_keywords` — 店家 ⇄ 關鍵字 多對多（店家標 ~3 組）。
+- `guides` — 攻略文（`slug, title, body_html, city_slug, category_id, status, published_at`）；城市專屬優先。
+- `clients.city_slug` — 從地址 deriveCitySlug() 推導（2026-05-21 修郵遞區號/台灣前綴 bug，21 家歸位）。
+
 ### 4 個示範客戶（已遷移到 blocks）
 | ID | Slug | 分類 | Blocks |
 |---|---|---|---|
@@ -159,12 +166,13 @@ tainan / kaohsiung / chiayi / taichung / taipei / newtaipei /
 taoyuan / taitung / pingtung / hsinchu / yilan / hualien
 ```
 
-### 各縣市現況
-- 🟢 台南市 155 家（正式）
-- 🟢 高雄市 18 家（正式）
-- 🟢 嘉義市 5 家（正式）
-- 🟢 台中市 5 家（正式 2 + placeholder 3）
-- 🔴 其他縣市 < 3 家，sitemap 不收錄
+### 各縣市現況（2026-05-21 city_slug 修正後）
+- 🟢 台南市 171 家（正式；修 city_slug 前顯示 155）
+- 🟢 高雄市 23 家
+- 🟢 嘉義市 8 家
+- 🟢 台中市 5 家
+- 🟡 屏東 2 / 台北 1 / 桃園 1 / 新北 1 / 台東 1（< 3 家，sitemap 城市頁不收錄）
+- 彰化＝內容型縣市（0 店，靠交叉頁內容撐）
 
 ### 含
 - `CollectionPage` + `ItemList` JSON-LD
@@ -172,6 +180,50 @@ taoyuan / taitung / pingtung / hsinchu / yilan / hualien
 - 在地內文（避 doorway pages 懲罰）— 從 cities 表讀
 - 按分類分群店家清單（核心 SEO 邏輯）
 - B 端 banner + 大 CTA
+
+## 子服務 IA（2026-05-21 大改版，migrations 022–043）
+
+**核心概念**：4 層 IA — 城市 › 大分類 › **子服務（關鍵字）** › 店家。
+大分類（居家服務）太籠統，SEO 關鍵字在子服務層（清潔/木地板/水電…）。消費者也搜「台南清潔」「台中木地板」而非「台南居家服務」。
+
+### URL / 路由（.htaccess）
+```
+/city/{c}                       city.php       縣市頁
+/city/{c}/{cat}                 citycat.php    大分類「樞紐頁」（列子服務標籤 + 該分類店家）
+/city/{c}/{cat}/{svc}           citycat.php?svc=  子服務頁（內文+FAQ+店家+攻略）
+/guide /guide/{slug}            guide.php      攻略文
+```
+
+### citycat.php 行為
+- `svc` 空＝樞紐頁（大分類列店）；`svc` 設＝子服務頁。子服務頁需有 geo 內容列，否則 404。
+- **子服務頁店家清單＝依關鍵字標籤 JOIN**（`client_service_keywords` + `service_keywords`，含同義 `page_slug` 折入），不是大分類過濾。
+- **0 店空狀態**：子服務頁有內容但 0 店 → 顯示 B2B「歡迎上架」（自動切換）。
+- **攻略查詢**：`(category 相符或通用) AND (city 相符或通用)`，城市專屬優先（避免跨分類外溢）。
+- 麵包屑 5 層、JSON-LD（CollectionPage/ItemList/BreadcrumbList/FAQPage）依層級切換。
+
+### 後台
+- `admin/pages/geo_category.php` — 交叉頁內容（加子服務 slug/名稱欄）
+- `admin/pages/service_keywords.php` — ⭐ 關鍵字池 per 分類 CRUD（page_slug 同義詞）
+- `admin/pages/settings.php` — 店家編輯加「服務關鍵字」勾選（軟上限 3）→ client_service_keywords
+- `admin/pages/guides.php` — 攻略文 CRUD
+
+### 已建關鍵字池（9 分類，migrations 023/027/030/032/043）
+- 居家服務：清潔/室內設計/木地板/油漆防水/除蟲/系統廚具/窗簾/冷氣/沙發床墊/監視器弱電/驗屋
+- 餐飲美食：火鍋/燒肉/牛排/日式/韓式/海鮮/麵食/甜點/咖啡/西餐/婚宴餐廳/素食/吃到飽/中式（+同義詞）
+- 健康醫療：中醫診所/皮膚科/醫學美容/醫事檢驗
+- 汽車服務：包膜/鍍膜/汽車美容/保養維修/音響/大燈/駕訓
+- 美容美髮：美髮/美甲/美睫/紋繡霧眉/臉部護膚/SPA/除毛/新娘秘書（+剪染燙/光療/飄眉同義詞）
+- 專業服務：會計記帳/法律/代書地政/保險/廣告設計/商業攝影/印刷/徵信
+- 教育學習：升學補習/美語/才藝/音樂/安親課輔/美術/家教/數理
+- 旅宿住宿：民宿/飯店旅館/包棟Villa/露營區
+- 零售購物：（043 已建池）
+- 關鍵字池只是建好「可標」，內容頁（geo_category_pages）要另寫；目前已寫內容的子服務頁集中居家/餐飲/健康/汽車。
+
+### 現況（2026-05-21）
+- 子服務內容頁 ~33（台南最多：居家5+餐飲6+中醫1+婚宴；高雄餐飲3+室內設計+婚宴+驗屋；台中清潔/木地板/室內設計/驗屋/婚宴；嘉義包膜/鍍膜；彰化清潔）。
+- 攻略文 19 篇（3 通用 + 16 城市專屬），全進 sitemap。
+- **內容紀律**：每篇/每頁城市在地差異化（地名/重劃區/行情）避 doorway；行情數字人工確認；0 店靠內容撐排名（sanfeng）。**重質不重量、觀察 Google 收錄再續灌**。
+- BASE_URL 修正：prod config.php BASE_URL 補 www（內部連結與 canonical 一致，少一跳 301）。
 
 ## 設計系統 gomag.css
 
