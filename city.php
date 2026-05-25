@@ -41,14 +41,15 @@ $extraCss = [BASE_URL . '/assets/css/gomag.css'];
 //   模式 A：未指定縣市 → 顯示所有縣市入口
 // ═══════════════════════════════════════════════════════════
 if (!$slug) {
-    $cityList = '臺北市|台北市|新北市|桃園市|臺中市|台中市|臺南市|台南市|高雄市|基隆市|新竹市|新竹縣|苗栗縣|彰化縣|南投縣|雲林縣|嘉義市|嘉義縣|屏東縣|宜蘭縣|花蓮縣|臺東縣|台東縣|澎湖縣|金門縣|連江縣';
-    $rows = $db->query("SELECT address FROM clients WHERE is_active=1 AND address IS NOT NULL AND address != ''")->fetchAll();
+    // 縣市店數：用已正規化的 clients.city_slug（與城市頁一致；修原 address regex 漏郵遞區號 bug）
     $stats = [];
-    foreach ($rows as $r) {
-        if (preg_match('/^(' . $cityList . ')/u', $r['address'], $m)) {
-            $c = str_replace('臺', '台', $m[1]);
-            $stats[$c] = ($stats[$c] ?? 0) + 1;
-        }
+    $dupPhA = implode(',', array_fill(0, count($dupSkip), '?'));
+    $stStmt = $db->prepare("SELECT city_slug, COUNT(*) c FROM clients
+        WHERE is_active=1 AND COALESCE(city_slug,'') <> '' AND slug NOT IN ($dupPhA)
+        GROUP BY city_slug");
+    $stStmt->execute($dupSkip);
+    foreach ($stStmt->fetchAll() as $r) {
+        if (isset($cityMap[$r['city_slug']])) $stats[$cityMap[$r['city_slug']]] = (int)$r['c'];
     }
     arsort($stats);
 
@@ -74,19 +75,13 @@ if (!$slug) {
         </div>
       </div>
 
-      <div class="g-store-grid" style="grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));">
+      <div style="display:flex; flex-wrap:wrap; gap:10px;">
         <?php foreach ($stats as $cityName => $cnt):
             if (!isset($cityNameToSlug[$cityName])) continue;
             if ($cnt < 3) continue;
             $citySlug = $cityNameToSlug[$cityName];
         ?>
-        <a class="g-store-card" href="<?= BASE_URL ?>/city.php?slug=<?= h($citySlug) ?>" style="text-align:center;">
-          <div class="g-store-img" style="aspect-ratio:1.4; background:var(--g-bg-alt); display:grid; place-items:center; font-size:48px;">📍</div>
-          <div class="g-store-meta-top" style="justify-content:center;">
-            <div class="g-store-name" style="font-size:18px;"><?= h($cityName) ?></div>
-          </div>
-          <div class="g-store-loc" style="font-family:var(--g-font-num); font-weight:600; color:var(--g-accent);"><?= $cnt ?> 家店家</div>
-        </a>
+        <a href="<?= BASE_URL ?>/city.php?slug=<?= h($citySlug) ?>" class="g-city-meta-tag" style="background:var(--g-accent-light); color:var(--g-accent); border-color:var(--g-accent-light); text-decoration:none; font-size:.95rem; padding:9px 16px;">📍 <?= h($cityName) ?> <span style="font-weight:800;"><?= $cnt ?></span></a>
         <?php endforeach; ?>
       </div>
     </section>
@@ -112,15 +107,9 @@ if (!$slug) {
           <p class="g-section-sub">這些地區的在地服務專頁</p>
         </div>
       </div>
-      <div class="g-store-grid" style="grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));">
+      <div style="display:flex; flex-wrap:wrap; gap:10px;">
         <?php foreach ($contentCities as $cs => $cn): ?>
-        <a class="g-store-card" href="<?= BASE_URL ?>/city.php?slug=<?= h($cs) ?>" style="text-align:center;">
-          <div class="g-store-img" style="aspect-ratio:1.4; background:var(--g-bg-alt); display:grid; place-items:center; font-size:40px;">🧭</div>
-          <div class="g-store-meta-top" style="justify-content:center;">
-            <div class="g-store-name" style="font-size:17px;"><?= h($cn) ?></div>
-          </div>
-          <div class="g-store-loc" style="color:var(--g-ink-muted);">在地服務專頁</div>
-        </a>
+        <a href="<?= BASE_URL ?>/city.php?slug=<?= h($cs) ?>" class="g-city-meta-tag" style="background:var(--g-bg-alt); color:var(--g-ink); border-color:var(--g-border); text-decoration:none; font-size:.95rem; padding:9px 16px;">🧭 <?= h($cn) ?></a>
         <?php endforeach; ?>
       </div>
     </section>
