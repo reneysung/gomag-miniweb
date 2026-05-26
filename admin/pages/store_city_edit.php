@@ -62,11 +62,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'city_slug'              => $citySlug,
         'city_label'             => $cityLabel ?: $citySlug,
         'brand_name'             => trim($_POST['brand_name'] ?? '') ?: null,
+        // 📢 行銷頁覆寫
         'store_meta_title'       => trim($_POST['store_meta_title'] ?? '') ?: null,
         'store_meta_desc'        => trim($_POST['store_meta_desc'] ?? '') ?: null,
         'store_keywords'         => trim($_POST['store_keywords'] ?? '') ?: null,
         'landing_extra_content'  => trim($_POST['landing_extra_content'] ?? '') ?: null,
         'store_og_image'         => trim($_POST['store_og_image'] ?? '') ?: null,
+        // 🌐 小官網覆寫
+        'minisite_meta_title'    => trim($_POST['minisite_meta_title'] ?? '') ?: null,
+        'minisite_meta_desc'     => trim($_POST['minisite_meta_desc'] ?? '') ?: null,
+        'minisite_keywords'      => trim($_POST['minisite_keywords'] ?? '') ?: null,
+        'minisite_og_image'      => trim($_POST['minisite_og_image'] ?? '') ?: null,
+        'minisite_intro_html'    => trim($_POST['minisite_intro_html'] ?? '') ?: null,
+        // 共用
         'hero_image_path'        => $heroPath ?: null,
         'filter_cases_by_region' => !empty($_POST['filter_cases_by_region']) ? 1 : 0,
         'sort_order'             => (int)($_POST['sort_order'] ?? 0),
@@ -109,7 +117,9 @@ require_once __DIR__ . '/../includes/layout_head.php';
     <a href="<?= BASE_URL ?>/admin/pages/store_cities.php" style="color:var(--muted); font-size:.85rem; text-decoration:none;">← 返回城市行銷頁列表</a>
     <h1>🗺️ <?= h($pageTitle) ?></h1>
     <p style="color:var(--muted); margin-top:6px; font-size:.9rem;">
-      預覽 URL：<code>/store/<?= h($sub) ?>/{city}</code>（儲存後可在列表預覽）
+      預覽 URL：
+      📢 行銷頁 <code>https://www.gomag.com.tw/store/<?= h($sub) ?>/{city}</code>
+      🌐 小官網 <code>https://<?= h($sub) ?>.gomag.com.tw/{city}</code>
     </p>
   </div>
 </div>
@@ -163,18 +173,24 @@ require_once __DIR__ . '/../includes/layout_head.php';
     </div>
   </div>
 
-  <!-- SEO 覆寫 -->
+  <!-- 共用:品牌覆寫(行銷頁+小官網同時用) -->
   <div class="card" style="margin-top:20px;">
-    <div class="card-header"><h2>🔍 SEO 覆寫（留空 = 用主檔）</h2></div>
+    <div class="card-header"><h2>🔗 共用覆寫（行銷頁＋小官網都會用到）</h2></div>
     <div class="card-body">
       <div class="form-group">
         <label>品牌名稱（顯示在此城市頁）</label>
         <input type="text" name="brand_name" class="form-control" maxlength="120"
                placeholder="留空 = 用主檔「<?= h($client['brand_name']) ?>」"
                value="<?= h($row['brand_name'] ?? '') ?>">
-        <div class="hint">想讓城市頁標示「亞雷台中清潔團隊」之類更貼近在地的品牌名時填這裡。</div>
+        <div class="hint">想讓城市頁標示「奧喜長崎蛋糕 台中店」之類更貼近在地的品牌名時填這裡。行銷頁與小官網都會用此名稱。</div>
       </div>
+    </div>
+  </div>
 
+  <!-- 📢 行銷頁 SEO 覆寫 -->
+  <div class="card" style="margin-top:20px; border-left:4px solid var(--accent);">
+    <div class="card-header"><h2>📢 行銷頁 SEO 覆寫（/store/{slug}/{city}，留空 = 用主檔）</h2></div>
+    <div class="card-body">
       <div class="form-group">
         <label>SEO 標題 (Meta Title)</label>
         <input type="text" name="store_meta_title" class="form-control" maxlength="300"
@@ -205,12 +221,12 @@ require_once __DIR__ . '/../includes/layout_head.php';
     </div>
   </div>
 
-  <!-- Hero / 內容覆寫 -->
-  <div class="card" style="margin-top:20px;">
-    <div class="card-header"><h2>🖼️ Hero 圖 + 一頁式延伸內容</h2></div>
+  <!-- 📢 行銷頁 Hero + 一頁式 -->
+  <div class="card" style="margin-top:20px; border-left:4px solid var(--accent);">
+    <div class="card-header"><h2>📢 行銷頁 Hero + 一頁式延伸內容</h2></div>
     <div class="card-body">
       <div class="form-group">
-        <label>Hero 圖（此城市專用）</label>
+        <label>Hero 圖（此城市專用，行銷頁＋小官網共用）</label>
         <?php if (!empty($row['hero_image_path'])): ?>
           <div style="margin-bottom:10px;">
             <img src="<?= BASE_URL . '/' . h($row['hero_image_path']) ?>" style="max-width:300px; border-radius:6px;">
@@ -230,11 +246,59 @@ require_once __DIR__ . '/../includes/layout_head.php';
     </div>
   </div>
 
+  <!-- 🌐 小官網 SEO 覆寫 -->
+  <div class="card" style="margin-top:20px; border-left:4px solid #2563eb;">
+    <div class="card-header"><h2>🌐 小官網 SEO 覆寫（{sub}.gomag.com.tw/{city}，留空 = 用主檔）</h2></div>
+    <div class="card-body">
+      <div class="form-group">
+        <label>小官網 SEO 標題 (Meta Title)</label>
+        <input type="text" name="minisite_meta_title" class="form-control" maxlength="300"
+               placeholder="例：奧喜長崎蛋糕 台中店｜手工長崎蛋糕宅配・台中專送"
+               value="<?= h($row['minisite_meta_title'] ?? '') ?>">
+        <div class="hint">跟行銷頁標題寫不一樣！小官網是「品牌官網角度」，行銷頁是「關鍵字搜尋角度」，兩邊互補不互蠶食。</div>
+      </div>
+
+      <div class="form-group">
+        <label>小官網 SEO 描述 (Meta Description)</label>
+        <textarea name="minisite_meta_desc" class="form-control" rows="3" maxlength="500"
+                  placeholder="120-160 字。城市 + 主力商品 + 在地特色 + 行動引導"><?= h($row['minisite_meta_desc'] ?? '') ?></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>小官網 關鍵字（逗號分隔）</label>
+        <input type="text" name="minisite_keywords" class="form-control" maxlength="500"
+               placeholder="例：台中長崎蛋糕,台中伴手禮,北屯彌月禮盒"
+               value="<?= h($row['minisite_keywords'] ?? '') ?>">
+      </div>
+
+      <div class="form-group">
+        <label>小官網 OG 分享圖路徑（uploads/...）</label>
+        <input type="text" name="minisite_og_image" class="form-control"
+               placeholder="留空 = 用上方 Hero 圖或主檔"
+               value="<?= h($row['minisite_og_image'] ?? '') ?>">
+      </div>
+    </div>
+  </div>
+
+  <!-- 🌐 小官網 城市專屬內容（覆寫關於我們） -->
+  <div class="card" style="margin-top:20px; border-left:4px solid #2563eb;">
+    <div class="card-header"><h2>🌐 小官網 城市專屬內容（覆寫「關於我們」段，留空 = 用主檔）</h2></div>
+    <div class="card-body">
+      <div class="form-group">
+        <label>城市專屬簡介（HTML/富文本）</label>
+        <textarea name="minisite_intro_html" class="form-control wysiwyg" rows="10"
+                  placeholder="留空 = 小官網該城市頁的「關於我們」用主檔內容。填值 = 小官網該城市頁專用內容（如：在地服務範圍、地區故事、城市限定品項）"><?= h($row['minisite_intro_html'] ?? '') ?></textarea>
+        <div class="hint">這段會出現在小官網 {sub}.gomag.com.tw/{city} 頁的「關於我們」區段，差異化內容對 SEO 很重要——別 5 個城市寫一樣。</div>
+      </div>
+    </div>
+  </div>
+
   <div class="form-actions" style="margin-top:24px; display:flex; gap:10px;">
     <button type="submit" class="btn btn-primary btn-lg">💾 儲存城市變體</button>
     <a href="<?= BASE_URL ?>/admin/pages/store_cities.php" class="btn btn-ghost btn-lg">取消</a>
     <?php if ($row): ?>
-      <a href="<?= BASE_URL ?>/store/<?= h($sub) ?>/<?= h($row['city_slug']) ?>" target="_blank" rel="noopener" class="btn btn-ghost btn-lg" style="margin-left:auto;">🌐 預覽此城市頁</a>
+      <a href="<?= BASE_URL ?>/store/<?= h($sub) ?>/<?= h($row['city_slug']) ?>" target="_blank" rel="noopener" class="btn btn-ghost btn-lg" style="margin-left:auto;">📢 預覽行銷頁</a>
+      <a href="https://<?= h($sub) ?>.gomag.com.tw/<?= h($row['city_slug']) ?>" target="_blank" rel="noopener" class="btn btn-ghost btn-lg">🌐 預覽小官網</a>
     <?php endif; ?>
   </div>
 </form>
