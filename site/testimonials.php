@@ -137,7 +137,7 @@ require __DIR__ . '/layout_head.php';
     <?php if(empty($site['testimonials'])): ?>
     <div style="text-align:center;padding:60px 0;color:#888">
       <div style="font-size:3rem;margin-bottom:16px">⭐</div>
-      <div style="font-size:1rem;font-weight:600">客戶好評陸續新增中，敬請期待！</div>
+      <div style="font-size:1rem;font-weight:600">網友分享陸續新增中，敬請期待！</div>
     </div>
     <?php endif; ?>
 

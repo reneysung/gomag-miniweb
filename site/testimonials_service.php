@@ -59,7 +59,7 @@ require __DIR__ . '/layout_head.php';
 <section style="padding:80px 20px">
   <div style="max-width:600px;margin:0 auto;padding:48px 24px;text-align:center;background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.06)">
     <div style="font-size:3rem;margin-bottom:14px">⭐</div>
-    <h3 style="font-size:1.2rem;font-weight:800;color:var(--g-ink);margin-bottom:8px">客戶評價整理中</h3>
+    <h3 style="font-size:1.2rem;font-weight:800;color:var(--g-ink);margin-bottom:8px">網友分享整理中</h3>
     <p style="color:#888;font-size:.95rem;margin-bottom:24px">最新好評正在收集中，歡迎成為下一個滿意客戶。</p>
     <?php if (!empty($client['phone'])): ?>
       <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$client['phone'])) ?>" class="btn btn-primary" style="margin:4px">📞 <?= h($client['phone']) ?></a>

@@ -300,7 +300,7 @@ function schemaBreadcrumb(string $sub, string $pageKey, string $brandName, ?arra
     $pageNames = [
         'services'     => '服務項目',
         'cases'        => '施工案例',
-        'testimonials' => '客戶評價',
+        'testimonials' => '網友分享',
         'contact'      => '聯絡我們',
         'articles'     => '專欄',
         // detail 頁 — 第二層連回列表
