@@ -474,13 +474,20 @@ $latestStmt = $db->prepare("
 $latestStmt->execute(array_merge([$slug], $dupSkip));
 $latestStores = $latestStmt->fetchAll();
 
+// 城市口碑：同店去重（每店最多 1 筆，取該店最高分／最新一則），再跨店取前 6
+// 避免某家店 5 筆五星霸佔版面、確保 6 個方塊來自 6 家不同店家
 $cityReviewsStmt = $db->prepare("
-  SELECT t.reviewer_name, t.rating, t.content, cl.brand_name, cl.subdomain, cl.slug,
+  WITH ranked AS (
+    SELECT t.*, ROW_NUMBER() OVER (PARTITION BY t.client_id ORDER BY t.rating DESC, t.id DESC) AS rn
+    FROM testimonials t
+    WHERE t.is_active=1 AND COALESCE(t.source,'') <> 'demo'
+  )
+  SELECT r.reviewer_name, r.rating, r.content, cl.brand_name, cl.subdomain, cl.slug,
          cl.has_minisite, cl.external_website_url
-  FROM testimonials t JOIN clients cl ON t.client_id = cl.id
-  WHERE t.is_active=1 AND cl.is_active=1 AND cl.city_slug = ?
-    AND cl.slug NOT IN ($dupPh) AND COALESCE(t.source,'') <> 'demo'
-  ORDER BY t.rating DESC, t.id DESC LIMIT 6");
+  FROM ranked r JOIN clients cl ON r.client_id = cl.id
+  WHERE r.rn = 1 AND cl.is_active=1 AND cl.city_slug = ?
+    AND cl.slug NOT IN ($dupPh)
+  ORDER BY r.rating DESC, r.id DESC LIMIT 6");
 $cityReviewsStmt->execute(array_merge([$slug], $dupSkip));
 $cityReviews = $cityReviewsStmt->fetchAll();
 
