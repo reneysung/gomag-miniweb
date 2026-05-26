@@ -269,7 +269,7 @@ img{max-width:100%;display:block}
       <?php if ($_hasArticles): ?>
         <a href="<?= h($_columnUrl) ?>" class="<?= in_array($pageKey,['articles','article_detail'])?'active':'' ?>">專欄</a>
       <?php endif; ?>
-      <a href="<?= siteUrl($slug,'testimonials') ?>" class="<?= $pageKey==='testimonials'?'active':'' ?>">客戶好評</a>
+      <a href="<?= siteUrl($slug,'testimonials') ?>" class="<?= $pageKey==='testimonials'?'active':'' ?>">網友分享</a>
       <?php if ($phone): ?>
         <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$phone)) ?>" class="btn-contact">📞 <?= h($phone) ?></a>
       <?php endif; ?>
@@ -285,7 +285,7 @@ img{max-width:100%;display:block}
     <?php if ($_hasArticles): ?>
       <a href="<?= h($_columnUrl) ?>" onclick="closeMobileMenu()">📝 專欄</a>
     <?php endif; ?>
-    <a href="<?= siteUrl($slug,'testimonials') ?>" onclick="closeMobileMenu()">⭐ 客戶好評</a>
+    <a href="<?= siteUrl($slug,'testimonials') ?>" onclick="closeMobileMenu()">⭐ 網友分享</a>
     <?php if ($phone): ?>
       <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$phone)) ?>" class="highlight">📞 <?= h($phone) ?></a>
     <?php endif; ?>

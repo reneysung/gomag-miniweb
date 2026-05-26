@@ -25,7 +25,7 @@ require __DIR__ . '/layout_head.php';
   <div class="prosvc-hero-bg" style="background-image:url('<?= h($photos['happy']) ?>');"></div>
   <div class="prosvc-hero-overlay"></div>
   <div class="prosvc-hero-content">
-    <div class="prosvc-tag"><span class="prosvc-tag-dot"></span>客戶好評</div>
+    <div class="prosvc-tag"><span class="prosvc-tag-dot"></span>網友分享</div>
     <h1 class="prosvc-hero-title">真實口碑推薦</h1>
     <p class="prosvc-hero-sub">每一則都是客戶的親身體驗</p>
   </div>
@@ -98,7 +98,7 @@ require __DIR__ . '/layout_head.php';
 <section class="proRev-grid-section">
   <div class="proRev-grid-head">
     <div class="prosvc-eyebrow">MORE REVIEWS</div>
-    <h2 class="prosvc-section-title">更多客戶分享</h2>
+    <h2 class="prosvc-section-title">更多網友分享</h2>
   </div>
   <div class="proRev-grid">
     <?php foreach ($rest as $i => $t): ?>

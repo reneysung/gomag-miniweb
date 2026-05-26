@@ -60,10 +60,10 @@ require __DIR__ . '/layout_head.php';
 ?>
 
 <div class="page-banner">
-  <div class="container"><h1>⭐ 客戶好評</h1><p>真實口碑推薦，每一則都是客戶的親身體驗</p></div>
+  <div class="container"><h1>⭐ 網友分享</h1><p>真實口碑推薦，每一則都是客戶的親身體驗</p></div>
 </div>
 <div class="container">
-  <div class="breadcrumb"><a href="<?= siteUrl($sub) ?>">首頁</a> › <span>客戶好評</span></div>
+  <div class="breadcrumb"><a href="<?= siteUrl($sub) ?>">首頁</a> › <span>網友分享</span></div>
 </div>
 
 <!-- 篩選 Tab -->

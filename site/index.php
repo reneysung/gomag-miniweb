@@ -773,7 +773,7 @@ if($featured): ?>
   <div class="container">
     <div class="section-title animate-in">
       <div class="label">TESTIMONIALS</div>
-      <h2>客戶真實評價</h2>
+      <h2>網友分享</h2>
       <p>每一個笑容，都是我們最大的動力</p>
     </div>
     <div class="grid-3">
