@@ -289,6 +289,31 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
   </url>
   <?php     }
       }
+      // mini-site 多縣市頁（{sub}.gomag.com.tw/{city}）— 該客戶有設 minisite_* 覆寫的 city 才收
+      try {
+          $msCityStmt = $db->prepare("SELECT city_slug, COALESCE(created_at, NOW()) AS modified
+              FROM client_city_pages
+              WHERE client_id=? AND is_active=1
+                AND (minisite_meta_title IS NOT NULL AND minisite_meta_title != ''
+                  OR minisite_meta_desc  IS NOT NULL AND minisite_meta_desc  != ''
+                  OR minisite_intro_html IS NOT NULL AND minisite_intro_html != ''
+                  OR minisite_keywords   IS NOT NULL AND minisite_keywords   != '')
+              ORDER BY sort_order, id");
+          $msCityStmt->execute([$cidRow['id']]);
+          foreach ($msCityStmt->fetchAll() as $mc) {
+              $cMod = date('Y-m-d', strtotime($mc['modified']));
+              $cUrl = (IS_LOCAL || IS_STAGING)
+                  ? $miniBase . '/index.php?sub=' . urlencode($sub) . '&city=' . urlencode($mc['city_slug'])
+                  : $miniBase . '/' . rawurlencode($mc['city_slug']);
+  ?>
+  <url>
+    <loc><?= htmlspecialchars($cUrl) ?></loc>
+    <lastmod><?= $cMod ?></lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <?php     }
+      } catch (PDOException $e) { /* minisite_* 欄位若還沒 migrate 則忽略 */ }
       // 專欄文章（Phase 7：/column/{slug}）
       try {
           $artStmt = $db->prepare("SELECT slug, COALESCE(updated_at, created_at) AS modified FROM articles WHERE client_id=? AND is_active=1 AND slug IS NOT NULL AND slug!='' ORDER BY id");
