@@ -456,6 +456,11 @@ textarea.form-control { resize: vertical; min-height: 90px; }
        href="<?= BASE_URL ?>/admin/pages/settings.php?tab=store">
       <span class="icon">📢</span> 行銷頁 SEO + 內容
     </a>
+    <a class="nav-item <?= in_array($currentPage, ['store_cities', 'store_city_edit']) ? 'active' : '' ?>"
+       href="<?= BASE_URL ?>/admin/pages/store_cities.php">
+      <span class="icon">🗺️</span> 城市行銷頁
+      <span style="margin-left:auto; background:#FF5A36; color:#fff; font-size:.6rem; font-weight:800; padding:1px 6px; border-radius:20px;">NEW</span>
+    </a>
     <a class="nav-item <?= $currentPage === 'seo' ? 'active' : '' ?>"
        href="<?= BASE_URL ?>/admin/pages/seo.php">
       <span class="icon">🔍</span> 進階 SEO（per page）

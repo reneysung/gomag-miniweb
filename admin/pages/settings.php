@@ -829,6 +829,28 @@ modeRich.addEventListener('click', () => {
   </div>
 </div>
 
+<!-- 多城市行銷頁入口（store tab）-->
+<?php
+$_cityVarCount = (int)$db->query("SELECT COUNT(*) FROM client_city_pages WHERE client_id=" . (int)$clientId)->fetchColumn();
+?>
+<div class="card tab-section" data-tab="store" style="margin-bottom:20px; border-left:4px solid #FF5A36; background:linear-gradient(135deg,#FFF8F4,#FFE8DF);">
+  <div class="card-header"><h2>🗺️ 多城市行銷頁</h2></div>
+  <div class="card-body" style="display:flex; align-items:center; gap:16px;">
+    <div style="flex:1;">
+      <p style="margin:0 0 6px; font-size:.95rem; font-weight:700;">
+        此客戶有 <span style="color:#FF5A36;"><?= $_cityVarCount ?></span> 個城市行銷頁
+      </p>
+      <p style="margin:0; font-size:.85rem; color:var(--muted); line-height:1.6;">
+        想為這個客戶開不同城市的專屬行銷頁（例：<code>/store/<?= h($client['subdomain'] ?: $client['slug'] ?? '') ?>/taichung</code>、<code>/store/<?= h($client['subdomain'] ?: $client['slug'] ?? '') ?>/changhua</code>）？
+        每個城市可獨立設定 SEO 標題、描述、Hero、延伸內容，案例自動依城市篩選 — 避免互蠶食。
+      </p>
+    </div>
+    <div>
+      <a class="btn btn-primary" href="<?= BASE_URL ?>/admin/pages/store_cities.php" style="white-space:nowrap;">🗺️ 管理城市行銷頁</a>
+    </div>
+  </div>
+</div>
+
 <!-- Google 地圖 -->
 <div class="card tab-section" data-tab="basic" style="margin-bottom:20px;">
   <div class="card-header"><h2>🗺️ Google 地圖嵌入</h2></div>
