@@ -12,6 +12,38 @@ $social   = $site['social'];
 $services = $site['services'];
 $seo      = getSeo($site, $pageKey);
 
+// ─── 多縣市覆寫 ─────────────────────────────────────────────
+// 若 $_GET['city'] 是該客戶有設 minisite_* 覆寫的城市，把 client_city_pages 對應
+// row 覆寫上 $client（不破壞既有「沒覆寫就 fallback 主檔」的邏輯）。
+$cityVariants = [];          // [city_slug => row] 該客戶所有啟用城市
+$currentCity  = '';          // 目前頁面對應城市 slug（空字串=不是城市變體頁）
+try {
+    $cvStmt = getDB()->prepare("SELECT city_slug, city_label, brand_name, hero_image_path,
+        minisite_meta_title, minisite_meta_desc, minisite_keywords, minisite_og_image, minisite_intro_html
+        FROM client_city_pages
+        WHERE client_id=? AND is_active=1
+          AND (COALESCE(minisite_meta_title,'')<>''
+            OR COALESCE(minisite_meta_desc,'') <>''
+            OR COALESCE(minisite_intro_html,'')<>''
+            OR COALESCE(minisite_keywords,'')  <>'')
+        ORDER BY sort_order, id");
+    $cvStmt->execute([(int)$client['id']]);
+    foreach ($cvStmt->fetchAll() as $cv) $cityVariants[$cv['city_slug']] = $cv;
+} catch (\Throwable $e) { /* client_city_pages 表未建或欄位未 migrate */ }
+
+$reqCity = strtolower(preg_replace('/[^a-z]/', '', $_GET['city'] ?? ''));
+if ($reqCity !== '' && isset($cityVariants[$reqCity])) {
+    $currentCity = $reqCity;
+    $cv = $cityVariants[$reqCity];
+    // 覆寫到 $client，沒填的欄位保留原值（COALESCE 行為）
+    foreach (['minisite_meta_title','minisite_meta_desc','minisite_keywords','minisite_og_image'] as $k) {
+        if (!empty($cv[$k])) $client[$k] = $cv[$k];
+    }
+    if (!empty($cv['brand_name']))          $client['brand_name']       = $cv['brand_name'];
+    if (!empty($cv['hero_image_path']))     $client['hero_image_path']  = $cv['hero_image_path'];
+    if (!empty($cv['minisite_intro_html'])) $client['about_text']       = $cv['minisite_intro_html'];
+}
+
 // Mini-site SEO 優先級：頁面 SEO（service_detail 等預設）> client 自訂 minisite_meta_* > 自動組
 $metaTitle = $seo['meta_title']
     ?? (!empty($client['minisite_meta_title']) ? $client['minisite_meta_title'] : ($client['brand_name'] . '｜' . ($client['tagline'] ?? '')));
@@ -19,6 +51,13 @@ $metaDesc  = $seo['meta_desc']
     ?? (!empty($client['minisite_meta_desc']) ? $client['minisite_meta_desc'] : ($client['about_text'] ? mb_strimwidth(strip_tags($client['about_text']), 0, 120, '…') : ''));
 // canonical：呼叫者可預先設定（如 service_detail.php），否則由 pageKey 自動算
 $canonicalUrl = $canonicalUrl ?? getCanonicalUrl($slug, $pageKey);
+// 城市變體 canonical 覆寫：{sub}.gomag.com.tw/{city}（prod）或 ?city= 形式（local/staging）
+if ($currentCity !== '' && $pageKey === 'home') {
+    $_mb = (IS_LOCAL || IS_STAGING) ? BASE_URL . '/site' : 'https://' . $slug . '.' . MINISITE_DOMAIN;
+    $canonicalUrl = (IS_LOCAL || IS_STAGING)
+        ? $_mb . '/index.php?sub=' . urlencode($slug) . '&city=' . urlencode($currentCity)
+        : $_mb . '/' . rawurlencode($currentCity);
+}
 $ogImage   = $seo['og_image']
     ?? (!empty($client['minisite_og_image']) ? (str_starts_with($client['minisite_og_image'], 'http') ? $client['minisite_og_image'] : BASE_URL . '/' . $client['minisite_og_image']) : ($client['hero_image_path'] ? BASE_URL . '/' . $client['hero_image_path'] : ''));
 // LINE URL：line_url 直填 > line_id 自動組 > 沒設則 ''（templates 用 if 判斷）
