@@ -3,6 +3,7 @@
 require_once __DIR__ . '/includes/config.php';
 require_once __DIR__ . '/includes/helpers.php';
 require_once __DIR__ . '/includes/block_helpers.php';
+require_once __DIR__ . '/includes/front_functions.php';  // getCityMap()
 
 $db = getDB();
 $sub = strtolower(trim($_GET['sub'] ?? $_GET['store'] ?? ''));
@@ -21,23 +22,13 @@ $slug_redirects = [
     'modifiedcars3'      => 'modifiedcars',         // 光點線專業汽車大燈（id=195 → 46）
     'gourmetrestaurant1' => 'gourmetrestaurant2',   // 來道好食雞（id=76 → 145）
     '065957487'          => '062263168',            // 二鍋壽喜燒（id=90 → 13）
+    'cleaningcompany5'   => 'sanfengclean',         // 三峰清潔公司（id=197 → 218）
 ];
 if (isset($slug_redirects[$sub])) {
     $newSub = $slug_redirects[$sub];
     $newUrl = (IS_LOCAL || IS_STAGING) ? BASE_URL . '/store.php?sub=' . urlencode($newSub) : 'https://www.gomag.com.tw/store/' . urlencode($newSub);
     header('HTTP/1.1 301 Moved Permanently');
     header('Location: ' . $newUrl);
-    exit;
-}
-
-// ─── 外部 301 轉址（同店分屬不同 docroot）─────────
-// 本系統 demo slug → 對應已上線的舊系統官網（避免 duplicate content）
-$external_redirects = [
-    'xusen' => 'https://062051129.gomag.com.tw/',  // 旭浪清潔：新系統 demo → 舊系統獨立官網
-];
-if (isset($external_redirects[$sub])) {
-    header('HTTP/1.1 301 Moved Permanently');
-    header('Location: ' . $external_redirects[$sub]);
     exit;
 }
 
@@ -93,19 +84,16 @@ if ($isPlaceholder) {
     // 新系統：清空舊變數（block 區塊由 renderStoreBlocks() 負責），僅保留 testimonials/評價
     $services = $cases = [];
 
-    $testimonials = $db->prepare("SELECT * FROM testimonials WHERE client_id=? AND is_active=1 ORDER BY sort_order, id LIMIT 3");
+    $testimonials = $db->prepare("SELECT * FROM testimonials WHERE client_id=? AND is_active=1 AND COALESCE(source,'') <> 'demo' ORDER BY sort_order, id LIMIT 3");
     $testimonials->execute([$cid]);
     $testimonials = $testimonials->fetchAll();
 
-    $avgRating = $db->prepare("SELECT AVG(rating) AS avg, COUNT(*) AS cnt FROM testimonials WHERE client_id=? AND is_active=1");
+    $avgRating = $db->prepare("SELECT AVG(rating) AS avg, COUNT(*) AS cnt FROM testimonials WHERE client_id=? AND is_active=1 AND COALESCE(source,'') <> 'demo'");
     $avgRating->execute([$cid]);
     $rating = $avgRating->fetch();
 
+    // 行銷頁不顯示 Google 評價（API 成本 + 需逐家 place_id + 無法濾掉負評）— 改用站內 testimonials
     $googleReviews = null;
-    if (!empty($client['google_place_id'])) {
-        require_once __DIR__ . '/includes/google_reviews.php';
-        try { $googleReviews = getGoogleReviews($client['google_place_id']); } catch (\Throwable $e) { $googleReviews = null; }
-    }
 } else {
     $services = $db->prepare("SELECT * FROM services WHERE client_id=? AND is_active=1 ORDER BY sort_order, id LIMIT 6");
     $services->execute([$cid]);
@@ -115,21 +103,17 @@ if ($isPlaceholder) {
     $cases->execute([$cid]);
     $cases = $cases->fetchAll();
 
-    $testimonials = $db->prepare("SELECT * FROM testimonials WHERE client_id=? AND is_active=1 ORDER BY sort_order, id LIMIT 3");
+    $testimonials = $db->prepare("SELECT * FROM testimonials WHERE client_id=? AND is_active=1 AND COALESCE(source,'') <> 'demo' ORDER BY sort_order, id LIMIT 3");
     $testimonials->execute([$cid]);
     $testimonials = $testimonials->fetchAll();
 
     // 計算評價平均
-    $avgRating = $db->prepare("SELECT AVG(rating) AS avg, COUNT(*) AS cnt FROM testimonials WHERE client_id=? AND is_active=1");
+    $avgRating = $db->prepare("SELECT AVG(rating) AS avg, COUNT(*) AS cnt FROM testimonials WHERE client_id=? AND is_active=1 AND COALESCE(source,'') <> 'demo'");
     $avgRating->execute([$cid]);
     $rating = $avgRating->fetch();
 
-    // 取 Google 評價（如果有 place_id 跟 API key，且未禁用）
+    // 行銷頁不顯示 Google 評價（API 成本 + 需逐家 place_id + 無法濾掉負評）— 改用站內 testimonials
     $googleReviews = null;
-    if (!empty($client['google_place_id'])) {
-        require_once __DIR__ . '/includes/google_reviews.php';
-        $googleReviews = getGoogleReviews($client['google_place_id']);
-    }
 }
 
 // 主 CTA URL：mini-site > 外部官網 > none
@@ -138,6 +122,32 @@ if ($client['has_minisite']) {
     $miniSiteUrl = (IS_LOCAL || IS_STAGING)
         ? BASE_URL . '/site/index.php?sub=' . urlencode($client['subdomain'] ?? $client['slug'])
         : 'https://' . ($client['subdomain'] ?? $client['slug']) . '.' . MINISITE_DOMAIN . '/';
+}
+
+// ── 城市行銷頁變體 /store/{slug}/{city} ──
+// 同一個客戶可以開多個城市行銷頁（如亞雷台中／亞雷彰化），各自獨立 SEO 文案、案例篩選。
+// 變體 row 缺欄位則 fallback 主檔，無變體則 404。
+$cityVariant = null;
+$citySlug = strtolower(trim($_GET['city'] ?? ''));
+if ($citySlug !== '') {
+    $cvStmt = $db->prepare("SELECT * FROM client_city_pages WHERE client_id=? AND city_slug=? AND is_active=1 LIMIT 1");
+    $cvStmt->execute([(int)$client['id'], $citySlug]);
+    $cityVariant = $cvStmt->fetch(PDO::FETCH_ASSOC);
+    if (!$cityVariant) {
+        http_response_code(404);
+        die('找不到該城市的行銷頁');
+    }
+    foreach (['brand_name','store_meta_title','store_meta_desc','store_keywords','store_og_image','hero_image_path','landing_extra_content'] as $_f) {
+        if (!empty($cityVariant[$_f])) $client[$_f] = $cityVariant[$_f];
+    }
+    // 依城市篩案例（location 前綴對 city_slug）
+    if (!empty($cityVariant['filter_cases_by_region'])) {
+        require_once __DIR__ . '/includes/front_functions.php';
+        $_cs = $db->prepare("SELECT * FROM cases WHERE client_id=? AND is_active=1 ORDER BY is_featured DESC, sort_order LIMIT 50");
+        $_cs->execute([(int)$client['id']]);
+        $_all = $_cs->fetchAll(PDO::FETCH_ASSOC);
+        $cases = array_slice(array_values(array_filter($_all, fn($c) => caseRegionSlug($c['location'] ?? '') === $citySlug)), 0, 3);
+    }
 }
 
 // SEO：客戶自定 > 自動產生
@@ -162,12 +172,14 @@ $metaKeywords = !empty($client['store_keywords']) ? $client['store_keywords'] : 
 $ogImage = !empty($client['store_og_image'])
     ? (str_starts_with($client['store_og_image'], 'http') ? $client['store_og_image'] : BASE_URL . '/' . $client['store_og_image'])
     : ($client['hero_image_path'] ? BASE_URL . '/' . $client['hero_image_path'] : '');
-// 設計策略：行銷頁（/store/{slug}）= 平台店家口碑頁，與 mini-site（{slug}.gomag.com.tw）共存為兩個 SEO 入口
-//   - 行銷頁 canonical 永遠指向自己（不指 mini-site）
-//   - 兩個 URL 都被 Google 索引，但內容角度不同（平台介紹 vs 品牌官網）
 $canonical = IS_LOCAL
-    ? BASE_URL . '/store.php?sub=' . urlencode($sub)
-    : 'https://www.gomag.com.tw/store/' . urlencode($sub);
+    ? BASE_URL . '/store.php?sub=' . urlencode($sub) . ($cityVariant ? '&city=' . urlencode($citySlug) : '')
+    : 'https://www.gomag.com.tw/store/' . urlencode($sub) . ($cityVariant ? '/' . urlencode($citySlug) : '');
+
+// Placeholder（資料整理中）為薄頁 → noindex，但保留 follow 讓內連權重續流
+if ($isPlaceholder) {
+    $metaRobots = 'noindex,follow';
+}
 
 // 如果用新 blocks 系統，載 gomag.css 樣式
 if ($useBlocks) {
@@ -191,7 +203,7 @@ if (!empty($client['email'])) $jsonLd['email'] = $client['email'];
 if (!empty($client['address'])) {
     // 從地址自動抓城市（嘉義市/嘉義縣/台南市/高雄市/...），抓不到 fallback 台南市
     $locality = '台南市';
-    if (preg_match('/(臺?[北中南東]市|新北市|桃園市|高雄市|嘉義[市縣]|新竹[市縣]|苗栗[市縣]|彰化縣|南投縣|雲林縣|屏東縣|宜蘭縣|花蓮縣|台東縣|澎湖縣|金門縣|連江縣|基隆市)/u', $client['address'], $m)) {
+    if (preg_match('/([台臺][北中南東]市|新北市|桃園市|高雄市|嘉義[市縣]|新竹[市縣]|苗栗[市縣]|彰化縣|南投縣|雲林縣|屏東縣|宜蘭縣|花蓮縣|台東縣|澎湖縣|金門縣|連江縣|基隆市)/u', $client['address'], $m)) {
         $locality = str_replace('臺', '台', $m[1]);
     }
     $jsonLd['address'] = [
@@ -201,24 +213,7 @@ if (!empty($client['address'])) {
         'addressCountry' => 'TW',
     ];
 }
-// Google 評價優先（更具公信力），沒有才 fallback testimonials
-if ($googleReviews && $googleReviews['rating'] > 0) {
-    $jsonLd['aggregateRating'] = [
-        '@type' => 'AggregateRating',
-        'ratingValue' => $googleReviews['rating'],
-        'reviewCount' => $googleReviews['userRatingCount'],
-        'bestRating' => 5,
-        'worstRating' => 1,
-    ];
-} elseif ($rating && (int)$rating['cnt'] > 0 && (float)$rating['avg'] > 0) {
-    $jsonLd['aggregateRating'] = [
-        '@type' => 'AggregateRating',
-        'ratingValue' => round((float)$rating['avg'], 1),
-        'reviewCount' => (int)$rating['cnt'],
-        'bestRating' => 5,
-        'worstRating' => 1,
-    ];
-}
+// 不輸出 aggregateRating：行銷頁評價為站內 testimonials（店家自填），對 Google 宣稱星等屬 self-serving，故不放 schema
 if (!empty($client['updated_at'])) {
     $jsonLd['dateModified'] = date('c', strtotime($client['updated_at']));
 }
@@ -230,13 +225,8 @@ if (!empty($client['updated_at'])) {
 // 從 address 抓縣市供麵包屑用
 $_breadcrumbCity = null;
 $_breadcrumbCitySlug = null;
-$_cityNameToSlug = [
-    '台南市' => 'tainan', '高雄市' => 'kaohsiung', '嘉義市' => 'chiayi',
-    '台中市' => 'taichung', '台北市' => 'taipei', '新北市' => 'newtaipei',
-    '桃園市' => 'taoyuan', '台東縣' => 'taitung', '屏東縣' => 'pingtung',
-    '新竹市' => 'hsinchu', '宜蘭縣' => 'yilan', '花蓮縣' => 'hualien',
-];
-if (!empty($client['address']) && preg_match('/^(臺?[北中南東]市|新北市|桃園市|高雄市|嘉義[市縣]|新竹[市縣]|苗栗縣|彰化縣|南投縣|雲林縣|屏東縣|宜蘭縣|花蓮縣|台東縣|基隆市)/u', $client['address'], $_m)) {
+$_cityNameToSlug = array_flip(getCityMap());  // 唯一來源：cities 表
+if (!empty($client['address']) && preg_match('/^([台臺][北中南東]市|新北市|桃園市|高雄市|嘉義[市縣]|新竹[市縣]|苗栗縣|彰化縣|南投縣|雲林縣|屏東縣|宜蘭縣|花蓮縣|台東縣|基隆市)/u', $client['address'], $_m)) {
     $_breadcrumbCity = str_replace('臺', '台', $_m[1]);
     $_breadcrumbCitySlug = $_cityNameToSlug[$_breadcrumbCity] ?? null;
 }
@@ -557,22 +547,11 @@ if ($client['about_text'] || ($aboutTags && is_array($aboutTags))):
   <div class="m-container" style="max-width:800px;">
     <div class="landing-content" style="line-height:1.8;">
       <?php
-      // 行銷頁 HTML 輸出前安全過濾
+      // 行銷頁 HTML 輸出前安全過濾：補圖片 alt（SEO + 無障礙）
       $_landing = $client['landing_extra_content'];
       $_brand = $client['brand_name'];
       $_alt = $_brand . ($client['cat_name'] ? ' - ' . $client['cat_name'] : '');
-
-      // ⚠️ 防禦：客戶有時會把整份 <!DOCTYPE html><html><head>...</head><body>...</body></html>
-      //    貼進來。把不該在 body 出現的標籤通通拔掉，避免重複 <title>/<meta> 影響 SEO。
-      $_landing = preg_replace('/<!DOCTYPE[^>]*>/i', '', $_landing);
-      $_landing = preg_replace('/<\/?(html|head|body)\b[^>]*>/i', '', $_landing);
-      $_landing = preg_replace('/<title\b[^>]*>.*?<\/title>/is', '', $_landing);
-      $_landing = preg_replace('/<meta\b[^>]*>/i', '', $_landing);
-      $_landing = preg_replace('/<link\b[^>]*>/i', '', $_landing);
-      // <script type="application/ld+json"> 整段砍（防止 client 加自己的 schema 跟系統衝突）
-      $_landing = preg_replace('/<script\b[^>]*type=["\']application\/ld\+json["\'][^>]*>.*?<\/script>/is', '', $_landing);
-
-      // 補上沒有 alt 的 <img>（SEO + 無障礙）
+      // 補上沒有 alt 的 <img>
       $_landing = preg_replace_callback('/<img\b([^>]*)>/i', function($m) use ($_alt) {
           $attrs = $m[1];
           if (preg_match('/\balt\s*=/i', $attrs)) return $m[0]; // 已有 alt 就不動
@@ -936,37 +915,6 @@ if ($useBlocks && $testimonials) {
     </div>
   </div>
 </section>
-<?php endif; ?>
-
-<!-- ═══════ FB Page Plugin（後台勾選自動嵌入）═══════ -->
-<?php
-$_social_stmt = $db->prepare('SELECT fb_page_url, fb_embed_enabled FROM client_social WHERE client_id=? LIMIT 1');
-$_social_stmt->execute([$cid]);
-$_social = $_social_stmt->fetch();
-if ($_social && !empty($_social['fb_page_url']) && !empty($_social['fb_embed_enabled'])):
-?>
-<section class="m-section" style="background:var(--m-bg-alt); border-top:1px solid var(--m-border); padding:48px 0;">
-  <div class="m-container" style="max-width:560px; text-align:center;">
-    <h2 class="m-section-title" style="margin-bottom:8px;">📘 追蹤 <?= h($client['brand_name']) ?> Facebook</h2>
-    <p style="color:#666; margin-bottom:24px; font-size:.95rem;">看最新案例、優惠資訊——我們 FB 發什麼，這裡同步顯示</p>
-    <div class="fb-page"
-         data-href="<?= h($_social['fb_page_url']) ?>"
-         data-tabs="timeline"
-         data-width="500"
-         data-height="600"
-         data-small-header="false"
-         data-adapt-container-width="true"
-         data-hide-cover="false"
-         data-show-facepile="true"
-         style="max-width:100%; margin:0 auto; display:block;">
-      <blockquote cite="<?= h($_social['fb_page_url']) ?>" class="fb-xfbml-parse-ignore">
-        <a href="<?= h($_social['fb_page_url']) ?>" target="_blank" rel="noopener">前往 <?= h($client['brand_name']) ?> Facebook 粉絲團</a>
-      </blockquote>
-    </div>
-  </div>
-</section>
-<div id="fb-root"></div>
-<script async defer crossorigin="anonymous" src="https://connect.facebook.net/zh_TW/sdk.js#xfbml=1&version=v18.0"></script>
 <?php endif; ?>
 
 <?php require_once __DIR__ . '/main/layout_foot.php'; ?>

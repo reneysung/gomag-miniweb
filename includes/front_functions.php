@@ -16,8 +16,51 @@ function getDuplicateSkipSlugs(): array {
         'gourmetrestaurant1', // 來道好食雞 → gourmetrestaurant2 (id=76 → 145)
         '065957487',          // 二鍋壽喜燒 → 062263168 (id=90 → 13)
         'docaroating',        // 鍍卡：拼錯修正 → docar
+        'cleaningcompany5',   // 三峰清潔 → sanfengclean  (id=197 → 218)
+        'clean1',             // 亞雷彰化 → /store/rre/changhua 城市變體 (id=219 → 215)
         'xusen',              // 旭浪清潔 demo → 外部 062051129 舊官網（不是站內合併）
     ];
+}
+
+/**
+ * 縣市 slug ↔ 中文全名對映的「唯一來源」（取代寫死在 city/sitemap/store/index 的 array）。
+ * 讀 cities 表全部 row（不濾 is_active：這是路由對映，與「是否顯示城市介紹」無關）。
+ * 回傳 [slug => full_name]，名→slug 由呼叫端 array_flip()。
+ * 開新縣市 = cities 表新增一筆 row，不動程式碼。
+ */
+function getCityMap(): array {
+    static $map = null;
+    if ($map !== null) return $map;
+    $map = [];
+    try {
+        foreach (getDB()->query("SELECT slug, full_name FROM cities ORDER BY sort_order, id") as $r) {
+            $map[$r['slug']] = $r['full_name'];
+        }
+    } catch (\Throwable $e) {
+        $map = [];  // cities 表還不存在時不致命
+    }
+    return $map;
+}
+
+/**
+ * 從 address 推導縣市 slug（取代到處 address LIKE '台中市%' 的脆弱比對）。
+ * 台/臺 正規化後對 cities 表的 full_name；非 12 對映縣市（雲林/彰化…）回 null。
+ * 用於 migration backfill + admin 存檔時重算 clients.city_slug。
+ */
+function deriveCitySlug(string $address): ?string {
+    $address = trim($address);
+    if ($address === '') return null;
+    static $nameToSlug = null;
+    if ($nameToSlug === null) $nameToSlug = array_flip(getCityMap());
+    // 去掉開頭雜訊再比對：郵遞區號（3-6 碼）、「台灣/臺灣」前綴
+    // 例：「709台灣臺南市安南區…」→「臺南市安南區…」；保持開頭錨定避免誤判中間出現的城市名
+    $address = preg_replace('/^\s*\d{3,6}\s*/u', '', $address);
+    $address = preg_replace('/^\s*(台灣|臺灣)\s*/u', '', $address);
+    $address = ltrim($address);
+    $re = '/^(臺北市|台北市|新北市|桃園市|臺中市|台中市|臺南市|台南市|高雄市|基隆市|新竹市|新竹縣|苗栗縣|彰化縣|南投縣|雲林縣|嘉義市|嘉義縣|屏東縣|宜蘭縣|花蓮縣|臺東縣|台東縣|澎湖縣|金門縣|連江縣)/u';
+    if (!preg_match($re, $address, $m)) return null;
+    $name = str_replace('臺', '台', $m[1]);
+    return $nameToSlug[$name] ?? null;
 }
 
 /**
@@ -164,7 +207,7 @@ function loadSiteData(string $sub): array {
     $cases = $ca->fetchAll();
 
     // 評價
-    $te = $db->prepare('SELECT t.*, s.name AS svc_name, s.slug AS svc_slug FROM testimonials t LEFT JOIN services s ON t.service_id=s.id WHERE t.client_id=? AND t.is_active=1 ORDER BY t.sort_order,t.id');
+    $te = $db->prepare("SELECT t.*, s.name AS svc_name, s.slug AS svc_slug FROM testimonials t LEFT JOIN services s ON t.service_id=s.id WHERE t.client_id=? AND t.is_active=1 AND COALESCE(t.source,'') <> 'demo' ORDER BY t.sort_order,t.id");
     $te->execute([$cid]);
     $testimonials = $te->fetchAll();
 
