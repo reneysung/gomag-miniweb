@@ -185,6 +185,25 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
   </url>
   <?php endforeach; ?>
 
+  <!-- 城市行銷頁變體 /store/{slug}/{city}（client_city_pages 表） -->
+  <?php
+    $cvRows = $db->query("SELECT c.subdomain, c.slug, ccp.city_slug, ccp.created_at
+                          FROM client_city_pages ccp
+                          JOIN clients c ON c.id = ccp.client_id AND c.is_active=1
+                          WHERE ccp.is_active=1
+                          ORDER BY ccp.client_id, ccp.sort_order")->fetchAll();
+    foreach ($cvRows as $cv):
+      $sub = $cv['subdomain'] ?: $cv['slug'];
+      $lastmod = date('Y-m-d', strtotime($cv['created_at']));
+  ?>
+  <url>
+    <loc><?= htmlspecialchars($baseUrl) ?>/store/<?= htmlspecialchars($sub) ?>/<?= htmlspecialchars($cv['city_slug']) ?></loc>
+    <lastmod><?= $lastmod ?></lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <?php endforeach; ?>
+
 <?php endif; /* !$subOnly */ ?>
 
   <!-- 啟用 mini-site 的客戶才列子網域頁面 -->
