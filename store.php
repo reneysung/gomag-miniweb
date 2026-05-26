@@ -124,22 +124,57 @@ if ($client['has_minisite']) {
         : 'https://' . ($client['subdomain'] ?? $client['slug']) . '.' . MINISITE_DOMAIN . '/';
 }
 
+// ── 城市行銷頁變體 /store/{slug}/{city} ──
+// 同一個客戶可以開多個城市行銷頁（如亞雷台中／亞雷彰化），各自獨立 SEO 文案、案例篩選。
+// 變體 row 缺欄位則 fallback 主檔，無變體則 404。
+$cityVariant = null;
+$citySlug = strtolower(trim($_GET['city'] ?? ''));
+if ($citySlug !== '') {
+    $cvStmt = $db->prepare("SELECT * FROM client_city_pages WHERE client_id=? AND city_slug=? AND is_active=1 LIMIT 1");
+    $cvStmt->execute([(int)$client['id'], $citySlug]);
+    $cityVariant = $cvStmt->fetch(PDO::FETCH_ASSOC);
+    if (!$cityVariant) {
+        http_response_code(404);
+        die('找不到該城市的行銷頁');
+    }
+    foreach (['brand_name','store_meta_title','store_meta_desc','store_keywords','store_og_image','hero_image_path','landing_extra_content'] as $_f) {
+        if (!empty($cityVariant[$_f])) $client[$_f] = $cityVariant[$_f];
+    }
+    // 依城市篩案例（location 前綴對 city_slug）
+    if (!empty($cityVariant['filter_cases_by_region'])) {
+        require_once __DIR__ . '/includes/front_functions.php';
+        $_cs = $db->prepare("SELECT * FROM cases WHERE client_id=? AND is_active=1 ORDER BY is_featured DESC, sort_order LIMIT 50");
+        $_cs->execute([(int)$client['id']]);
+        $_all = $_cs->fetchAll(PDO::FETCH_ASSOC);
+        $cases = array_slice(array_values(array_filter($_all, fn($c) => caseRegionSlug($c['location'] ?? '') === $citySlug)), 0, 3);
+    }
+}
+
 // SEO：客戶自定 > 自動產生
-$pageTitle = !empty($client['store_meta_title'])
-    ? $client['store_meta_title']
-    : $client['brand_name'] . '｜' . ($client['tagline'] ?? '台南' . ($client['cat_name'] ?? '') . '店家');
-$metaDesc = !empty($client['store_meta_desc'])
-    ? $client['store_meta_desc']
-    : ($client['about_text']
+// 行銷頁 SEO 預設：有小官網的客戶 → 行銷頁走「口碑/評價」角度，與小官網(品牌/服務)錯開，避免兩頁互搶排名(cannibalization)
+if (!empty($client['store_meta_title'])) {
+    $pageTitle = $client['store_meta_title'];
+} elseif (!empty($client['has_minisite'])) {
+    $pageTitle = $client['brand_name'] . '評價・口碑推薦｜真實客戶評論' . ($client['cat_name'] ? '・' . $client['cat_name'] : '');
+} else {
+    $pageTitle = $client['brand_name'] . '｜' . ($client['tagline'] ?? '台南' . ($client['cat_name'] ?? '') . '店家');
+}
+if (!empty($client['store_meta_desc'])) {
+    $metaDesc = $client['store_meta_desc'];
+} elseif (!empty($client['has_minisite'])) {
+    $metaDesc = $client['brand_name'] . '的真實評價與客戶口碑整理：服務心得、Google 評論與推薦，看實際口碑再決定。';
+} else {
+    $metaDesc = $client['about_text']
         ? mb_strimwidth(strip_tags($client['about_text']), 0, 150, '…')
-        : "台南{$client['cat_name']}店家：{$client['brand_name']}");
+        : "台南{$client['cat_name']}店家：{$client['brand_name']}";
+}
 $metaKeywords = !empty($client['store_keywords']) ? $client['store_keywords'] : '';
 $ogImage = !empty($client['store_og_image'])
     ? (str_starts_with($client['store_og_image'], 'http') ? $client['store_og_image'] : BASE_URL . '/' . $client['store_og_image'])
     : ($client['hero_image_path'] ? BASE_URL . '/' . $client['hero_image_path'] : '');
 $canonical = IS_LOCAL
-    ? BASE_URL . '/store.php?sub=' . urlencode($sub)
-    : 'https://www.gomag.com.tw/store/' . urlencode($sub);
+    ? BASE_URL . '/store.php?sub=' . urlencode($sub) . ($cityVariant ? '&city=' . urlencode($citySlug) : '')
+    : 'https://www.gomag.com.tw/store/' . urlencode($sub) . ($cityVariant ? '/' . urlencode($citySlug) : '');
 
 // Placeholder（資料整理中）為薄頁 → noindex，但保留 follow 讓內連權重續流
 if ($isPlaceholder) {
