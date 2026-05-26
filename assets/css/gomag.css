@@ -625,6 +625,34 @@
   border-bottom: 1px solid var(--g-border);
   font-family: var(--g-font);
 }
+/* 可滑動提示：右側漸層 + 箭頭（JS 加 .is-overflowing；滑到底加 .at-end 隱藏）*/
+.g-cat-nav-wrap::after {
+  content: "";
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 52px;
+  background: linear-gradient(to right, rgba(255,255,255,0), #fff 72%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 2;
+}
+.g-cat-nav-wrap::before {
+  content: "›";
+  position: absolute;
+  top: 50%; right: 14px;
+  transform: translateY(-50%);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--g-ink-muted);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 3;
+}
+.g-cat-nav-wrap.is-overflowing:not(.at-end)::after,
+.g-cat-nav-wrap.is-overflowing:not(.at-end)::before { opacity: 1; }
 .g-cat-nav {
   max-width: 1320px;
   margin: 0 auto;

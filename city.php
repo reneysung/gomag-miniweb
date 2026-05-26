@@ -690,6 +690,23 @@ function renderCityStoreCard(array $cl): void {
     });
   }
 })();
+
+// 產業標籤列：可滑動提示（右側漸層+箭頭，內容超出才顯示，滑到底自動隱藏）
+(function() {
+  var wrap = document.getElementById('g-cat-nav-wrap');
+  if (!wrap) return;
+  var nav = wrap.querySelector('.g-cat-nav');
+  if (!nav) return;
+  function upd() {
+    var more = nav.scrollWidth - nav.clientWidth;
+    wrap.classList.toggle('is-overflowing', more > 4);
+    wrap.classList.toggle('at-end', nav.scrollLeft >= more - 4);
+  }
+  nav.addEventListener('scroll', upd, { passive: true });
+  window.addEventListener('resize', upd);
+  upd();
+  setTimeout(upd, 300); // 等字型載入後再算一次寬度
+})();
 </script>
 <?php endif; ?>
 
