@@ -21,10 +21,9 @@ Disallow: /admin/
 Disallow: /includes/
 Disallow: /install.php
 
-# 禁止爬 2022 年被 hack 殘留的 spam 路徑（GSC 5xx/404 大宗來源）
-Disallow: /edm/
-Disallow: /shopx.php
-Disallow: /coupon_show.php
+# 註：2022 hack 殘留路徑（/edm/、/shopx.php、/coupon_show.php）已全部 404，
+# 不再 Disallow，讓 Google 重爬看到 404 → 自然刪舊索引
+# （之前 Disallow 反而擋 Google 看 404，造成「已建立索引但遭 robots 封鎖」）
 
 # Sitemap
 Sitemap: <?= $sitemapUrl ?>
