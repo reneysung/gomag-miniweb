@@ -86,6 +86,9 @@ require __DIR__ . '/layout_head.php';
         <?php endif; ?>
       </div>
     </div>
+    <?php if (!empty($featured['source_url'])): ?>
+    <div style="margin-top:24px"><a href="<?= h($featured['source_url']) ?>" target="_blank" rel="noopener" style="display:inline-block;font-size:.9rem;font-weight:700;color:var(--g-accent);text-decoration:none;border:1.6px solid var(--g-accent);padding:9px 22px;border-radius:100px">📖 閱讀完整口碑文 →</a></div>
+    <?php endif; ?>
   </div>
 </section>
 <?php endif; ?>
@@ -116,6 +119,9 @@ require __DIR__ . '/layout_head.php';
           <?php endif; ?>
         </div>
       </div>
+      <?php if (!empty($t['source_url'])): ?>
+      <div style="margin-top:16px"><a href="<?= h($t['source_url']) ?>" target="_blank" rel="noopener" style="font-size:.82rem;font-weight:700;color:var(--g-accent);text-decoration:none">📖 閱讀全文 →</a></div>
+      <?php endif; ?>
     </article>
     <?php endforeach; ?>
   </div>
