@@ -135,16 +135,25 @@ $qRaw = trim($_GET['q'] ?? '');
 $q    = mb_substr($qRaw, 0, 50);   // cap 長度防 abuse
 
 // 抓該縣市所有店家（按分類分組）— 套用關鍵字過濾
+// 城市店家清單條件：本店在該城市 OR 有 client_city_pages 啟用該城市的多城市方案 row
+// → 多縣市方案客戶（如奧喜：1 個本店在台中 + 5 城市行銷頁變體）在 5 個城市頁都看得到
 $sql = "
     SELECT cl.id, cl.subdomain, cl.slug, cl.brand_name, cl.tagline,
            cl.has_minisite, cl.external_website_url, cl.hero_image_path,
            cl.address, cl.phone, cl.is_placeholder,
-           c.id AS cat_id, c.name AS cat_name, c.icon AS cat_icon, c.slug AS cat_slug
+           c.id AS cat_id, c.name AS cat_name, c.icon AS cat_icon, c.slug AS cat_slug,
+           EXISTS (SELECT 1 FROM client_city_pages ccp2
+                   WHERE ccp2.client_id = cl.id AND ccp2.city_slug = ? AND ccp2.is_active = 1) AS has_city_variant
     FROM clients cl
     LEFT JOIN categories c ON cl.category_id = c.id
-    WHERE cl.is_active = 1 AND cl.city_slug = ? AND cl.slug NOT IN ($dupPh)
+    WHERE cl.is_active = 1
+      AND (cl.city_slug = ? OR EXISTS (
+          SELECT 1 FROM client_city_pages ccp
+          WHERE ccp.client_id = cl.id AND ccp.city_slug = ? AND ccp.is_active = 1
+      ))
+      AND cl.slug NOT IN ($dupPh)
 ";
-$params = array_merge([$slug], $dupSkip);
+$params = array_merge([$slug, $slug, $slug], $dupSkip);
 if ($q !== '') {
     $sql .= " AND (cl.brand_name LIKE ? OR cl.tagline LIKE ? OR c.name LIKE ?)";
     $kw = '%' . $q . '%';
@@ -452,26 +461,39 @@ $breadcrumbLd = [
 
 <?php
 // ═══ Phase D: 該縣市本週熱門 / 最新加入 / 口碑 ═══
+// 本週熱門 / 最新加入也加多城市條件（讓多縣市方案客戶可在 5 個城市頁出現）
 $hotStmt = $db->prepare("
   SELECT cl.id, cl.subdomain, cl.slug, cl.brand_name, cl.tagline, cl.hero_image_path,
          cl.has_minisite, cl.external_website_url,
-         cl.address, c.name AS cat_name, c.icon AS cat_icon, c.slug AS cat_slug
+         cl.address, c.name AS cat_name, c.icon AS cat_icon, c.slug AS cat_slug,
+         EXISTS (SELECT 1 FROM client_city_pages ccp2
+                 WHERE ccp2.client_id = cl.id AND ccp2.city_slug = ? AND ccp2.is_active = 1) AS has_city_variant
   FROM clients cl LEFT JOIN categories c ON cl.category_id=c.id
-  WHERE cl.is_active=1 AND COALESCE(cl.is_placeholder,0)=0 AND cl.city_slug = ?
+  WHERE cl.is_active=1 AND COALESCE(cl.is_placeholder,0)=0
+    AND (cl.city_slug = ? OR EXISTS (
+        SELECT 1 FROM client_city_pages ccp
+        WHERE ccp.client_id = cl.id AND ccp.city_slug = ? AND ccp.is_active = 1
+    ))
     AND cl.is_featured=1 AND cl.slug NOT IN ($dupPh)
   ORDER BY cl.id DESC LIMIT 4");
-$hotStmt->execute(array_merge([$slug], $dupSkip));
+$hotStmt->execute(array_merge([$slug, $slug, $slug], $dupSkip));
 $hotStores = $hotStmt->fetchAll();
 
 $latestStmt = $db->prepare("
   SELECT cl.id, cl.subdomain, cl.slug, cl.brand_name, cl.tagline, cl.hero_image_path,
          cl.has_minisite, cl.external_website_url,
-         cl.address, c.name AS cat_name, c.icon AS cat_icon, c.slug AS cat_slug
+         cl.address, c.name AS cat_name, c.icon AS cat_icon, c.slug AS cat_slug,
+         EXISTS (SELECT 1 FROM client_city_pages ccp2
+                 WHERE ccp2.client_id = cl.id AND ccp2.city_slug = ? AND ccp2.is_active = 1) AS has_city_variant
   FROM clients cl LEFT JOIN categories c ON cl.category_id=c.id
-  WHERE cl.is_active=1 AND COALESCE(cl.is_placeholder,0)=0 AND cl.city_slug = ?
+  WHERE cl.is_active=1 AND COALESCE(cl.is_placeholder,0)=0
+    AND (cl.city_slug = ? OR EXISTS (
+        SELECT 1 FROM client_city_pages ccp
+        WHERE ccp.client_id = cl.id AND ccp.city_slug = ? AND ccp.is_active = 1
+    ))
     AND cl.slug NOT IN ($dupPh)
   ORDER BY cl.created_at DESC, cl.id DESC LIMIT 4");
-$latestStmt->execute(array_merge([$slug], $dupSkip));
+$latestStmt->execute(array_merge([$slug, $slug, $slug], $dupSkip));
 $latestStores = $latestStmt->fetchAll();
 
 // 城市口碑：同店去重（每店最多 1 筆，取該店最高分／最新一則），再跨店取前 6
@@ -492,11 +514,15 @@ $cityReviewsStmt->execute(array_merge([$slug], $dupSkip));
 $cityReviews = $cityReviewsStmt->fetchAll();
 
 // 共用 render 卡片 helper
-function renderCityStoreCard(array $cl): void {
+// $currentCity = 當前城市頁的 slug；若該店在此城市有 client_city_pages 變體，連結改用變體 URL
+function renderCityStoreCard(array $cl, string $currentCity = ''): void {
   $sub = $cl['subdomain'] ?? $cl['slug'];
   $heroImg = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
+  $cardUrl = !empty($cl['has_city_variant']) && $currentCity !== ''
+      ? rtrim(clientStoreUrl($cl), '/') . '/' . urlencode($currentCity)
+      : clientStoreUrl($cl);
   ?>
-  <a class="g-store-card" href="<?= h(clientStoreUrl($cl)) ?>">
+  <a class="g-store-card" href="<?= h($cardUrl) ?>">
     <div class="g-store-img" <?= $heroImg ? 'style="background-image:url(\''.$heroImg.'\')"' : '' ?>>
       <?php if (!$heroImg): ?><div class="g-store-img-fallback"><span class="icon"><?= h($cl['cat_icon']??'🏪') ?></span><span class="label"><?= h($cl['cat_name']??'') ?></span></div><?php endif; ?>
     </div>
@@ -515,7 +541,7 @@ function renderCityStoreCard(array $cl): void {
     <div><h2 class="g-section-title">🔥 本週<?= h($cityName) ?>熱門</h2></div>
   </div>
   <div class="g-store-grid">
-    <?php foreach ($hotStores as $cl) renderCityStoreCard($cl); ?>
+    <?php foreach ($hotStores as $cl) renderCityStoreCard($cl, $slug); ?>
   </div>
 </section>
 <?php endif; ?>
@@ -543,7 +569,10 @@ function renderCityStoreCard(array $cl): void {
     <?php foreach ($catClients as $cl):
         $sub = $cl['subdomain'] ?? $cl['slug'];
         $heroImg = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
-        $linkUrl = clientStoreUrl($cl);
+        // 該店在此城市有多城市變體 → 卡片連到變體 URL（強化 SEO 內鏈 + UX 對應）
+        $linkUrl = !empty($cl['has_city_variant'])
+            ? rtrim(clientStoreUrl($cl), '/') . '/' . urlencode($slug)
+            : clientStoreUrl($cl);
         $isPH = !empty($cl['is_placeholder']);
         $cardClass = 'g-store-card' . ($isPH ? ' g-store-card-ph' : '');
     ?>
@@ -582,7 +611,7 @@ function renderCityStoreCard(array $cl): void {
     <div><h2 class="g-section-title">🆕 <?= h($cityName) ?>最新加入</h2></div>
   </div>
   <div class="g-store-grid">
-    <?php foreach ($latestStores as $cl) renderCityStoreCard($cl); ?>
+    <?php foreach ($latestStores as $cl) renderCityStoreCard($cl, $slug); ?>
   </div>
 </section>
 <?php endif; ?>
