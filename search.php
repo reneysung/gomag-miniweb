@@ -18,6 +18,7 @@ if (mb_strlen($q) >= 1) {
         LEFT JOIN categories c ON cl.category_id = c.id
         LEFT JOIN services s ON s.client_id = cl.id AND s.is_active = 1
         WHERE cl.is_active = 1
+          AND COALESCE(cl.is_placeholder, 0) = 0
           AND (
             cl.brand_name LIKE ?
             OR cl.tagline LIKE ?
@@ -35,6 +36,31 @@ if (mb_strlen($q) >= 1) {
     $stmt = $db->prepare($sql);
     $stmt->execute(array_fill(0, 8, $like));
     $results = $stmt->fetchAll();
+}
+
+// 全站搜尋 log（給週分析 routine 用，格式對齊 city.php）
+if ($q !== '') {
+    $logDir  = __DIR__ . '/_logs';
+    $logFile = $logDir . '/search.log';
+    if (!is_dir($logDir)) @mkdir($logDir, 0755, true);
+    if (is_dir($logDir)) {
+        $ip = $_SERVER['HTTP_CF_CONNECTING_IP']
+            ?? $_SERVER['HTTP_X_FORWARDED_FOR']
+            ?? $_SERVER['REMOTE_ADDR']
+            ?? '';
+        $ip = explode(',', $ip)[0];
+        $ipH = $ip ? substr(sha1($ip . '|' . date('Y-m-d')), 0, 10) : '-';
+        $qSafe = preg_replace('/[\t\r\n]+/', ' ', $q);
+        $line = implode("\t", [
+            date('c'),
+            '__sitewide__',   // 城市欄位：全站搜尋標記
+            '-',              // slug 欄位：N/A
+            $qSafe,
+            count($results),
+            $ipH,
+        ]) . "\n";
+        @file_put_contents($logFile, $line, FILE_APPEND | LOCK_EX);
+    }
 }
 
 $pageTitle = $q ? "搜尋「{$q}」｜店家好口碑" : '搜尋店家｜店家好口碑';
@@ -97,7 +123,11 @@ require_once __DIR__ . '/main/layout_head.php';
       <?php foreach ($results as $cl): ?>
       <?php
         $heroImg = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
-        $linkUrl = BASE_URL . '/store.php?sub=' . urlencode($cl['subdomain'] ?? $cl['slug']);
+        // Pretty URL：/store/{sub}（本機/staging fallback 到 store.php?sub=...）
+        $subKey = $cl['subdomain'] ?? $cl['slug'];
+        $linkUrl = (IS_LOCAL || IS_STAGING)
+            ? BASE_URL . '/store.php?sub=' . urlencode($subKey)
+            : 'https://www.gomag.com.tw/store/' . urlencode($subKey);
       ?>
       <a class="m-store-card" href="<?= $linkUrl ?>">
         <div class="cover" <?= $heroImg ? 'style="background-image:url(\''.$heroImg.'\')"' : '' ?>>
