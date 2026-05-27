@@ -20,6 +20,35 @@ $client->execute([$clientId]);
 $client = $client->fetch();
 if (!$client) { redirect(BASE_URL . '/admin/index.php'); }
 
+// ─── Action: 拖拉排序（AJAX，POST 整批 ID 陣列重設 sort_order）─────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reorder') {
+    header('Content-Type: application/json; charset=utf-8');
+    if (!hash_equals($_SESSION['csrf_token'] ?? '', $_POST['_token'] ?? '')) {
+        http_response_code(403); echo json_encode(['ok'=>false,'err'=>'csrf']); exit;
+    }
+    $order = $_POST['order'] ?? [];
+    if (!is_array($order) || empty($order)) {
+        echo json_encode(['ok'=>false,'err'=>'empty']); exit;
+    }
+    try {
+        $db->beginTransaction();
+        $upd = $db->prepare("UPDATE store_blocks SET sort_order=? WHERE id=? AND client_id=?");
+        $i = 1;
+        foreach ($order as $bid) {
+            $bid = (int)$bid;
+            if ($bid <= 0) continue;
+            $upd->execute([$i * 10, $bid, $clientId]);
+            $i++;
+        }
+        $db->commit();
+        echo json_encode(['ok'=>true,'n'=>$i-1]);
+    } catch (\Throwable $e) {
+        $db->rollBack();
+        echo json_encode(['ok'=>false,'err'=>$e->getMessage()]);
+    }
+    exit;
+}
+
 // ─── Action: 排序變更（上移/下移）──────────────────────
 if (isset($_GET['move']) && isset($_GET['id'])) {
     if (!hash_equals($_SESSION['csrf_token'] ?? '', $_GET['t'] ?? '')) { http_response_code(403); die('CSRF'); }
@@ -197,7 +226,7 @@ $csrfToken = csrfToken();
           <th style="padding:12px; text-align:right; width:280px;">操作</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody id="blocks-sortable">
       <?php foreach ($blocks as $i => $b):
         $meta = $typeMeta[$b['type']] ?? ['icon' => '📦', 'name' => $b['type']];
         $title = $b['data_decoded']['title'] ?? $meta['name'];
@@ -209,8 +238,8 @@ $csrfToken = csrfToken();
           $itemCount = count($b['data_decoded']['items'] ?? []);
         }
       ?>
-      <tr style="border-bottom:1px solid var(--border);<?= !$b['is_active'] ? ' opacity:.55' : '' ?>">
-        <td style="padding:12px; text-align:center; font-family:monospace; color:var(--muted);"><?= $b['sort_order'] ?></td>
+      <tr data-block-id="<?= (int)$b['id'] ?>" style="border-bottom:1px solid var(--border);<?= !$b['is_active'] ? ' opacity:.55' : '' ?>">
+        <td class="blk-drag-handle" style="padding:12px; text-align:center; font-family:monospace; color:var(--muted); cursor:grab; user-select:none;" title="拖拉以重新排序">⋮⋮ <span style="display:block;font-size:.7rem;opacity:.55;margin-top:2px"><?= $b['sort_order'] ?></span></td>
         <td style="padding:12px;">
           <div style="font-size:1.6rem; float:left; margin-right:12px;"><?= h($meta['icon']) ?></div>
           <div>
@@ -247,5 +276,58 @@ $csrfToken = csrfToken();
     <?php endif; ?>
   </div>
 </div>
+
+<?php if (!empty($blocks)): ?>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<style>
+  #blocks-sortable tr.blk-dragging { background:#fff8e1 !important; box-shadow:0 4px 12px rgba(0,0,0,.12); }
+  #blocks-sortable tr.blk-ghost { opacity:.35; }
+  .blk-drag-handle:active { cursor:grabbing; }
+  #blk-reorder-status { position:fixed; bottom:24px; right:24px; padding:10px 16px; background:#0a8; color:#fff; border-radius:8px; font-size:.85rem; box-shadow:0 4px 16px rgba(0,0,0,.25); opacity:0; transition:opacity .2s; pointer-events:none; z-index:9999; }
+  #blk-reorder-status.show { opacity:1; }
+  #blk-reorder-status.err { background:#c33; }
+</style>
+<div id="blk-reorder-status"></div>
+<script>
+(function() {
+  var tbody = document.getElementById('blocks-sortable');
+  var status = document.getElementById('blk-reorder-status');
+  if (!tbody || typeof Sortable === 'undefined') return;
+  function showStatus(msg, isErr) {
+    status.textContent = msg;
+    status.classList.toggle('err', !!isErr);
+    status.classList.add('show');
+    setTimeout(function() { status.classList.remove('show'); }, 1800);
+  }
+  Sortable.create(tbody, {
+    handle: '.blk-drag-handle',
+    animation: 160,
+    ghostClass: 'blk-ghost',
+    dragClass: 'blk-dragging',
+    onEnd: function() {
+      var order = Array.from(tbody.querySelectorAll('tr[data-block-id]')).map(function(r){ return r.dataset.blockId; });
+      var fd = new FormData();
+      fd.append('action', 'reorder');
+      fd.append('_token', '<?= h($csrfToken) ?>');
+      order.forEach(function(id) { fd.append('order[]', id); });
+      fetch(location.pathname, { method:'POST', body:fd, credentials:'same-origin' })
+        .then(function(r){ return r.json(); })
+        .then(function(j){
+          if (j.ok) {
+            showStatus('✓ 排序已儲存（' + j.n + ' 個區塊）');
+            // 重新整理 sort_order 顯示
+            Array.from(tbody.querySelectorAll('tr[data-block-id] .blk-drag-handle span')).forEach(function(s, i){
+              s.textContent = (i + 1) * 10;
+            });
+          } else {
+            showStatus('⚠ 儲存失敗：' + (j.err || '未知'), true);
+          }
+        })
+        .catch(function(e){ showStatus('⚠ 網路錯誤：' + e.message, true); });
+    }
+  });
+})();
+</script>
+<?php endif; ?>
 
 <?php require_once __DIR__ . '/../includes/layout_foot.php'; ?>
