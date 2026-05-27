@@ -188,6 +188,15 @@ if ($useBlocks) {
 
 require_once __DIR__ . '/main/layout_head.php';
 
+// ─── 多縣市方案：撈該客戶所有啟用城市（給 schema areaServed + 底部互鏈用）────
+$cityVariantList = [];
+try {
+    $cvListStmt = $db->prepare("SELECT city_slug, city_label FROM client_city_pages
+        WHERE client_id=? AND is_active=1 ORDER BY sort_order, id");
+    $cvListStmt->execute([(int)$client['id']]);
+    $cityVariantList = $cvListStmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (\Throwable $e) { /* 表未建時略過 */ }
+
 // ─── Schema.org LocalBusiness JSON-LD ────────────
 $jsonLd = [
     '@context' => 'https://schema.org',
@@ -214,6 +223,20 @@ if (!empty($client['address'])) {
     ];
 }
 // 不輸出 aggregateRating：行銷頁評價為站內 testimonials（店家自填），對 Google 宣稱星等屬 self-serving，故不放 schema
+
+// areaServed：城市變體頁=該城市；主行銷頁=所有啟用城市列表
+if ($cityVariant) {
+    $jsonLd['areaServed'] = [
+        '@type' => 'City',
+        'name'  => $cityVariant['city_label'] ?? $citySlug,
+    ];
+} elseif ($cityVariantList) {
+    $jsonLd['areaServed'] = array_map(fn($c) => [
+        '@type' => 'City',
+        'name'  => $c['city_label'],
+    ], $cityVariantList);
+}
+
 if (!empty($client['updated_at'])) {
     $jsonLd['dateModified'] = date('c', strtotime($client['updated_at']));
 }
@@ -875,6 +898,41 @@ if ($useBlocks && $testimonials) {
       <iframe src="<?= h($_mapsSrc) ?>"
               width="100%" height="380" style="border:0; display:block;"
               allowfullscreen loading="lazy"></iframe>
+    </div>
+  </div>
+</section>
+<?php endif; ?>
+
+<!-- ═══════ 多縣市互鏈：該客戶有多城市方案時列出其他城市 ═══════ -->
+<?php
+$otherCities = $cityVariant
+    ? array_values(array_filter($cityVariantList, fn($c) => $c['city_slug'] !== $citySlug))
+    : $cityVariantList;
+?>
+<?php if (count($cityVariantList) >= 2): ?>
+<section class="m-section" style="background:var(--m-bg-alt); border-top:1px solid var(--m-border); border-bottom:1px solid var(--m-border);">
+  <div class="m-container">
+    <h2 class="m-section-title" style="text-align:center; margin-bottom:10px;">
+      📍 <?= h($client['brand_name']) ?>．全台服務縣市
+    </h2>
+    <p style="text-align:center; color:var(--m-text-muted); margin-bottom:26px; font-size:.95rem;">
+      <?= $cityVariant ? '看 ' . h($client['brand_name']) . ' 在其他縣市的在地視角內容' : '點各縣市看該城市專屬內容（在地觀點、配送範圍、城市場景）' ?>
+    </p>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:12px; max-width:920px; margin:0 auto;">
+      <?php if ($cityVariant): /* 變體頁時加「本店資訊」回主行銷頁 */ ?>
+      <a href="<?= BASE_URL ?>/store/<?= h($sub) ?>" style="display:block; text-align:center; padding:20px 12px; background:#fff; border:1.5px solid var(--m-border); border-radius:10px; text-decoration:none; color:var(--m-text); transition:transform .2s, border-color .2s;" onmouseover="this.style.transform='translateY(-2px)';this.style.borderColor='var(--m-primary)'" onmouseout="this.style.transform='';this.style.borderColor='var(--m-border)'">
+        <div style="font-size:1.5rem; margin-bottom:6px;">🏠</div>
+        <div style="font-weight:700; font-size:.95rem;"><?= h($client['brand_name']) ?></div>
+        <div style="font-size:.78rem; color:var(--m-text-muted); margin-top:4px;">本店／品牌主頁</div>
+      </a>
+      <?php endif; ?>
+      <?php foreach ($otherCities as $oc): ?>
+      <a href="<?= BASE_URL ?>/store/<?= h($sub) ?>/<?= h($oc['city_slug']) ?>" style="display:block; text-align:center; padding:20px 12px; background:#fff; border:1.5px solid var(--m-border); border-radius:10px; text-decoration:none; color:var(--m-text); transition:transform .2s, border-color .2s;" onmouseover="this.style.transform='translateY(-2px)';this.style.borderColor='var(--m-primary)'" onmouseout="this.style.transform='';this.style.borderColor='var(--m-border)'">
+        <div style="font-size:1.5rem; margin-bottom:6px;">📍</div>
+        <div style="font-weight:700; font-size:.95rem;"><?= h($oc['city_label']) ?></div>
+        <div style="font-size:.78rem; color:var(--m-text-muted); margin-top:4px;">在地視角</div>
+      </a>
+      <?php endforeach; ?>
     </div>
   </div>
 </section>
