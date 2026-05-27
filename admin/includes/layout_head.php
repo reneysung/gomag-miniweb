@@ -102,13 +102,18 @@ body {
 /* 導航 */
 .sidebar nav { padding: 8px 0; flex: 1; }
 .nav-section {
-  padding: 12px 16px 4px;
-  font-size: .65rem;
+  padding: 10px 14px 4px;
+  font-size: .68rem;
   letter-spacing: .12em;
   text-transform: uppercase;
-  opacity: .5;
-  font-weight: 600;
+  opacity: .7;
+  font-weight: 700;
+  border-left: 3px solid transparent;
+  margin-top: 6px;
 }
+.nav-section--basic    { border-left-color: #94a3b8; opacity:.85; }
+.nav-section--minisite { border-left-color: #2563eb; opacity:.95; color:#1e40af; }
+.nav-section--store    { border-left-color: #f97316; opacity:.95; color:#c2410c; }
 .nav-item {
   display: flex;
   align-items: center;
@@ -411,7 +416,7 @@ textarea.form-control { resize: vertical; min-height: 90px; }
     </a>
 
     <!-- ═══════ 🛒 基本資料（共用）═══════ -->
-    <div class="nav-section">🛒 基本資料（兩邊共用）</div>
+    <div class="nav-section nav-section--basic">🛒 基本資料（兩邊共用）</div>
     <a class="nav-item <?= ($currentPage === 'settings' && ($_GET['tab'] ?? 'basic') === 'basic') ? 'active' : '' ?>"
        href="<?= BASE_URL ?>/admin/pages/settings.php?tab=basic">
       <span class="icon">⚙️</span> 基本資訊
@@ -425,8 +430,9 @@ textarea.form-control { resize: vertical; min-height: 90px; }
       <span class="icon">📱</span> 社群連結
     </a>
 
-    <!-- ═══════ 🌐 小官網內容（mini-site 專屬：{sub}.gomag.com.tw）═══════ -->
-    <div class="nav-section">🌐 小官網（子網域）</div>
+    <!-- ═══════ 🌐 小官網內容（mini-site 專屬：{sub}.gomag.com.tw；has_minisite=0 隱藏）═══════ -->
+    <?php if (!empty($clientData['has_minisite'])): ?>
+    <div class="nav-section nav-section--minisite">🌐 小官網（子網域）</div>
     <a class="nav-item <?= ($currentPage === 'settings' && ($_GET['tab'] ?? '') === 'minisite') ? 'active' : '' ?>"
        href="<?= BASE_URL ?>/admin/pages/settings.php?tab=minisite">
       <span class="icon">🌐</span> 小官網 SEO 設定
@@ -450,8 +456,10 @@ textarea.form-control { resize: vertical; min-height: 90px; }
       <span style="margin-left:auto; background:#FF5A36; color:#fff; font-size:.6rem; font-weight:800; padding:1px 6px; border-radius:20px;">NEW</span>
     </a>
 
+    <?php endif; /* has_minisite group close */ ?>
+
     <!-- ═══════ 📢 行銷頁設定（主站 /store/{slug}）═══════ -->
-    <div class="nav-section">📢 行銷頁（主站）</div>
+    <div class="nav-section nav-section--store">📢 行銷頁（主站）</div>
     <a class="nav-item <?= ($currentPage === 'settings' && ($_GET['tab'] ?? '') === 'store') ? 'active' : '' ?>"
        href="<?= BASE_URL ?>/admin/pages/settings.php?tab=store">
       <span class="icon">📢</span> 行銷頁 SEO + 內容

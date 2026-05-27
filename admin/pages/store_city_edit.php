@@ -187,6 +187,21 @@ require_once __DIR__ . '/../includes/layout_head.php';
     </div>
   </div>
 
+  <!-- ═══ Tab 切換 ═══ -->
+  <div class="cv-tabs" role="tablist" style="display:flex; gap:0; margin-top:24px; border-bottom:2px solid var(--border);">
+    <button type="button" class="cv-tab-btn cv-tab-btn-active" data-tab-target="store" role="tab"
+            style="flex:1; padding:14px 18px; background:#fff; border:0; border-bottom:3px solid var(--accent,#FF5A36); border-radius:8px 8px 0 0; cursor:pointer; font-weight:800; color:#c2410c; font-size:1rem; transition:all .15s">
+      📢 行銷頁覆寫
+    </button>
+    <button type="button" class="cv-tab-btn" data-tab-target="minisite" role="tab"
+            style="flex:1; padding:14px 18px; background:transparent; border:0; border-bottom:3px solid transparent; cursor:pointer; font-weight:700; color:var(--muted); font-size:1rem; transition:all .15s">
+      🌐 小官網覆寫
+    </button>
+  </div>
+
+  <!-- 📢 行銷頁 Tab(預設顯示) -->
+  <div data-tab-panel="store">
+
   <!-- 📢 行銷頁 SEO 覆寫 -->
   <div class="card" style="margin-top:20px; border-left:4px solid var(--accent);">
     <div class="card-header"><h2>📢 行銷頁 SEO 覆寫（/store/{slug}/{city}，留空 = 用主檔）</h2></div>
@@ -246,6 +261,11 @@ require_once __DIR__ . '/../includes/layout_head.php';
     </div>
   </div>
 
+  </div><!-- /store panel -->
+
+  <!-- 🌐 小官網 Tab(預設隱藏) -->
+  <div data-tab-panel="minisite" style="display:none">
+
   <!-- 🌐 小官網 SEO 覆寫 -->
   <div class="card" style="margin-top:20px; border-left:4px solid #2563eb;">
     <div class="card-header"><h2>🌐 小官網 SEO 覆寫（{sub}.gomag.com.tw/{city}，留空 = 用主檔）</h2></div>
@@ -293,6 +313,8 @@ require_once __DIR__ . '/../includes/layout_head.php';
     </div>
   </div>
 
+  </div><!-- /minisite panel -->
+
   <div class="form-actions" style="margin-top:24px; display:flex; gap:10px;">
     <button type="submit" class="btn btn-primary btn-lg">💾 儲存城市變體</button>
     <a href="<?= BASE_URL ?>/admin/pages/store_cities.php" class="btn btn-ghost btn-lg">取消</a>
@@ -302,5 +324,29 @@ require_once __DIR__ . '/../includes/layout_head.php';
     <?php endif; ?>
   </div>
 </form>
+
+<script>
+// 行銷頁／小官網 tab 切換（純前端，所有欄位都在同一 form 一起送出）
+(function() {
+  var btns = document.querySelectorAll('.cv-tab-btn');
+  var panels = document.querySelectorAll('[data-tab-panel]');
+  btns.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var target = btn.dataset.tabTarget;
+      btns.forEach(function(b) {
+        var on = b === btn;
+        b.classList.toggle('cv-tab-btn-active', on);
+        b.style.borderBottomColor = on ? (target === 'store' ? 'var(--accent,#FF5A36)' : '#2563eb') : 'transparent';
+        b.style.color = on ? (target === 'store' ? '#c2410c' : '#1e40af') : 'var(--muted)';
+        b.style.background = on ? '#fff' : 'transparent';
+        b.style.fontWeight = on ? '800' : '700';
+      });
+      panels.forEach(function(p) {
+        p.style.display = (p.dataset.tabPanel === target) ? '' : 'none';
+      });
+    });
+  });
+})();
+</script>
 
 <?php require_once __DIR__ . '/../includes/layout_foot.php'; ?>
