@@ -192,8 +192,21 @@ require_once __DIR__ . '/../includes/layout_head.php';
 <div class="alert alert-<?= h($flash['type']) ?>"><?= h($flash['message']) ?></div>
 <?php endif; ?>
 
-<form method="POST" enctype="multipart/form-data">
+<style>
+.blk-split { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:24px; align-items:start; }
+.blk-preview-pane { position:sticky; top:20px; }
+.blk-preview-head { font-size:.85rem; color:var(--muted); padding:6px 0 10px; display:flex; align-items:center; gap:8px; }
+.blk-preview-frame-wrap { border:1.5px solid var(--border); border-radius:8px; overflow:hidden; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.04); }
+#blk-preview { width:100%; height:560px; border:0; display:block; background:#fff; }
+.blk-preview-status { font-size:.72rem; color:var(--muted); display:inline-block; min-width:60px; }
+@media (max-width:1100px) { .blk-split { grid-template-columns:1fr; } .blk-preview-pane { position:static; } }
+</style>
+
+<div class="blk-split">
+  <div>
+<form method="POST" enctype="multipart/form-data" id="blk-form">
   <input type="hidden" name="_token" value="<?= h(csrfToken()) ?>">
+  <input type="hidden" name="type" value="<?= h($type) ?>">
 
   <div class="card">
     <div class="card-header"><h2><?= h($meta['icon']) ?> <?= h($meta['name']) ?> 區塊內容</h2></div>
@@ -226,5 +239,90 @@ require_once __DIR__ . '/../includes/layout_head.php';
     <a href="<?= BASE_URL ?>/admin/pages/store_blocks.php" class="btn btn-ghost btn-lg">取消</a>
   </div>
 </form>
+  </div><!-- /left form column -->
+
+  <aside class="blk-preview-pane">
+    <div class="blk-preview-head">
+      <span>👁️ 即時預覽（編輯時自動更新）</span>
+      <span class="blk-preview-status" id="blk-preview-status"></span>
+    </div>
+    <div class="blk-preview-frame-wrap">
+      <iframe id="blk-preview" title="區塊即時預覽" loading="lazy"></iframe>
+    </div>
+    <div style="margin-top:8px; font-size:.72rem; color:var(--muted); line-height:1.55;">
+      預覽用既有的圖片路徑（剛上傳但還沒存的圖片不會出現，存檔後再回來看完整效果）。
+    </div>
+  </aside>
+</div><!-- /.blk-split -->
+
+<script>
+// Block 即時預覽：表單變動 → POST 到 /admin/preview_block.php → iframe.srcdoc
+(function() {
+  var form   = document.getElementById('blk-form');
+  var frame  = document.getElementById('blk-preview');
+  var status = document.getElementById('blk-preview-status');
+  if (!form || !frame) return;
+
+  var debounceTimer = null;
+  var inFlight = false;
+  var pendingRetry = false;
+
+  function setStatus(text, color) {
+    if (!status) return;
+    status.textContent = text;
+    status.style.color = color || 'var(--muted)';
+  }
+
+  function refresh() {
+    if (inFlight) { pendingRetry = true; return; }
+    inFlight = true;
+    setStatus('• 更新中…', '#888');
+    var fd = new FormData(form);
+    // 預覽不需要 file uploads（保留路徑就好），剃除以免請求過大
+    var lean = new FormData();
+    for (var pair of fd.entries()) {
+      var v = pair[1];
+      if (v instanceof File) continue;
+      lean.append(pair[0], v);
+    }
+    fetch('<?= BASE_URL ?>/admin/preview_block.php', {
+      method: 'POST',
+      body: lean,
+      credentials: 'same-origin'
+    })
+    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+    .then(function(html) {
+      frame.srcdoc = html;
+      setStatus('✓ 已同步', '#0a8');
+      setTimeout(function() { setStatus(''); }, 1500);
+    })
+    .catch(function(e) {
+      setStatus('⚠ 預覽失敗：' + e.message, '#c33');
+    })
+    .finally(function() {
+      inFlight = false;
+      if (pendingRetry) { pendingRetry = false; refresh(); }
+    });
+  }
+
+  function schedule() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(refresh, 450);
+  }
+
+  form.addEventListener('input', schedule);
+  form.addEventListener('change', schedule);
+  // 動態新增 row（service items / menu groups 等）時也觸發
+  document.addEventListener('click', function(e) {
+    var t = e.target;
+    if (t && (t.matches('.btn-add-item, .btn-remove-item, .btn-add-group, .btn-remove-group, button[type=button][data-blk-action]'))) {
+      setTimeout(schedule, 50);
+    }
+  });
+
+  // 初次載入即渲染
+  refresh();
+})();
+</script>
 
 <?php require_once __DIR__ . '/../includes/layout_foot.php'; ?>
