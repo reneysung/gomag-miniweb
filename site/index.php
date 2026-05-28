@@ -78,6 +78,20 @@ $aboutTags = $dbAboutTags ?: $defaultAboutTags;
 // aboutStats 從 heroStats 衍生（交替顯示 accent 色）
 $aboutStats = array_map(fn($s, $i) => [$s[0], $s[1], $i % 2 ? 'accent' : ''], $heroStats, array_keys($heroStats));
 
+// ─── Mini-site template system Phase 4（脫鉤的小官網模板，2026-05-28）─────
+// 優先順序高於 industry-based 分流：客戶有設 minisite_template 就走模板
+require_once __DIR__ . '/../includes/minisite_template_loader.php';
+$_mtpl = $client['minisite_template'] ?? '_default';
+if ($_mtpl !== '_default') {
+    $_renderPath = minisiteTemplateRenderPath($_mtpl, 'home');
+    if ($_renderPath) {
+        require __DIR__ . '/layout_head.php';
+        require $_renderPath;
+        require __DIR__ . '/layout_foot.php';
+        return;
+    }
+}
+
 // 餐飲業走專屬攝影集 layout（Hawksmoor 風）
 if ($isFood) {
     require __DIR__ . '/index_food.php';

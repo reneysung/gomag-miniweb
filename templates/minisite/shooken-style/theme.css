@@ -1,0 +1,419 @@
+/*
+ * shooken-style — 松翁軒風小官網模板
+ * 深棕 × 象牙白 × 克制金、極簡優雅、大量留白、明朝體標題
+ * 用 `ss-*` prefix 避免跟 gomag.css 的 g-* 衝突
+ */
+
+:root {
+  --ss-brown:      #6B4423;  /* 主深棕（文字／邊框） */
+  --ss-brown-deep: #4A2E18;  /* 深棕 hover */
+  --ss-ivory:      #F5F1ED;  /* 象牙白背景 */
+  --ss-ivory-soft: #FAF7F2;  /* 更淺紙白 */
+  --ss-gold:       #C9A876;  /* 克制金（accent） */
+  --ss-gold-soft:  #D4B584;  /* 淺金 hover */
+  --ss-ink:        #2A1F18;  /* 主文字（近黑） */
+  --ss-muted:      #8B7A6A;  /* 次文字 */
+  --ss-line:       #DDD3C5;  /* 米色線條 */
+  --ss-red-stamp:  #B43028;  /* 紅印章（極少用，僅 logo 銜接） */
+}
+
+/* ─── 覆寫 mini-site 既有 base（gomag.css）──── */
+body {
+  font-family: "Noto Serif TC", "Songti TC", "Yu Mincho", serif !important;
+  background: var(--ss-ivory-soft) !important;
+  color: var(--ss-ink) !important;
+  line-height: 1.85 !important;
+  letter-spacing: .02em !important;
+}
+
+/* 覆寫 site-header（去 emoji 風、深棕極簡）*/
+.site-header {
+  background: var(--ss-ivory-soft) !important;
+  border-bottom: 1px solid var(--ss-line) !important;
+  box-shadow: none !important;
+}
+.site-header .site-nav a,
+.site-header .nav-link {
+  color: var(--ss-brown) !important;
+  font-family: "Noto Serif TC", serif !important;
+  font-weight: 500 !important;
+  letter-spacing: .15em !important;
+  font-size: .92rem !important;
+}
+.site-header .site-nav a:hover,
+.site-header .nav-link:hover {
+  color: var(--ss-red-stamp) !important;
+}
+.site-header .brand-name,
+.site-header .site-logo {
+  font-family: "Noto Serif TC", serif !important;
+  font-weight: 700 !important;
+  letter-spacing: .12em !important;
+  color: var(--ss-brown) !important;
+}
+
+/* 覆寫 footer */
+.site-footer {
+  background: var(--ss-brown) !important;
+  color: var(--ss-ivory) !important;
+}
+.site-footer a { color: var(--ss-gold) !important; }
+.site-footer a:hover { color: var(--ss-gold-soft) !important; }
+.footer-brand { font-family: "Noto Serif TC", serif !important; letter-spacing: .2em !important; }
+
+/* 浮動 LINE 按鈕（保留功能，視覺收斂）*/
+.float-line { opacity: .85; transition: opacity .2s; }
+.float-line:hover { opacity: 1; }
+
+/* ═══════ Mini-site body container ═══════ */
+.ss-page {
+  max-width: 100%;
+  font-family: "Noto Serif TC", serif;
+}
+.ss-container {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 32px;
+}
+.ss-section {
+  padding: 100px 0;
+}
+.ss-section--tight { padding: 60px 0; }
+.ss-section--cream { background: var(--ss-ivory); }
+.ss-section--brown {
+  background: var(--ss-brown);
+  color: var(--ss-ivory);
+}
+
+/* ─── Hero（大圖輪播仿松翁軒）───────────── */
+.ss-hero {
+  position: relative;
+  width: 100%;
+  height: 70vh;
+  min-height: 480px;
+  max-height: 720px;
+  background: var(--ss-brown-deep);
+  overflow: hidden;
+}
+.ss-hero-slides {
+  position: absolute;
+  inset: 0;
+  display: flex;
+}
+.ss-hero-slide {
+  flex: 1 0 100%;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  filter: brightness(.78);
+}
+.ss-hero-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 80px 32px;
+  text-align: center;
+  background: linear-gradient(180deg, transparent 50%, rgba(42,31,24,.7) 100%);
+}
+.ss-hero-overlay-inner {
+  max-width: 720px;
+  color: var(--ss-ivory);
+}
+.ss-hero-slogan {
+  font-family: "Noto Serif TC", serif;
+  font-weight: 600;
+  font-size: clamp(1.4rem, 3vw, 2.2rem);
+  letter-spacing: .25em;
+  margin-bottom: 12px;
+}
+.ss-hero-slogan-sub {
+  font-family: "Manrope", sans-serif;
+  font-size: .82rem;
+  letter-spacing: .4em;
+  opacity: .85;
+  text-transform: uppercase;
+}
+
+/* ─── 章節標題 ────────────────────────── */
+.ss-h2-en {
+  text-align: center;
+  font-family: "Manrope", sans-serif;
+  font-size: .8rem;
+  font-weight: 500;
+  letter-spacing: .45em;
+  color: var(--ss-gold);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.ss-h2 {
+  text-align: center;
+  font-family: "Noto Serif TC", serif;
+  font-size: clamp(1.7rem, 3.2vw, 2.4rem);
+  font-weight: 600;
+  color: var(--ss-brown);
+  letter-spacing: .15em;
+  margin: 0 0 16px 0;
+}
+.ss-h2-line {
+  display: block;
+  width: 32px;
+  height: 1px;
+  background: var(--ss-gold);
+  margin: 24px auto 56px;
+}
+
+/* ─── 關於本舖 ───────────────────────── */
+.ss-about-body {
+  max-width: 680px;
+  margin: 0 auto;
+  text-align: center;
+  font-size: 1.02rem;
+  line-height: 2.1;
+  color: var(--ss-ink);
+}
+.ss-about-body p { margin: 0 0 1.6em 0; }
+.ss-about-body p:last-child { margin: 0; }
+.ss-about-body strong { color: var(--ss-brown); font-weight: 600; }
+.ss-about-quote {
+  margin-top: 32px;
+  font-style: italic;
+  color: var(--ss-muted);
+  font-size: .95em;
+  letter-spacing: .1em;
+}
+
+/* ─── 4 列產品 grid（仿松翁軒，無價格滿版）── */
+.ss-products {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+.ss-product {
+  text-align: center;
+  background: var(--ss-ivory-soft);
+  transition: transform .35s;
+}
+.ss-product:hover { transform: translateY(-4px); }
+.ss-product-img {
+  width: 100%;
+  aspect-ratio: 1/1;
+  object-fit: cover;
+  background: var(--ss-ivory);
+  display: block;
+}
+.ss-product-body { padding: 18px 8px 20px; }
+.ss-product h3 {
+  font-family: "Noto Serif TC", serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ss-ink);
+  margin: 0 0 6px 0;
+  letter-spacing: .08em;
+}
+.ss-product-desc {
+  font-size: .82rem;
+  color: var(--ss-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+.ss-product-price {
+  margin-top: 10px;
+  font-family: "Manrope", sans-serif;
+  color: var(--ss-brown);
+  font-weight: 600;
+  font-size: .92rem;
+  letter-spacing: .05em;
+}
+.ss-products-more {
+  text-align: center;
+  margin-top: 48px;
+  font-size: .88rem;
+  color: var(--ss-muted);
+  letter-spacing: .1em;
+}
+
+/* ─── 製作過程 gallery（共用 jm-process-* 樣式概念，獨立 prefix）── */
+.ss-process-gallery {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.ss-process-gallery figure {
+  margin: 0;
+  position: relative;
+  overflow: hidden;
+  background: var(--ss-brown-deep);
+}
+.ss-process-gallery img {
+  width: 100%;
+  aspect-ratio: 3/4;
+  object-fit: cover;
+  display: block;
+  filter: contrast(.95) brightness(.95);
+  transition: transform .4s, filter .4s;
+}
+.ss-process-gallery figure:hover img {
+  transform: scale(1.04);
+  filter: contrast(1.02) brightness(1);
+}
+.ss-process-gallery figcaption {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: linear-gradient(180deg, transparent, rgba(42,31,24,.85));
+  color: var(--ss-ivory);
+  font-family: "Noto Serif TC", serif;
+  font-size: .82rem;
+  letter-spacing: .2em;
+  padding: 32px 12px 14px;
+  text-align: center;
+}
+.ss-process-quote {
+  text-align: center;
+  font-family: "Noto Serif TC", serif;
+  font-size: 1.05rem;
+  font-style: italic;
+  color: var(--ss-ivory);
+  opacity: .9;
+  letter-spacing: .08em;
+  max-width: 640px;
+  margin: 0 auto 56px;
+}
+
+/* ─── 門市資訊 ─────────────────────── */
+.ss-visit {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: start;
+}
+.ss-visit-info dt {
+  font-family: "Manrope", sans-serif;
+  font-size: .72rem;
+  letter-spacing: .35em;
+  color: var(--ss-gold);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.ss-visit-info dd {
+  font-size: 1.02rem;
+  color: var(--ss-ink);
+  margin: 0 0 28px 0;
+  letter-spacing: .04em;
+}
+.ss-visit-info dd a {
+  color: var(--ss-brown);
+  text-decoration: none;
+  border-bottom: 1px solid var(--ss-gold);
+}
+.ss-visit-map {
+  border: 1px solid var(--ss-line);
+}
+
+/* ─── CTA 區（深棕底，極簡按鈕）─────── */
+.ss-cta {
+  background: var(--ss-brown);
+  color: var(--ss-ivory);
+  text-align: center;
+  padding: 96px 32px;
+}
+.ss-cta h2 {
+  font-family: "Noto Serif TC", serif;
+  font-size: clamp(1.4rem, 2.8vw, 2rem);
+  font-weight: 500;
+  color: var(--ss-ivory);
+  letter-spacing: .2em;
+  margin: 0 0 14px 0;
+}
+.ss-cta p {
+  color: rgba(245,241,237,.78);
+  font-size: 1rem;
+  margin: 0 0 40px 0;
+  letter-spacing: .08em;
+}
+.ss-btn {
+  display: inline-block;
+  padding: 16px 48px;
+  font-family: "Noto Serif TC", serif;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: .25em;
+  text-decoration: none;
+  border: 1px solid var(--ss-gold);
+  color: var(--ss-gold);
+  background: transparent;
+  transition: all .25s;
+}
+.ss-btn:hover {
+  background: var(--ss-gold);
+  color: var(--ss-brown);
+}
+.ss-btn--solid {
+  background: var(--ss-gold);
+  color: var(--ss-brown);
+}
+.ss-btn--solid:hover {
+  background: var(--ss-gold-soft);
+  border-color: var(--ss-gold-soft);
+}
+
+/* ─── Footer mark ─────────────────── */
+.ss-foot-mark {
+  text-align: center;
+  padding: 48px 24px;
+  background: var(--ss-ivory-soft);
+  border-top: 1px solid var(--ss-line);
+}
+.ss-foot-mark-brand {
+  font-family: "Noto Serif TC", serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--ss-brown);
+  letter-spacing: .35em;
+  margin-bottom: 8px;
+}
+.ss-foot-mark-en {
+  font-family: "Manrope", sans-serif;
+  font-size: .68rem;
+  letter-spacing: .45em;
+  color: var(--ss-gold);
+  text-transform: uppercase;
+}
+
+/* ─── 輪播 JS 用 class（簡單 fade）──── */
+.ss-hero-slide { opacity: 0; transition: opacity 1.2s ease; position: absolute; inset: 0; }
+.ss-hero-slide.active { opacity: 1; z-index: 2; }
+.ss-hero-dots {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  gap: 10px;
+}
+.ss-hero-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: rgba(245,241,237,.4);
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  transition: background .3s;
+}
+.ss-hero-dot.active { background: var(--ss-gold); }
+
+/* ─── RWD ─────────────────────────── */
+@media (max-width: 900px) {
+  .ss-section { padding: 72px 0; }
+  .ss-products { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .ss-process-gallery { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .ss-visit { grid-template-columns: 1fr; gap: 40px; }
+  .ss-hero { height: 60vh; }
+}
+@media (max-width: 480px) {
+  .ss-container { padding: 0 20px; }
+  .ss-hero-slogan { font-size: 1.2rem; letter-spacing: .18em; }
+  .ss-cta { padding: 64px 20px; }
+}

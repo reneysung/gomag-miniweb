@@ -123,6 +123,17 @@ $_siteSitemapHost = (IS_LOCAL || IS_STAGING) ? rtrim(BASE_URL, '/') : 'https://'
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/gomag.css?v=<?= filemtime(__DIR__ . '/../assets/css/gomag.css') ?>">
 <?php outputThemeCss($theme); /* 必須在 gomag.css 之後，讓客戶 theme 色 override 預設 */ ?>
+<?php
+// ── Mini-site template theme.css（Phase 4 脫鉤系統，必須在 outputThemeCss 之後才能覆寫）──
+$_mtpl_cs = $client['minisite_template'] ?? '_default';
+if ($_mtpl_cs !== '_default') {
+    $_mtplCssPath = __DIR__ . "/../templates/minisite/{$_mtpl_cs}/theme.css";
+    if (is_file($_mtplCssPath)) {
+        $_mtplCssUrl = BASE_URL . "/templates/minisite/{$_mtpl_cs}/theme.css?v=" . filemtime($_mtplCssPath);
+        echo '<link rel="stylesheet" href="' . htmlspecialchars($_mtplCssUrl, ENT_QUOTES) . "\">\n";
+    }
+}
+?>
 <style>
 /* ══ RESET & BASE ══════════════════════════════════════════ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}

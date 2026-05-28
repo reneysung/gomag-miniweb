@@ -1,0 +1,7 @@
+{
+  "name": "預設（按產業分流）",
+  "description": "保留現有 site/index.php industry-based 分流（餐飲走 index_food / 設計走 index_design / 其他走 site/index.php 後段 HTML）。所有現有 220 客戶採用此模板。",
+  "industries": [],
+  "thumbnail": "thumbnail.png",
+  "status": "active"
+}
