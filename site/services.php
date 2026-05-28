@@ -13,6 +13,11 @@ if (!$site) { http_response_code(404); die('網站不存在'); }
 
 $pageKey  = 'services';
 $client   = $site['client'];
+
+// 模板系統 single-page mode：sub-page 自動 302 回首頁
+require_once __DIR__ . '/../includes/minisite_template_loader.php';
+minisiteRedirectSubpageIfSinglePage($sub, $client);
+
 $social   = $site['social'] ?? [];
 $services = $site['services'] ?? [];
 $phone    = $client['phone'] ?? '';

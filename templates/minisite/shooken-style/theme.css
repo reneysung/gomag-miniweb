@@ -32,6 +32,19 @@ body {
   border-bottom: 1px solid var(--ss-line) !important;
   box-shadow: none !important;
 }
+/* single-page 模式：隱藏 sub-page 對應 nav links（並非實體 redirect 已 302） */
+.site-header .site-nav a[href*="/services"],
+.site-header .site-nav a[href*="/cases"],
+.site-header .site-nav a[href*="/testimonials"],
+.site-header .site-nav a[href*="/column"],
+.site-header .site-nav a[href*="/articles"],
+.mobile-menu a[href*="/services"],
+.mobile-menu a[href*="/cases"],
+.mobile-menu a[href*="/testimonials"],
+.mobile-menu a[href*="/column"],
+.mobile-menu a[href*="/articles"] {
+  display: none !important;
+}
 .site-header .site-nav a,
 .site-header .nav-link {
   color: var(--ss-brown) !important;

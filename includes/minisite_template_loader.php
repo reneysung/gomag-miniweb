@@ -86,3 +86,32 @@ function minisiteTemplateRecommend(?string $categoryName): string {
     }
     return '_default';
 }
+
+/**
+ * 判斷該模板是否為 single-page 模式（meta.json 內 single_page=true）
+ */
+function minisiteTemplateIsSinglePage(string $slug): bool {
+    $slug = preg_replace('/[^a-z0-9_-]/i', '', $slug);
+    $metaFile = MINISITE_TEMPLATE_DIR . '/' . $slug . '/meta.json';
+    if (!is_file($metaFile)) return false;
+    $meta = json_decode((string)file_get_contents($metaFile), true) ?: [];
+    return !empty($meta['single_page']);
+}
+
+/**
+ * 在 sub-page (site/services.php / cases.php / 等) 開頭呼叫
+ * 若客戶用的模板是 single-page mode，則 302 redirect 回首頁
+ */
+function minisiteRedirectSubpageIfSinglePage(string $sub, array $client): void {
+    $mtpl = $client['minisite_template'] ?? '_default';
+    if ($mtpl === '_default') return;
+    if (!minisiteTemplateIsSinglePage($mtpl)) return;
+    // 蓋掉前面 sub-page 設的 Cache-Control: public, max-age=300（避免 LiteSpeed cache 住 200）
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    header('Pragma: no-cache');
+    $homeUrl = (defined('IS_LOCAL') && (IS_LOCAL || IS_STAGING))
+        ? BASE_URL . '/site/index.php?sub=' . urlencode($sub)
+        : 'https://' . $sub . '.' . MINISITE_DOMAIN . '/';
+    header('Location: ' . $homeUrl, true, 302);
+    exit;
+}

@@ -3,5 +3,7 @@
   "description": "深棕 × 象牙白 × 克制金，極簡優雅、大量留白、明朝體標題。參考日本長崎老舖松翁軒（1681 創業）的現代版老舖風格。適合伴手禮、和菓子、茶道、日式料理、職人品牌。",
   "industries": ["伴手禮", "和菓子", "茶道", "日式料理", "甜點"],
   "thumbnail": "thumbnail.png",
-  "status": "active"
+  "status": "active",
+  "single_page": true,
+  "_comment_single_page": "true=所有 sub-page (services/cases/testimonials/articles/contact) 自動 redirect 回首頁；nav 也會被 CSS 隱藏對應連結。"
 }

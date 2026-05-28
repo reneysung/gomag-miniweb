@@ -13,6 +13,10 @@ $site = loadSiteData($sub);
 if (!$site) { http_response_code(404); die('網站不存在或已停用'); }
 if (empty($site['client']['has_minisite'])) { http_response_code(404); die('未啟用小官網'); }
 
+// 模板系統 single-page mode：sub-page 自動 302 回首頁
+require_once __DIR__ . '/../includes/minisite_template_loader.php';
+minisiteRedirectSubpageIfSinglePage($sub, $site['client']);
+
 $slug    = $sub;
 $pageKey = 'articles';
 $client  = $site['client'];
