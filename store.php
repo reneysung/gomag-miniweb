@@ -341,6 +341,23 @@ if ($showTopBanner):
       <p class="g-store-hero-tagline"><?= h($client['tagline']) ?></p>
       <?php endif; ?>
 
+      <?php
+      // 城市變體頁的「服務關鍵字膠囊 row」— 顯眼告訴搜尋者該頁主打哪些關鍵字
+      $_serviceTags = [];
+      if ($cityVariant && !empty($cityVariant['service_tags'])) {
+          $_serviceTags = json_decode($cityVariant['service_tags'], true) ?: [];
+      }
+      ?>
+      <?php if ($_serviceTags): ?>
+      <div class="g-store-hero-svc-tags" style="display:flex; flex-wrap:wrap; gap:8px; margin:14px 0;">
+        <?php foreach ($_serviceTags as $tag): ?>
+        <span style="display:inline-block; padding:6px 14px; background:rgba(255,90,54,.12); color:#FF5A36; border:1.5px solid rgba(255,90,54,.35); border-radius:999px; font-size:.88rem; font-weight:700;">
+          <?= h($tag) ?>
+        </span>
+        <?php endforeach; ?>
+      </div>
+      <?php endif; ?>
+
       <?php if ($rating['cnt'] > 0): ?>
       <div class="g-store-hero-rating">
         <span class="g-store-hero-rating-stars">
@@ -430,6 +447,23 @@ if ($showTopBanner):
         <p style="font-size:1.1rem; color:var(--m-text-muted); margin-bottom:16px;">
           <?= h($client['tagline']) ?>
         </p>
+        <?php endif; ?>
+
+        <?php
+        // 城市變體頁的「服務關鍵字膠囊 row」（m-* fallback hero）
+        $_serviceTagsM = [];
+        if ($cityVariant && !empty($cityVariant['service_tags'])) {
+            $_serviceTagsM = json_decode($cityVariant['service_tags'], true) ?: [];
+        }
+        ?>
+        <?php if ($_serviceTagsM): ?>
+        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;">
+          <?php foreach ($_serviceTagsM as $tag): ?>
+          <span style="display:inline-block; padding:6px 14px; background:rgba(255,90,54,.12); color:#FF5A36; border:1.5px solid rgba(255,90,54,.35); border-radius:999px; font-size:.88rem; font-weight:700;">
+            <?= h($tag) ?>
+          </span>
+          <?php endforeach; ?>
+        </div>
         <?php endif; ?>
 
         <?php if ($rating['cnt'] > 0): ?>
