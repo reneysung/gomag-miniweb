@@ -19,6 +19,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (empty($username) || empty($password)) {
         $error = '請填寫帳號與密碼';
+    } elseif (isLoginLocked()) {
+        $error = '嘗試次數過多，請 15 分鐘後再試';
     } elseif (!loginAdmin($username, $password)) {
         $error = '帳號或密碼錯誤，請重新確認';
     } else {
