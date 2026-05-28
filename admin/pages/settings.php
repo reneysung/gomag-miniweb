@@ -25,6 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'industry'               => trim($_POST['industry'] ?? ''),
         'category_id'            => !empty($_POST['category_id']) ? (int)$_POST['category_id'] : null,
         'phone'                  => trim($_POST['phone'] ?? ''),
+        'mobile_phone'           => trim($_POST['mobile_phone'] ?? '') ?: null,
         'business_hours'         => trim($_POST['business_hours'] ?? ''),
         'email'                  => trim($_POST['email'] ?? ''),
         'address'                => trim($_POST['address'] ?? ''),
@@ -38,9 +39,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'longitude'              => !empty($_POST['longitude']) ? (float)$_POST['longitude'] : null,
         'opening_hours_json'     => trim($_POST['opening_hours_json'] ?? '') ?: null,
         'external_website_url'   => trim($_POST['external_website_url'] ?? ''),
+        'order_url'              => trim($_POST['order_url'] ?? '') ?: null,
+        'top_banner_html'        => trim($_POST['top_banner_html'] ?? '') ?: null,
+        'top_banner_until'       => trim($_POST['top_banner_until'] ?? '') ?: null,
         'about_text'             => trim($_POST['about_text'] ?? ''),
         'landing_extra_content'  => trim($_POST['landing_extra_content'] ?? ''),
         'has_minisite'           => isset($_POST['has_minisite']) ? 1 : 0,
+        'store_template'         => preg_replace('/[^a-z0-9_-]/i', '', $_POST['store_template'] ?? '_default') ?: '_default',
         'is_featured'            => isset($_POST['is_featured']) ? 1 : 0,
         'is_placeholder'         => isset($_POST['is_placeholder']) ? 1 : 0,
         'subdomain_provisioned'  => isset($_POST['subdomain_provisioned']) ? 1 : 0,
@@ -342,6 +347,67 @@ body[data-current-tab="minisite"] .tab-section[data-tab="store"] { display:none;
       </div>
     </div>
 
+    <!-- 🎨 視覺模板選擇 -->
+    <?php
+    require_once __DIR__ . '/../../includes/template_loader.php';
+    $_currentTpl  = $client['store_template'] ?? '_default';
+    $_allTpls     = templateList();
+    $_catName     = $client['category_name'] ?? null;
+    $_recommended = $_catName ? templateRecommend($_catName) : '_default';
+    ?>
+    <div class="form-group-admin" style="background:#faf7f2;padding:14px;border-radius:8px;border:1.5px solid #d4c4a8;margin-top:10px;">
+      <label style="font-weight:700;display:block;margin-bottom:8px;">
+        🎨 行銷頁視覺模板
+      </label>
+      <div class="hint" style="margin-bottom:10px;">
+        套用到 <code>/store/<?= h($client['slug'] ?? '') ?></code> 與所有城市變體頁。切換後即時生效（已有資料的 blocks/services 都會自動套新版型）。
+      </div>
+
+      <?php if ($_recommended !== '_default' && $_currentTpl === '_default'): ?>
+      <div style="background:#fef3c7;border:1px solid #fcd34d;padding:8px 12px;border-radius:6px;margin-bottom:10px;font-size:.9rem;">
+        💡 根據「<?= h($_catName ?? '') ?>」分類，推薦試試「<?= h($_allTpls[$_recommended]['name'] ?? '') ?>」
+      </div>
+      <?php endif; ?>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;">
+        <?php foreach ($_allTpls as $_slug => $_tpl): ?>
+        <?php
+          $_isCurrent = $_slug === $_currentTpl;
+          $_isRec     = $_slug === $_recommended && $_slug !== '_default';
+          $_isDev     = ($_tpl['status'] ?? '') === 'dev';
+          $_thumb     = templateThumbnailUrl($_slug);
+        ?>
+        <label style="display:block;cursor:<?= $_isDev ? 'not-allowed' : 'pointer' ?>;<?= $_isDev ? 'opacity:.5;' : '' ?>">
+          <input type="radio" name="store_template" value="<?= h($_slug) ?>"
+                 <?= $_isCurrent ? 'checked' : '' ?>
+                 <?= $_isDev ? 'disabled' : '' ?>
+                 style="display:none;"
+                 onchange="this.closest('div.form-group-admin').querySelectorAll('.tpl-card').forEach(c=>c.classList.remove('tpl-card-active'));this.closest('label').querySelector('.tpl-card').classList.add('tpl-card-active');">
+          <div class="tpl-card<?= $_isCurrent ? ' tpl-card-active' : '' ?>"
+               style="border:2px solid <?= $_isCurrent ? '#1c3d3d' : '#dde5dd' ?>;border-radius:8px;overflow:hidden;background:#fff;transition:all .15s;">
+            <img src="<?= h($_thumb) ?>" alt="<?= h($_tpl['name']) ?>"
+                 style="width:100%;height:120px;object-fit:cover;display:block;background:#f4f6f4;"
+                 onerror="this.src='<?= h(BASE_URL) ?>/assets/img/template-placeholder.svg'">
+            <div style="padding:8px 10px;">
+              <div style="font-weight:700;font-size:.95rem;color:#1a2a1a;">
+                <?= h($_tpl['name']) ?>
+                <?php if ($_isRec): ?><span style="background:#fcd34d;color:#78350f;font-size:.7rem;padding:1px 6px;border-radius:4px;margin-left:4px;">推薦</span><?php endif; ?>
+                <?php if ($_isDev): ?><span style="background:#ddd;color:#666;font-size:.7rem;padding:1px 6px;border-radius:4px;margin-left:4px;">開發中</span><?php endif; ?>
+              </div>
+              <div style="color:#6b7c6b;font-size:.78rem;line-height:1.4;margin-top:2px;">
+                <?= h(mb_strimwidth($_tpl['description'], 0, 50, '…')) ?>
+              </div>
+            </div>
+          </div>
+        </label>
+        <?php endforeach; ?>
+      </div>
+      <style>
+        .tpl-card-active { border-color: #1c3d3d !important; box-shadow: 0 2px 8px rgba(28,61,61,.2); }
+        .tpl-card:hover { border-color: #6b7c6b; }
+      </style>
+    </div>
+
     <!-- 首頁精選展示 -->
     <div class="form-group-admin" style="background:#fffbeb;padding:14px;border-radius:8px;border:1.5px solid #fcd34d;margin-top:10px;">
       <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;">
@@ -417,6 +483,29 @@ body[data-current-tab="minisite"] .tab-section[data-tab="store"] { display:none;
              value="<?= h($client['external_website_url'] ?? '') ?>">
       <div class="hint">如果客戶已有獨立官網，填這裡。主站行銷頁會顯示「前往官網」按鈕指過去。</div>
     </div>
+
+    <!-- 線上訂購 / 外送連結 -->
+    <div class="form-group-admin" style="margin-top:10px;">
+      <label>🍱 線上訂購／菜單連結（可選）</label>
+      <input type="url" name="order_url" class="form-control"
+             placeholder="https://shop.ichefpos.com/store/xxx/ordering"
+             value="<?= h($client['order_url'] ?? '') ?>">
+      <div class="hint">iCHEF、foodpanda、Uber Eats、Inline 訂位、官方訂購頁等。行銷頁會顯示「🍱 線上訂購」按鈕。</div>
+    </div>
+
+    <!-- 頁面頂部 banner -->
+    <div class="form-group-admin" style="margin-top:18px; padding-top:18px; border-top:1px dashed #ccc;">
+      <label>📢 頁面頂部橫條 banner（HTML，可選）</label>
+      <textarea name="top_banner_html" class="form-control" rows="4"
+                placeholder='<div class="g-top-banner"><span class="g-top-banner-tag">活動時間</span><span class="g-top-banner-text">活動內容...</span><a href="tel:xxx" class="g-top-banner-cta">立即預約 →</a></div>'><?= h($client['top_banner_html'] ?? '') ?></textarea>
+      <div class="hint">行銷頁最頂顯示，橘紅漸層底色。建議結構：<code>&lt;div class="g-top-banner"&gt;</code> 包 <code>&lt;span class="g-top-banner-tag"&gt;</code>（標籤）+ <code>&lt;span class="g-top-banner-text"&gt;</code>（主文）+ <code>&lt;a class="g-top-banner-cta"&gt;</code>（按鈕）。留空＝不顯示。</div>
+    </div>
+    <div class="form-group-admin" style="margin-top:10px;">
+      <label>📅 banner 自動下架日期（可選）</label>
+      <input type="date" name="top_banner_until" class="form-control"
+             value="<?= h($client['top_banner_until'] ?? '') ?>">
+      <div class="hint">過了這天 banner 自動不顯示，留空＝永久顯示。例：2026-06-30</div>
+    </div>
   </div>
 </div>
 
@@ -445,6 +534,13 @@ body[data-current-tab="minisite"] .tab-section[data-tab="store"] { display:none;
         <label>聯絡電話</label>
         <input type="text" name="phone" class="form-control"
                value="<?= h($client['phone']) ?>">
+      </div>
+      <div class="form-group-admin">
+        <label>📱 行動電話／第二支電話（可選）</label>
+        <input type="text" name="mobile_phone" class="form-control"
+               placeholder="0932715143"
+               value="<?= h($client['mobile_phone'] ?? '') ?>">
+        <div class="hint">填了會在行銷頁多顯示「📱 撥打手機」按鈕（hero、aside 各一）。</div>
       </div>
       <div class="form-group-admin">
         <label>Email</label>

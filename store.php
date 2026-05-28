@@ -51,6 +51,11 @@ if (!$client) {
 $cid = (int)$client['id'];
 $isPlaceholder = !empty($client['is_placeholder']);
 
+// 客戶社群（FB/IG/LINE/YT）— 給 hero/aside icon row 用
+$_sStmt = $db->prepare("SELECT * FROM client_social WHERE client_id=? LIMIT 1");
+$_sStmt->execute([$cid]);
+$clientSocial = $_sStmt->fetch(PDO::FETCH_ASSOC) ?: [];
+
 // ─── Modular Blocks 雙寫期判斷 ─────────────────────────
 //  - 該 client 已有 store_blocks → 用新系統 render，舊 services/cases 變數清空
 //  - 沒有 store_blocks → 走舊邏輯（向後相容）
@@ -186,6 +191,13 @@ if ($useBlocks) {
     $extraCss = [BASE_URL . '/assets/css/gomag.css'];
 }
 
+// ─── 視覺模板系統 Phase 3（opt-in，default 完全不影響）──
+require_once __DIR__ . '/includes/template_loader.php';
+$_tplSlug = $client['store_template'] ?? '_default';
+if ($_tplSlug !== '_default' && is_file(__DIR__ . "/templates/store/{$_tplSlug}/theme.css")) {
+    $extraCss[] = BASE_URL . "/templates/store/{$_tplSlug}/theme.css?v=" . filemtime(__DIR__ . "/templates/store/{$_tplSlug}/theme.css");
+}
+
 require_once __DIR__ . '/main/layout_head.php';
 
 // ─── 多縣市方案：撈該客戶所有啟用城市（給 schema areaServed + 底部互鏈用）────
@@ -243,6 +255,17 @@ if (!empty($client['updated_at'])) {
 ?>
 <script type="application/ld+json"><?= json_encode($jsonLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
 
+<?php
+// ─── 視覺模板系統 Phase 3：若客戶選了非 _default 模板且模板有 render.php，delegate 過去 ──
+// 注意：必須直接 require（不能透過 function），否則 $client/$blocks/$services 等變數會被 function scope 吃掉
+$_tplRender = ($_tplSlug !== '_default') ? templateRenderPath($_tplSlug) : '';
+if ($_tplRender) {
+    require $_tplRender;
+    require_once __DIR__ . '/main/layout_foot.php';
+    exit;
+}
+?>
+
 <!-- ═══════ Breadcrumb ═══════ -->
 <?php
 // 從 address 抓縣市供麵包屑用
@@ -271,6 +294,31 @@ if (!empty($client['address']) && preg_match('/^([台臺][北中南東]市|新�
 </div>
 
 <?php $heroStats = !empty($client['hero_stats']) ? json_decode($client['hero_stats'], true) : []; ?>
+
+<?php
+// ─── 頁面頂部 banner（top_banner_html）— 有設定且未過期才顯示 ──
+$showTopBanner = !empty($client['top_banner_html'] ?? '');
+if ($showTopBanner && !empty($client['top_banner_until'])) {
+    $showTopBanner = strtotime($client['top_banner_until']) >= strtotime(date('Y-m-d'));
+}
+if ($showTopBanner):
+?>
+<style>
+.g-top-banner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:14px;
+  padding:12px 20px;background:linear-gradient(90deg,#FF5A36 0%,#FF8155 100%);color:#fff;
+  font-size:.95rem;line-height:1.5;text-align:center}
+.g-top-banner-tag{font-weight:700;background:rgba(255,255,255,.18);padding:4px 10px;
+  border-radius:999px;font-size:.85rem;white-space:nowrap}
+.g-top-banner-text{flex:1 1 auto;min-width:200px}
+.g-top-banner-text strong{font-weight:800}
+.g-top-banner-cta{display:inline-block;background:#fff;color:#FF5A36;font-weight:800;
+  padding:6px 16px;border-radius:999px;text-decoration:none;white-space:nowrap;
+  transition:transform .15s}
+.g-top-banner-cta:hover{transform:translateX(2px);color:#FF5A36}
+@media(max-width:640px){.g-top-banner{font-size:.88rem;padding:10px 14px;gap:8px}}
+</style>
+<?= $client['top_banner_html'] ?>
+<?php endif; ?>
 
 <?php if ($useBlocks): ?>
 <!-- ═══════ Store Hero（gomag 新樣式 — 僅 blocks 啟用客戶）═══════ -->
@@ -308,11 +356,17 @@ if (!empty($client['address']) && preg_match('/^([台臺][北中南東]市|新�
         <?php if ($client['phone']): ?>
         <a href="tel:<?= h($client['phone']) ?>" class="g-store-btn g-store-btn-primary">📞 撥打電話</a>
         <?php endif; ?>
+        <?php if (!empty($client['mobile_phone'])): ?>
+        <a href="tel:<?= h($client['mobile_phone']) ?>" class="g-store-btn g-store-btn-primary">📱 撥打手機</a>
+        <?php endif; ?>
         <?php if ($miniSiteUrl): ?>
         <a href="<?= h($miniSiteUrl) ?>" class="g-store-btn g-store-btn-secondary" target="_blank">🌐 查看完整官網</a>
         <?php endif; ?>
         <?php if ($client['external_website_url']): ?>
         <a href="<?= h($client['external_website_url']) ?>" class="g-store-btn g-store-btn-outline" target="_blank" rel="noopener">🔗 官方網站</a>
+        <?php endif; ?>
+        <?php if (!empty($client['order_url'])): ?>
+        <a href="<?= h($client['order_url']) ?>" class="g-store-btn g-store-btn-outline" target="_blank" rel="noopener">🍱 線上訂購</a>
         <?php endif; ?>
       </div>
 
@@ -401,9 +455,19 @@ if (!empty($client['address']) && preg_match('/^([台臺][北中南東]市|新�
             🔗 前往官方網站
           </a>
           <?php endif; ?>
+          <?php if (!empty($client['order_url'])): ?>
+          <a href="<?= h($client['order_url']) ?>" class="m-btn m-btn-accent" target="_blank" rel="noopener">
+            🍱 線上訂購
+          </a>
+          <?php endif; ?>
           <?php if ($client['phone']): ?>
           <a href="tel:<?= h($client['phone']) ?>" class="m-btn m-btn-outline">
             📞 撥打電話
+          </a>
+          <?php endif; ?>
+          <?php if (!empty($client['mobile_phone'])): ?>
+          <a href="tel:<?= h($client['mobile_phone']) ?>" class="m-btn m-btn-outline">
+            📱 撥打手機
           </a>
           <?php endif; ?>
         </div>
@@ -650,11 +714,17 @@ if ($client['about_text'] || ($aboutTags && is_array($aboutTags))):
         <?php if ($client['phone']): ?>
         <a href="tel:<?= h($client['phone']) ?>" class="g-aside-btn g-aside-btn-primary">📞 撥打電話</a>
         <?php endif; ?>
+        <?php if (!empty($client['mobile_phone'])): ?>
+        <a href="tel:<?= h($client['mobile_phone']) ?>" class="g-aside-btn g-aside-btn-primary">📱 撥打手機</a>
+        <?php endif; ?>
         <?php if ($miniSiteUrl): ?>
         <a href="<?= h($miniSiteUrl) ?>" target="_blank" rel="noopener" class="g-aside-btn g-aside-btn-outline">🌐 完整官網</a>
         <?php endif; ?>
         <?php if ($client['external_website_url']): ?>
         <a href="<?= h($client['external_website_url']) ?>" target="_blank" rel="noopener" class="g-aside-btn g-aside-btn-outline">🔗 官方網站</a>
+        <?php endif; ?>
+        <?php if (!empty($client['order_url'])): ?>
+        <a href="<?= h($client['order_url']) ?>" target="_blank" rel="noopener" class="g-aside-btn g-aside-btn-outline">🍱 線上訂購</a>
         <?php endif; ?>
       </div>
 
@@ -883,14 +953,15 @@ if ($useBlocks && $testimonials) {
       }
   }
 
-  // 接受 google.com 跟 maps.app 系列 + 純 ?pb= query
-  $_isValidMapEmbed = $_mapsSrc && (
+  // 短網址（maps.app.goo.gl）iframe 會被 Google 擋住，改渲染按鈕
+  $_isMapShortUrl = $_mapsSrc && preg_match('#^https?://maps\.app\.goo\.gl/#i', $_mapsSrc);
+  // 長 embed URL（google.com/maps/...）才適合 iframe
+  $_isMapEmbeddable = $_mapsSrc && !$_isMapShortUrl && (
       preg_match('#^https?://(www\.)?google\.[^/]+/maps/#i', $_mapsSrc) ||
-      preg_match('#^https?://maps\.app\.goo\.gl/#i', $_mapsSrc) ||
       preg_match('#^https?://maps\.google\.[^/]+/#i', $_mapsSrc)
   );
 ?>
-<?php if ($_isValidMapEmbed): ?>
+<?php if ($_isMapEmbeddable): ?>
 <section class="m-section">
   <div class="m-container">
     <h2 class="m-section-title">店家位置</h2>
@@ -898,6 +969,89 @@ if ($useBlocks && $testimonials) {
       <iframe src="<?= h($_mapsSrc) ?>"
               width="100%" height="380" style="border:0; display:block;"
               allowfullscreen loading="lazy"></iframe>
+    </div>
+  </div>
+</section>
+<?php elseif ($_isMapShortUrl): ?>
+<section class="m-section">
+  <div class="m-container" style="text-align:center;">
+    <h2 class="m-section-title">店家位置</h2>
+    <p style="color:var(--m-text-muted); margin-bottom:18px;">點下方按鈕用 Google 地圖查看完整位置、路線規劃與評論。</p>
+    <a href="<?= h($_mapsSrc) ?>" target="_blank" rel="noopener"
+       style="display:inline-flex; align-items:center; gap:8px; padding:14px 28px; background:#fff; border:2px solid #4285F4; color:#4285F4; border-radius:999px; text-decoration:none; font-weight:700;">
+      📍 開啟 Google 地圖
+    </a>
+  </div>
+</section>
+<?php endif; ?>
+
+<!-- ═══════ 社群連結 row（client_social 有資料時顯示）═══════ -->
+<?php
+$_socialIcons = [
+  'fb_page_url'   => ['label' => 'Facebook', 'emoji' => '📘', 'color' => '#1877F2'],
+  'instagram_url' => ['label' => 'Instagram','emoji' => '📷', 'color' => '#E4405F'],
+  'line_url'      => ['label' => 'LINE',     'emoji' => '💬', 'color' => '#06C755'],
+  'youtube_url'   => ['label' => 'YouTube',  'emoji' => '▶️', 'color' => '#FF0000'],
+];
+$_hasAnySocial = false;
+foreach ($_socialIcons as $f => $_) { if (!empty($clientSocial[$f])) { $_hasAnySocial = true; break; } }
+?>
+<?php if ($_hasAnySocial): ?>
+<section class="m-section" style="background:#fff; padding:30px 0;">
+  <div class="m-container" style="text-align:center;">
+    <div style="display:inline-flex; gap:12px; flex-wrap:wrap; justify-content:center; align-items:center;">
+      <span style="color:var(--m-text-muted); font-size:.9rem; margin-right:6px;">追蹤我們：</span>
+      <?php foreach ($_socialIcons as $field => $cfg): ?>
+        <?php if (!empty($clientSocial[$field])): ?>
+        <a href="<?= h($clientSocial[$field]) ?>" target="_blank" rel="noopener"
+           title="<?= h($cfg['label']) ?>"
+           style="display:inline-flex; align-items:center; gap:6px; padding:10px 18px; border:2px solid <?= $cfg['color'] ?>; color:<?= $cfg['color'] ?>; border-radius:999px; text-decoration:none; font-size:.92rem; font-weight:700; transition:transform .15s;"
+           onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
+          <span><?= $cfg['emoji'] ?></span><span><?= h($cfg['label']) ?></span>
+        </a>
+        <?php endif; ?>
+      <?php endforeach; ?>
+    </div>
+  </div>
+</section>
+<?php endif; ?>
+
+<!-- ═══════ 網友分享（external_reviews_json，每城市專屬）═══════ -->
+<?php
+$_extReviews = [];
+if ($cityVariant && !empty($cityVariant['external_reviews_json'])) {
+    $_extReviews = json_decode($cityVariant['external_reviews_json'], true) ?: [];
+}
+?>
+<?php if ($_extReviews): ?>
+<section class="m-section" style="background:#fafafa;">
+  <div class="m-container" style="max-width:1000px;">
+    <h2 class="m-section-title">📰 網友／部落客分享</h2>
+    <p style="text-align:center; color:var(--m-text-muted); margin:-10px 0 26px; font-size:.95rem;">
+      第三方部落格與媒體對 <?= h($client['brand_name']) ?> 的真實開箱紀錄
+    </p>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
+      <?php foreach ($_extReviews as $r): ?>
+      <a href="<?= h($r['url'] ?? '#') ?>" target="_blank" rel="noopener"
+         style="display:block; padding:20px; background:#fff; border:1px solid var(--m-border); border-radius:10px; text-decoration:none; color:var(--m-text); transition:transform .2s, box-shadow .2s;"
+         onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 6px 18px rgba(0,0,0,.08)'"
+         onmouseout="this.style.transform='';this.style.boxShadow=''">
+        <div style="display:inline-block; padding:3px 10px; background:var(--m-accent); color:#fff; font-size:.72rem; border-radius:999px; margin-bottom:10px;">
+          <?= h($r['source'] ?? '網友分享') ?>
+        </div>
+        <h3 style="font-size:1rem; font-weight:700; line-height:1.45; margin:0 0 8px; color:var(--m-text);">
+          <?= h($r['title'] ?? '') ?>
+        </h3>
+        <?php if (!empty($r['excerpt'])): ?>
+        <p style="font-size:.88rem; color:var(--m-text-muted); line-height:1.55; margin:0;">
+          <?= h($r['excerpt']) ?>
+        </p>
+        <?php endif; ?>
+        <div style="margin-top:12px; font-size:.82rem; color:var(--m-primary); font-weight:600;">
+          閱讀全文 →
+        </div>
+      </a>
+      <?php endforeach; ?>
     </div>
   </div>
 </section>
