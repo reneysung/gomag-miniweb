@@ -1,0 +1,701 @@
+/*
+ * japan-minimal — 和風老舖視覺系統
+ * 朱紅 × 金箔 × 米白 三色為主
+ * 從奧喜 logo + 包裝抽色
+ */
+
+/* ─── Reset to clean slate（避免被 g-*/m-* 樣式污染）── */
+.jm-page * { box-sizing: border-box; }
+.jm-page { margin: 0; padding: 0; }
+
+/* ─── 色票 ───────────────────────────────────────── */
+:root {
+  --jm-red:      #C73E2D;   /* 主朱紅（logo + 包裝腰封）*/
+  --jm-red-deep: #9A2A1E;   /* 深紅 hover/active */
+  --jm-red-soft: #E94F3F;   /* 淺朱紅 accent */
+  --jm-gold:     #C8922A;   /* 主金（logo 徽章）*/
+  --jm-gold-hot: #E8B847;   /* 亮金（包裝盒）*/
+  --jm-gold-ink: #A77523;   /* 暗金燙印 */
+  --jm-cream:    #F8EFE8;   /* 米白背景 */
+  --jm-paper:    #FAF6F0;   /* 紙白 */
+  --jm-ink:      #1A0F08;   /* 墨黑（字色）*/
+  --jm-ink-soft: #4A2E1E;   /* 茶褐字色 */
+  --jm-muted:    #8B6F5A;   /* 淡墨字 */
+  --jm-line:     #D9C9B5;   /* 米線條 */
+}
+
+/* ─── Page wrapper ───────────────────────────────── */
+.jm-page {
+  background: var(--jm-paper);
+  color: var(--jm-ink);
+  font-family: "Noto Serif TC", "PingFang TC", "Songti TC", serif;
+  font-size: 16px;
+  line-height: 1.75;
+  letter-spacing: .02em;
+}
+
+.jm-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.jm-section {
+  padding: 80px 0;
+}
+.jm-section--tight { padding: 48px 0; }
+.jm-section--cream { background: var(--jm-cream); }
+.jm-section--ink {
+  background: var(--jm-ink);
+  color: var(--jm-cream);
+}
+
+/* ─── Breadcrumb ─────────────────────────────────── */
+.jm-breadcrumb {
+  padding: 16px 0;
+  background: var(--jm-cream);
+  border-bottom: 1px solid var(--jm-line);
+  font-size: .82rem;
+  color: var(--jm-muted);
+}
+.jm-breadcrumb a { color: var(--jm-muted); text-decoration: none; transition: color .15s; }
+.jm-breadcrumb a:hover { color: var(--jm-red); }
+.jm-breadcrumb .sep { margin: 0 8px; color: var(--jm-line); }
+.jm-breadcrumb .here { color: var(--jm-red); font-weight: 600; }
+
+/* ─── Hero ───────────────────────────────────────── */
+.jm-hero {
+  position: relative;
+  min-height: 600px;
+  display: flex;
+  align-items: flex-end;
+  background-color: var(--jm-ink);
+  background-size: cover;
+  background-position: center;
+  color: #fff;
+  overflow: hidden;
+}
+.jm-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(26,15,8,.2) 0%, rgba(26,15,8,.85) 100%);
+  z-index: 1;
+}
+.jm-hero-inner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding: 60px 0;
+}
+.jm-hero-badge {
+  display: inline-block;
+  background: var(--jm-red);
+  color: #fff;
+  font-family: "Noto Serif TC", serif;
+  font-weight: 700;
+  padding: 6px 18px;
+  font-size: .85rem;
+  letter-spacing: .3em;
+  margin-bottom: 20px;
+  writing-mode: horizontal-tb;
+}
+.jm-hero h1 {
+  font-family: "Noto Serif TC", serif;
+  font-size: clamp(2.4rem, 5vw, 4rem);
+  font-weight: 900;
+  line-height: 1.15;
+  margin: 0 0 16px 0;
+  color: #fff;
+  letter-spacing: .05em;
+}
+.jm-hero h1 .en {
+  display: block;
+  font-family: "Manrope", "Inter", sans-serif;
+  font-size: .35em;
+  font-weight: 400;
+  letter-spacing: .35em;
+  color: var(--jm-gold-hot);
+  margin-top: 8px;
+}
+.jm-hero-sub {
+  font-size: 1.05rem;
+  color: rgba(248,239,232,.85);
+  margin-bottom: 32px;
+  line-height: 1.7;
+  max-width: 600px;
+}
+.jm-hero-meta {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(248,239,232,.2);
+}
+.jm-hero-meta-item {
+  font-size: .85rem;
+  color: rgba(248,239,232,.7);
+}
+.jm-hero-meta-item strong {
+  display: block;
+  color: var(--jm-gold-hot);
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 2px;
+  font-family: "Manrope", sans-serif;
+}
+
+/* ─── 直書印章 ───────────────────────────────────── */
+.jm-stamp-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 40px;
+  margin: 60px 0;
+}
+.jm-stamp {
+  width: 110px;
+  height: 110px;
+  border: 2.5px solid var(--jm-red);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--jm-red);
+  font-family: "Noto Serif TC", serif;
+  font-weight: 700;
+  font-size: 1.2rem;
+  letter-spacing: .15em;
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  background: var(--jm-paper);
+  transform: rotate(-3deg);
+  flex-shrink: 0;
+}
+
+/* ─── 章節標題 ───────────────────────────────────── */
+.jm-h2 {
+  font-family: "Noto Serif TC", serif;
+  font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+  font-weight: 900;
+  color: var(--jm-ink);
+  text-align: center;
+  margin: 0 0 16px 0;
+  letter-spacing: .08em;
+}
+.jm-h2-en {
+  display: block;
+  font-family: "Manrope", sans-serif;
+  font-size: .35em;
+  font-weight: 400;
+  letter-spacing: .4em;
+  color: var(--jm-gold);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+.jm-h2-sub {
+  text-align: center;
+  font-size: 1rem;
+  color: var(--jm-muted);
+  max-width: 680px;
+  margin: 0 auto 56px;
+  line-height: 1.8;
+}
+
+/* ─── 故事段（直書 + 大留白）─────────────────────── */
+.jm-story {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 60px;
+  align-items: start;
+}
+.jm-story-vertical {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-family: "Noto Serif TC", serif;
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: .4em;
+  color: var(--jm-red);
+  height: 280px;
+  margin: 0 auto;
+  padding: 12px 0;
+  border-left: 1px solid var(--jm-line);
+  border-right: 1px solid var(--jm-line);
+}
+.jm-story-body {
+  font-size: 1.08rem;
+  line-height: 2;
+  color: var(--jm-ink-soft);
+  max-width: 580px;
+}
+.jm-story-body p { margin: 0 0 1.4em 0; }
+.jm-story-body p:last-child { margin-bottom: 0; }
+.jm-story-body strong {
+  color: var(--jm-red);
+  font-weight: 700;
+}
+
+/* ─── 看板商品 ───────────────────────────────────── */
+.jm-products {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+}
+.jm-product {
+  background: #fff;
+  border: 1px solid var(--jm-line);
+  border-radius: 4px;
+  overflow: hidden;
+  transition: transform .25s, box-shadow .25s;
+}
+.jm-product:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(26,15,8,.12);
+}
+.jm-product-img {
+  width: 100%;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+  background: var(--jm-cream);
+  display: block;
+}
+.jm-product-body { padding: 20px 22px 24px; }
+.jm-product h3 {
+  font-family: "Noto Serif TC", serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0 0 6px 0;
+  color: var(--jm-ink);
+}
+.jm-product-desc {
+  font-size: .9rem;
+  line-height: 1.7;
+  color: var(--jm-muted);
+  margin: 0;
+}
+.jm-product-price {
+  margin-top: 12px;
+  font-family: "Manrope", sans-serif;
+  color: var(--jm-red);
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: .04em;
+}
+
+/* ─── 製程 4 步驟 ─────────────────────────────────── */
+.jm-process {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 32px;
+  margin-top: 40px;
+}
+.jm-process-step {
+  text-align: center;
+  padding: 0 16px;
+}
+.jm-process-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--jm-red);
+  color: var(--jm-gold-hot);
+  font-family: "Manrope", sans-serif;
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin-bottom: 16px;
+}
+.jm-process-step h4 {
+  font-family: "Noto Serif TC", serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0 0 6px 0;
+  color: var(--jm-ink);
+}
+.jm-process-step p {
+  font-size: .88rem;
+  line-height: 1.7;
+  color: var(--jm-muted);
+  margin: 0;
+}
+
+/* ─── 製作過程 gallery（純圖片網格，不編造步驟名）── */
+.jm-process-gallery {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin: 8px 0 12px;
+}
+.jm-process-gallery figure {
+  margin: 0;
+  position: relative;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--jm-ink);
+}
+.jm-process-gallery img {
+  width: 100%;
+  aspect-ratio: 3/4;
+  object-fit: cover;
+  display: block;
+  transition: transform .4s, filter .4s;
+  filter: contrast(.95) brightness(.97);
+}
+.jm-process-gallery figure:hover img {
+  transform: scale(1.03);
+  filter: contrast(1.02) brightness(1);
+}
+.jm-process-gallery figcaption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(180deg, transparent 0%, rgba(26,15,8,.85) 100%);
+  color: #fff;
+  font-family: "Noto Serif TC", serif;
+  font-size: .82rem;
+  letter-spacing: .15em;
+  padding: 24px 12px 10px;
+  text-align: center;
+  font-weight: 500;
+}
+.jm-process-quote {
+  text-align: center;
+  font-family: "Noto Serif TC", serif;
+  font-size: 1.1rem;
+  font-style: italic;
+  color: var(--jm-ink-soft);
+  line-height: 1.8;
+  margin: 0 auto 48px;
+  max-width: 640px;
+  padding: 0 20px;
+}
+.jm-process-quote::before,
+.jm-process-quote::after {
+  content: '';
+  display: inline-block;
+  width: 24px;
+  height: 1px;
+  background: var(--jm-gold);
+  vertical-align: middle;
+  margin: 0 12px;
+}
+.jm-process-cite {
+  display: block;
+  font-size: .82rem;
+  font-style: normal;
+  color: var(--jm-muted);
+  letter-spacing: .25em;
+  margin-top: 8px;
+}
+@media (max-width: 768px) {
+  .jm-process-gallery { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .jm-process-quote { font-size: 1rem; }
+}
+
+/* ─── 信賴 5 點 ───────────────────────────────────── */
+.jm-trust {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 24px;
+}
+.jm-trust-item {
+  background: #fff;
+  border-top: 3px solid var(--jm-gold);
+  padding: 24px 22px;
+  border-radius: 0 0 4px 4px;
+}
+.jm-trust-item h4 {
+  font-family: "Noto Serif TC", serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  color: var(--jm-red);
+}
+.jm-trust-item p {
+  font-size: .88rem;
+  line-height: 1.7;
+  color: var(--jm-ink-soft);
+  margin: 0;
+}
+
+/* ─── 客戶評價 ───────────────────────────────────── */
+.jm-reviews {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+.jm-review {
+  background: var(--jm-paper);
+  border: 1px solid var(--jm-line);
+  padding: 26px 28px;
+  border-radius: 4px;
+  position: relative;
+}
+.jm-review::before {
+  content: '「';
+  position: absolute;
+  top: 12px;
+  left: 14px;
+  font-family: "Noto Serif TC", serif;
+  font-size: 2.4rem;
+  color: var(--jm-red);
+  opacity: .25;
+  line-height: 1;
+}
+.jm-review-text {
+  font-size: .95rem;
+  line-height: 1.85;
+  color: var(--jm-ink-soft);
+  margin: 0 0 14px 0;
+  padding-left: 12px;
+}
+.jm-review-author {
+  font-size: .82rem;
+  color: var(--jm-muted);
+  padding-left: 12px;
+}
+.jm-review-author strong {
+  color: var(--jm-ink);
+  font-weight: 700;
+}
+
+/* ─── 門市資訊 / 配送 ────────────────────────────── */
+.jm-locations {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: start;
+}
+.jm-store-card {
+  background: var(--jm-paper);
+  border-left: 4px solid var(--jm-red);
+  padding: 24px 28px;
+}
+.jm-store-card h3 {
+  font-family: "Noto Serif TC", serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0 0 14px 0;
+  color: var(--jm-ink);
+}
+.jm-store-card dl { margin: 0; }
+.jm-store-card dt {
+  font-size: .78rem;
+  color: var(--jm-muted);
+  margin-bottom: 4px;
+  font-weight: 600;
+  letter-spacing: .15em;
+}
+.jm-store-card dd {
+  font-size: .98rem;
+  color: var(--jm-ink-soft);
+  margin: 0 0 14px 0;
+  line-height: 1.6;
+}
+.jm-store-card dd a {
+  color: var(--jm-red);
+  text-decoration: none;
+  font-weight: 600;
+}
+.jm-store-card dd a:hover { text-decoration: underline; }
+
+/* ─── 多城市互鏈 ─────────────────────────────────── */
+.jm-cities {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 24px;
+}
+.jm-city-pill {
+  display: block;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid var(--jm-line);
+  text-decoration: none;
+  color: var(--jm-ink);
+  font-family: "Noto Serif TC", serif;
+  font-weight: 600;
+  text-align: center;
+  border-radius: 4px;
+  transition: all .2s;
+}
+.jm-city-pill:hover {
+  background: var(--jm-red);
+  color: #fff;
+  border-color: var(--jm-red);
+  transform: translateY(-2px);
+}
+.jm-city-pill .en {
+  display: block;
+  font-family: "Manrope", sans-serif;
+  font-size: .7rem;
+  font-weight: 400;
+  color: var(--jm-gold);
+  letter-spacing: .25em;
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+.jm-city-pill:hover .en { color: var(--jm-gold-hot); }
+.jm-city-pill--current {
+  background: var(--jm-red);
+  color: #fff;
+  border-color: var(--jm-red);
+  pointer-events: none;
+}
+.jm-city-pill--current .en { color: var(--jm-gold-hot); }
+
+/* ─── CTA 區 ──────────────────────────────────────── */
+.jm-cta {
+  background: var(--jm-red);
+  color: #fff;
+  text-align: center;
+  padding: 64px 24px;
+  position: relative;
+  overflow: hidden;
+}
+.jm-cta::before, .jm-cta::after {
+  content: '';
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: var(--jm-red-deep);
+  opacity: .4;
+  pointer-events: none;
+}
+.jm-cta::before { top: -80px; left: -80px; }
+.jm-cta::after  { bottom: -80px; right: -80px; }
+.jm-cta-inner { position: relative; z-index: 2; max-width: 720px; margin: 0 auto; }
+.jm-cta h2 {
+  font-family: "Noto Serif TC", serif;
+  font-size: clamp(1.8rem, 3.5vw, 2.4rem);
+  font-weight: 900;
+  margin: 0 0 12px 0;
+  letter-spacing: .08em;
+  color: #fff;
+}
+.jm-cta p {
+  font-size: 1.05rem;
+  color: rgba(255,255,255,.88);
+  margin: 0 0 32px 0;
+}
+.jm-cta-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.jm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 36px;
+  font-family: "Noto Serif TC", serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: all .2s;
+  letter-spacing: .05em;
+}
+.jm-btn-gold {
+  background: var(--jm-gold-hot);
+  color: var(--jm-ink);
+  border: 2px solid var(--jm-gold-hot);
+}
+.jm-btn-gold:hover {
+  background: var(--jm-gold);
+  border-color: var(--jm-gold);
+}
+.jm-btn-ghost {
+  background: transparent;
+  color: #fff;
+  border: 2px solid rgba(255,255,255,.5);
+}
+.jm-btn-ghost:hover { background: rgba(255,255,255,.12); border-color: #fff; }
+
+/* ─── 簡 footer 強化（接 layout_foot 之外的自訂尾段）── */
+.jm-foot-mark {
+  text-align: center;
+  padding: 36px 24px;
+  background: var(--jm-cream);
+  border-top: 1px solid var(--jm-line);
+}
+.jm-foot-mark-cn {
+  font-family: "Noto Serif TC", serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: .25em;
+  color: var(--jm-red);
+  margin-bottom: 4px;
+}
+.jm-foot-mark-en {
+  font-family: "Manrope", sans-serif;
+  font-size: .75rem;
+  letter-spacing: .4em;
+  color: var(--jm-gold);
+}
+
+/* ─── 城市深度內容（landing_extra_content）整合 ─────
+ * 內容是 admin 後台儲存的 HTML，含自訂 inline style
+ * 這邊用 wrapper 重寫關鍵 typography 讓它跟 japan-minimal 風格一致
+ */
+.jm-city-deep { color: var(--jm-ink-soft); }
+.jm-city-deep section {
+  background: transparent !important;
+  padding: 0 !important;
+  margin: 0 0 36px 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.jm-city-deep h2 {
+  font-family: "Noto Serif TC", serif !important;
+  color: var(--jm-red) !important;
+  letter-spacing: .04em !important;
+  border-bottom-color: var(--jm-gold) !important;
+}
+.jm-city-deep h3 {
+  font-family: "Noto Serif TC", serif !important;
+  color: var(--jm-ink) !important;
+  letter-spacing: .02em !important;
+}
+.jm-city-deep p,
+.jm-city-deep li {
+  color: var(--jm-ink-soft) !important;
+  line-height: 1.85 !important;
+}
+.jm-city-deep strong { color: var(--jm-red) !important; }
+.jm-city-deep a { color: var(--jm-red) !important; }
+.jm-city-deep a:hover { color: var(--jm-red-deep) !important; }
+/* 移除原本後台塞的金色腰封 / 框線色 → 統一用 jm-* 變數 */
+.jm-city-deep [style*="#c5a572"] { border-color: var(--jm-gold) !important; }
+.jm-city-deep [style*="#5d4037"] { color: var(--jm-ink) !important; }
+.jm-city-deep [style*="#8b6f47"] { color: var(--jm-ink-soft) !important; }
+
+/* ─── RWD ────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .jm-section { padding: 56px 0; }
+  .jm-hero { min-height: 480px; }
+  .jm-story { grid-template-columns: 1fr; gap: 28px; }
+  .jm-story-vertical {
+    writing-mode: horizontal-tb;
+    text-orientation: mixed;
+    height: auto;
+    text-align: center;
+    border: none;
+    border-top: 1px solid var(--jm-line);
+    border-bottom: 1px solid var(--jm-line);
+    padding: 14px;
+    font-size: 1.1rem;
+  }
+  .jm-locations { grid-template-columns: 1fr; gap: 24px; }
+  .jm-hero-meta { gap: 16px; }
+  .jm-hero-meta-item strong { font-size: 1.2rem; }
+  .jm-stamp-row { gap: 16px; margin: 40px 0; }
+  .jm-stamp { width: 80px; height: 80px; font-size: .95rem; }
+}
