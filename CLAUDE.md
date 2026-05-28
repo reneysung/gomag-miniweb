@@ -60,7 +60,7 @@ c7cf5e3 Initial commit + Phase A: gomag design system foundation
 ```
 
 **GitHub**：`reneysung/gomag-miniweb`（private）— `git push origin {branch}`
-- main 分支可能落後當前工作分支，要看 `claude/sleepy-diffie-87db30` 才有最新
+- main 與 origin/main 同步，最新工作直接 commit 到 main（2026-05-27 收斂完成）
 
 ## 重要架構
 
