@@ -57,6 +57,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    // 網友分享 JSON 驗證（壞 JSON 直接拒存，顯示 flash 錯誤）
+    $_extReviewsRaw = trim($_POST['external_reviews_json'] ?? '');
+    $_extReviewsNormalized = null;
+    if ($_extReviewsRaw !== '') {
+        $_decoded = json_decode($_extReviewsRaw, true);
+        if (!is_array($_decoded)) {
+            setFlash('error', '網友分享 JSON 格式錯誤：' . (json_last_error_msg() ?: '不是有效的 JSON array'));
+            redirect($_SERVER['REQUEST_URI']);
+        }
+        $_extReviewsNormalized = json_encode($_decoded, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
     $fields = [
         'client_id'              => $clientId,
         'city_slug'              => $citySlug,
@@ -67,6 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'store_meta_desc'        => trim($_POST['store_meta_desc'] ?? '') ?: null,
         'store_keywords'         => trim($_POST['store_keywords'] ?? '') ?: null,
         'landing_extra_content'  => trim($_POST['landing_extra_content'] ?? '') ?: null,
+        'external_reviews_json'  => $_extReviewsNormalized,
         'store_og_image'         => trim($_POST['store_og_image'] ?? '') ?: null,
         // 🌐 小官網覆寫
         'minisite_meta_title'    => trim($_POST['minisite_meta_title'] ?? '') ?: null,
@@ -257,6 +270,27 @@ require_once __DIR__ . '/../includes/layout_head.php';
         <textarea name="landing_extra_content" class="form-control" rows="12"
                   placeholder="留空 = 用主檔內容。填值 = 此城市頁專用內容（會完全取代主檔）"><?= h($row['landing_extra_content'] ?? '') ?></textarea>
         <div class="hint">想為城市頁寫獨立的在地內容（地名、行情、服務範圍）時填這裡。</div>
+      </div>
+
+      <div class="form-group" style="margin-top:16px; padding-top:16px; border-top:1px dashed #ccc;">
+        <label>📰 網友／部落客分享（JSON array）</label>
+        <textarea name="external_reviews_json" class="form-control" rows="10"
+                  placeholder='[
+  {
+    "title": "文章標題",
+    "url": "https://example.com/...",
+    "source": "媒體或部落客名（顯示在橘色 tag）",
+    "excerpt": "1-2 句摘要（可選）"
+  }
+]'
+                  oninput="this.style.borderColor=''; try { if(this.value.trim()) JSON.parse(this.value); this.nextElementSibling.textContent='✅ JSON 格式正確'; this.nextElementSibling.style.color='#0a7'; } catch(e) { this.style.borderColor='#e53'; this.nextElementSibling.textContent='⚠️ '+e.message; this.nextElementSibling.style.color='#e53'; }"
+                  style="font-family:Menlo,Monaco,monospace; font-size:.85rem;"><?= h($row['external_reviews_json'] ?? '') ?></textarea>
+        <div class="hint" style="margin-top:4px;"><?= !empty($row['external_reviews_json']) ? '✅ 目前已存資料' : '留空＝不顯示「網友分享」section' ?></div>
+        <div class="hint" style="margin-top:8px; line-height:1.6;">
+          每篇文章是一個 object，必填 <code>title</code> + <code>url</code>，<code>source</code> 跟 <code>excerpt</code> 可選。<br>
+          範例值（複製整個 array 改用）：
+          <code style="display:block; background:#f5f5f5; padding:8px; margin-top:4px; border-radius:4px; white-space:pre; font-size:.78rem;">[{"title":"嘉義尾牙 450 桌開箱","url":"https://...","source":"史丹利樂福","excerpt":"龍蝦月光寶盒、黑蒜雞湯..."}]</code>
+        </div>
       </div>
     </div>
   </div>
