@@ -256,6 +256,10 @@ taoyuan / taitung / pingtung / hsinchu / yilan / hualien
 | D Day 2 | city.php hero 600px + 依分類探索 cards + 分類 anchor | git da15ffb |
 | D Day 3 | sticky 分類 nav + hero 搜尋列 + ?q= 過濾 + 滾動 active pill | git d432b4a |
 | D Day 3.1 | 應用層搜尋日誌 + analytics endpoint + GitHub repo + 週分析 routine | git 076e84c |
+| **後台安全 v2** | session secure cookie + Admin URL 隱藏 (magic cookie) + login rate limit + DB 密碼輪替 + secrets 移出 webroot | git 8268448 |
+| **視覺模板 Phase 3** | `clients.store_template` 欄位 + `templates/store/<slug>/` 架構 + `template_loader.php` + 後台模板選擇 UI（卡片＋推薦） | git b79f95d + 0c3753f |
+| **japan-minimal 模板** | 朱紅金箔米白「和風老舖」第一個客製模板（奧喜 id=220 在用），含 8 sections + city variant 整合 + process_gallery 製作圖庫 | git 0c3753f |
+| **奧喜內容稽核** | 「不能無中生有」原則確立；主頁 + 5 城市內頁全部用 banshin.com.tw 認證事實重寫；testimonials 改真實部落客 quote 含 source_url | git 9eb75f8 |
 
 ## 對齊 mockup 進度
 
@@ -276,14 +280,16 @@ taoyuan / taitung / pingtung / hsinchu / yilan / hualien
 
 | 工程 | 時間 | 備註 |
 |---|---|---|
-| Drag-drop 排序（admin block list 用 SortableJS）| 1-2 hr | UX 加分 |
-| Block 即時預覽 iframe（編輯不用儲存就能看效果）| 4-6 hr | 高 UX |
+| ~~Drag-drop 排序~~ | ✅ git b249942 | 已完成 |
+| ~~Block 即時預覽 iframe~~ | ✅ git 8ee401a | 已完成 |
 | 人工遷移更多客戶到 blocks | per-client 5-15 min | 增加 demo |
-| 把 main 分支推進到工作分支 | 5 min | 目前 main 落後（沒走 PR review 流程，可直接 merge） |
+| ~~main 分支推進~~ | ✅ 2026-05-27 收斂完成 | |
 | 全站搜尋（跨城市）`/search.php?q=` | 1 天 | 現在只有城市內搜尋，全站搜尋是自然延伸 |
 | 熱門搜尋詞變 SEO 著陸頁 | 視 routine 報告 | 等累積數週 data 再評估 |
 | 完全沒結果關鍵字 → redirect 到分類頁 | 視 routine 報告 | 同上 |
 | Phase 6 DNS 切換到 gomag.com.tw | 視旭浪而定 | 等你決定時機 |
+| **奧喜小官網 oishii.gomag.com.tw 客製版型** | 0.5-1 天 | 等 Reney 找日本網站設計參考 |
+| **220 家客戶內容稽核（無中生有）** | 2.5 hr + 客戶等待 | 等客戶投訴/GSC 警示再啟動，高風險清單已記在 memory |
 
 ### 風險低的小事
 - 標 `services.php`/`cases.php`/`faqs.php` 從 sidebar 隱藏（讓內勤一定走新 admin）
