@@ -1060,9 +1060,9 @@ if ($cityVariant && !empty($cityVariant['external_reviews_json'])) {
 <?php if ($_extReviews): ?>
 <section class="m-section" style="background:#fafafa;">
   <div class="m-container" style="max-width:1000px;">
-    <h2 class="m-section-title">📰 網友／部落客分享</h2>
+    <h2 class="m-section-title">📰 網友分享</h2>
     <p style="text-align:center; color:var(--m-text-muted); margin:-10px 0 26px; font-size:.95rem;">
-      第三方部落格與媒體對 <?= h($client['brand_name']) ?> 的真實開箱紀錄
+      網友對 <?= h($client['brand_name']) ?> 的真實分享紀錄
     </p>
     <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:16px;">
       <?php foreach ($_extReviews as $r): ?>
@@ -1071,7 +1071,7 @@ if ($cityVariant && !empty($cityVariant['external_reviews_json'])) {
          onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 6px 18px rgba(0,0,0,.08)'"
          onmouseout="this.style.transform='';this.style.boxShadow=''">
         <div style="display:inline-block; padding:3px 10px; background:var(--m-accent); color:#fff; font-size:.72rem; border-radius:999px; margin-bottom:10px;">
-          <?= h($r['source'] ?? '網友分享') ?>
+          網友分享
         </div>
         <h3 style="font-size:1rem; font-weight:700; line-height:1.45; margin:0 0 8px; color:var(--m-text);">
           <?= h($r['title'] ?? '') ?>
