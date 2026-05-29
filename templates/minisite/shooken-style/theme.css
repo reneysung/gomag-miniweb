@@ -26,6 +26,25 @@ body {
   letter-spacing: .02em !important;
 }
 
+/* 電話 button（btn-contact）覆寫成棕金配色 */
+.site-header .btn-contact {
+  background: var(--ss-brown) !important;
+  color: var(--ss-gold-soft) !important;
+  border: 1px solid var(--ss-brown) !important;
+  font-family: "Manrope", "Noto Serif TC", serif !important;
+  letter-spacing: .08em !important;
+  font-weight: 500 !important;
+}
+.site-header .btn-contact:hover {
+  background: var(--ss-brown-deep) !important;
+  color: var(--ss-ivory) !important;
+}
+.mobile-menu a.highlight {
+  background: var(--ss-brown) !important;
+  color: var(--ss-gold-soft) !important;
+  border-radius: 2px;
+}
+
 /* 覆寫 site-header（去 emoji 風、深棕極簡）*/
 .site-header {
   background: var(--ss-ivory-soft) !important;

@@ -26,7 +26,6 @@ $bgImg = !empty($client['hero_image_path']) ? BASE_URL . '/' . htmlspecialchars(
       <div class="ss-h2-en">VOICES</div>
       <h1 class="ss-h2">顧客分享</h1>
       <span class="ss-h2-line"></span>
-      <p class="ss-subpage-lead">部落客與顧客的真實體驗</p>
     </div>
   </section>
 
@@ -84,9 +83,6 @@ $bgImg = !empty($client['hero_image_path']) ? BASE_URL . '/' . htmlspecialchars(
         <?php endforeach; ?>
       </div>
 
-      <p class="ss-reviews-disclaimer">
-        以上分享來源自網友公開文章，未經任何贊助或合作。
-      </p>
       <?php endif; ?>
 
     </div>

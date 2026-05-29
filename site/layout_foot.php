@@ -49,10 +49,10 @@ $client  = $site['client'];
         <?php endif; ?>
         <a class="footer-link" href="<?= siteUrl($slug) ?>#contact">📍 聯絡我們</a>
       </div>
-      <?php if ($_showServices ?? true): ?>
+      <?php if (($_showServices ?? true) && !empty($site['services'])): ?>
       <div>
         <div class="footer-h"><?= h($_servicesLabel ?? '服務項目') ?></div>
-        <?php foreach (array_slice($site['services'] ?? [], 0, 5) as $svc): ?>
+        <?php foreach (array_slice($site['services'], 0, 5) as $svc): ?>
           <a class="footer-link" href="<?= siteUrl($slug,'services') ?>#svc-<?= $svc['id'] ?>"><?= h($svc['name']) ?></a>
         <?php endforeach; ?>
       </div>
