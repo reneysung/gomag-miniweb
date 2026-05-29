@@ -60,7 +60,7 @@ $client  = $site['client'];
     </div>
     <div class="footer-bottom">
       © <?= date('Y') ?> <?= h($client['brand_name']) ?> · 版權所有
-      &nbsp;|&nbsp; 網站由 <a href="https://wmf.com.tw" target="_blank" rel="noopener" style="color:rgba(255,255,255,.6)">口碑製造所</a> 製作
+      &nbsp;|&nbsp; 網站由 <a href="https://wmf.com.tw" target="_blank" rel="noopener" style="color:rgba(255,255,255,.85);text-decoration:underline;text-underline-offset:3px;">口碑製造所</a> 製作
     </div>
   </div>
 </footer>
