@@ -1019,6 +1019,36 @@ if ($useBlocks && $testimonials) {
 </section>
 <?php endif; ?>
 
+<!-- ═══════ Facebook Page Plugin（client_social.fb_embed_enabled=1 才嵌入）═══════ -->
+<?php if (!empty($clientSocial['fb_page_url']) && !empty($clientSocial['fb_embed_enabled'])):
+  $_fbHref = $clientSocial['fb_page_url'];
+  $_fbPluginSrc = 'https://www.facebook.com/plugins/page.php?'
+    . http_build_query([
+        'href' => $_fbHref,
+        'tabs' => 'timeline',
+        'width' => 500,
+        'height' => 500,
+        'small_header' => 'false',
+        'adapt_container_width' => 'true',
+        'hide_cover' => 'false',
+        'show_facepile' => 'true',
+      ]);
+?>
+<section class="m-section" style="background:var(--m-bg-alt);">
+  <div class="m-container" style="max-width:560px; text-align:center;">
+    <h2 class="m-section-title">📘 Facebook 粉絲專頁</h2>
+    <div style="display:flex; justify-content:center; margin-top:8px;">
+      <iframe src="<?= h($_fbPluginSrc) ?>"
+              width="500" height="500"
+              style="border:none; overflow:hidden; max-width:100%; border-radius:10px; box-shadow:0 2px 12px rgba(0,0,0,.08);"
+              scrolling="no" frameborder="0" allowfullscreen="true"
+              allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+              loading="lazy"></iframe>
+    </div>
+  </div>
+</section>
+<?php endif; ?>
+
 <!-- ═══════ 社群連結 row（client_social 有資料時顯示）═══════ -->
 <?php
 $_socialIcons = [

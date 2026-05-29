@@ -1505,18 +1505,18 @@
   list-style: none;
   margin: 0; padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 0;
+  grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
+  gap: 8px 28px;
 }
 .g-block-menu-item {
   display: flex;
   align-items: stretch;
-  gap: 14px;
-  padding: 16px 0;
+  gap: 18px;
+  padding: 18px 0;
   border-bottom: 1px dashed var(--g-border);
 }
 .g-block-menu-img {
-  width: 88px; height: 88px;
+  width: 120px; height: 120px;
   flex-shrink: 0;
   border-radius: 8px;
   background: var(--g-bg-alt) center/cover no-repeat;
