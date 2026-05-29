@@ -26,23 +26,27 @@ body {
   letter-spacing: .02em !important;
 }
 
-/* 電話 button（btn-contact）覆寫成棕金配色 */
-.site-header .btn-contact {
-  background: var(--ss-brown) !important;
-  color: var(--ss-gold-soft) !important;
+/* 電話 button（btn-contact）— 用更高 specificity 蓋 gomag.css inline style */
+.site-header .site-nav .btn-contact,
+.site-header .site-nav a.btn-contact {
+  background: var(--ss-ivory-soft) !important;
+  color: var(--ss-brown) !important;
   border: 1px solid var(--ss-brown) !important;
   font-family: "Manrope", "Noto Serif TC", serif !important;
   letter-spacing: .08em !important;
-  font-weight: 500 !important;
+  font-weight: 600 !important;
+  padding: 8px 18px !important;
+  border-radius: 2px !important;
 }
-.site-header .btn-contact:hover {
-  background: var(--ss-brown-deep) !important;
-  color: var(--ss-ivory) !important;
-}
-.mobile-menu a.highlight {
+.site-header .site-nav .btn-contact:hover,
+.site-header .site-nav a.btn-contact:hover {
   background: var(--ss-brown) !important;
   color: var(--ss-gold-soft) !important;
-  border-radius: 2px;
+  filter: none !important;
+}
+.mobile-menu a.highlight {
+  color: var(--ss-brown) !important;
+  font-weight: 700 !important;
 }
 
 /* 覆寫 site-header（去 emoji 風、深棕極簡）*/
