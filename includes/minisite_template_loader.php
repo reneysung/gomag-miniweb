@@ -88,30 +88,41 @@ function minisiteTemplateRecommend(?string $categoryName): string {
 }
 
 /**
- * 判斷該模板是否為 single-page 模式（meta.json 內 single_page=true）
+ * 取 template 提供的頁面對應表 — meta.json 的 pages 欄位
+ * @return array<string,string>  key=pageKey (services/cases/testimonials), value=nav 文案
  */
-function minisiteTemplateIsSinglePage(string $slug): bool {
+function minisiteTemplatePages(string $slug): array {
     $slug = preg_replace('/[^a-z0-9_-]/i', '', $slug);
     $metaFile = MINISITE_TEMPLATE_DIR . '/' . $slug . '/meta.json';
-    if (!is_file($metaFile)) return false;
+    if (!is_file($metaFile)) return [];
     $meta = json_decode((string)file_get_contents($metaFile), true) ?: [];
-    return !empty($meta['single_page']);
+    return $meta['pages'] ?? [];
 }
 
 /**
- * 在 sub-page (site/services.php / cases.php / 等) 開頭呼叫
- * 若客戶用的模板是 single-page mode，則 302 redirect 回首頁
+ * 在 sub-page 開頭呼叫，回傳該 sub-page 該怎麼處理：
+ *   'render'   => string  該 require 的模板 render path
+ *   'redirect' => string  該 302 回的 URL
+ *   'fallback' => true    繼續走原 industry-based 邏輯
+ *
+ * 注意：呼叫端要自己 require render path（不能用 function 包，function scope 會切斷 $site/$client 等變數）
  */
-function minisiteRedirectSubpageIfSinglePage(string $sub, array $client): void {
+function minisiteSubpageRoute(string $page, string $sub, array $client): array {
     $mtpl = $client['minisite_template'] ?? '_default';
-    if ($mtpl === '_default') return;
-    if (!minisiteTemplateIsSinglePage($mtpl)) return;
-    // 蓋掉前面 sub-page 設的 Cache-Control: public, max-age=300（避免 LiteSpeed cache 住 200）
-    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-    header('Pragma: no-cache');
-    $homeUrl = (defined('IS_LOCAL') && (IS_LOCAL || IS_STAGING))
-        ? BASE_URL . '/site/index.php?sub=' . urlencode($sub)
-        : 'https://' . $sub . '.' . MINISITE_DOMAIN . '/';
-    header('Location: ' . $homeUrl, true, 302);
-    exit;
+    if ($mtpl === '_default') return ['fallback' => true];
+
+    $pages = minisiteTemplatePages($mtpl);
+
+    if (!isset($pages[$page])) {
+        $homeUrl = (defined('IS_LOCAL') && (IS_LOCAL || IS_STAGING))
+            ? BASE_URL . '/site/index.php?sub=' . urlencode($sub)
+            : 'https://' . $sub . '.' . MINISITE_DOMAIN . '/';
+        return ['redirect' => $homeUrl];
+    }
+
+    $renderPath = minisiteTemplateRenderPath($mtpl, $page);
+    if ($renderPath) return ['render' => $renderPath];
+
+    // 有列但沒檔案 = 走 fallback（開發中）
+    return ['fallback' => true];
 }

@@ -13,9 +13,21 @@ $site = loadSiteData($sub);
 if (!$site) { http_response_code(404); die('網站不存在或已停用'); }
 if (empty($site['client']['has_minisite'])) { http_response_code(404); die('未啟用小官網'); }
 
-// 模板系統 single-page mode：sub-page 自動 302 回首頁
+// 模板系統 sub-page 路由（articles 通常不放在 pages，會 302 回首頁）
 require_once __DIR__ . '/../includes/minisite_template_loader.php';
-minisiteRedirectSubpageIfSinglePage($sub, $site['client']);
+$_mr = minisiteSubpageRoute('articles', $sub, $site['client']);
+if (!empty($_mr['redirect'])) {
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    header('Pragma: no-cache');
+    header('Location: ' . $_mr['redirect'], true, 302);
+    exit;
+}
+if (!empty($_mr['render'])) {
+    require __DIR__ . '/layout_head.php';
+    require $_mr['render'];
+    require __DIR__ . '/layout_foot.php';
+    exit;
+}
 
 $slug    = $sub;
 $pageKey = 'articles';

@@ -79,6 +79,19 @@ $_casesLabel = $_isFood ? '料理作品' : '施工案例';
 $_casesIcon  = $_isFood ? '🍽️' : '📸';
 $_logoIcon   = $_isFood ? '🍝' : '🌊';
 
+// ─── Mini-site template nav override（Phase 4 脫鉤系統）──
+// 若客戶模板 meta.json 有 pages 對應表，用模板的 nav 文字（且模板沒列的 sub-page 就隱藏）
+require_once __DIR__ . '/../includes/minisite_template_loader.php';
+$_mtpl_nav = $client['minisite_template'] ?? '_default';
+$_navPages = ($_mtpl_nav !== '_default') ? minisiteTemplatePages($_mtpl_nav) : [];
+$_servicesLabel = $_navPages['services'] ?? '服務項目';
+$_casesLabelOverride = $_navPages['cases'] ?? $_casesLabel;
+$_testimonialsLabel  = $_navPages['testimonials'] ?? '客戶好評';
+$_showServices       = empty($_navPages) || isset($_navPages['services']);
+$_showCases          = empty($_navPages) || isset($_navPages['cases']);
+$_showTestimonials   = empty($_navPages) || isset($_navPages['testimonials']);
+$_showArticlesNav    = empty($_navPages) || isset($_navPages['articles']);
+
 // 該客戶是否有發過專欄文章（決定是否顯示「專欄」nav）
 $_hasArticles = false;
 try {
@@ -298,12 +311,18 @@ img{max-width:100%;display:block}
 
     <nav class="site-nav">
       <a href="<?= siteUrl($slug) ?>"             class="<?= $pageKey==='home'?'active':'' ?>">首頁</a>
-      <a href="<?= siteUrl($slug,'services') ?>"  class="<?= $pageKey==='services'?'active':'' ?>">服務項目</a>
-      <a href="<?= siteUrl($slug,'cases') ?>"     class="<?= $pageKey==='cases'?'active':'' ?>"><?= $_casesLabel ?></a>
-      <?php if ($_hasArticles): ?>
+      <?php if ($_showServices): ?>
+      <a href="<?= siteUrl($slug,'services') ?>"  class="<?= $pageKey==='services'?'active':'' ?>"><?= h($_servicesLabel) ?></a>
+      <?php endif; ?>
+      <?php if ($_showCases): ?>
+      <a href="<?= siteUrl($slug,'cases') ?>"     class="<?= $pageKey==='cases'?'active':'' ?>"><?= h($_casesLabelOverride) ?></a>
+      <?php endif; ?>
+      <?php if ($_hasArticles && $_showArticlesNav): ?>
         <a href="<?= h($_columnUrl) ?>" class="<?= in_array($pageKey,['articles','article_detail'])?'active':'' ?>">專欄</a>
       <?php endif; ?>
-      <a href="<?= siteUrl($slug,'testimonials') ?>" class="<?= $pageKey==='testimonials'?'active':'' ?>">客戶好評</a>
+      <?php if ($_showTestimonials): ?>
+      <a href="<?= siteUrl($slug,'testimonials') ?>" class="<?= $pageKey==='testimonials'?'active':'' ?>"><?= h($_testimonialsLabel) ?></a>
+      <?php endif; ?>
       <?php if ($phone): ?>
         <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$phone)) ?>" class="btn-contact">📞 <?= h($phone) ?></a>
       <?php endif; ?>
@@ -314,12 +333,18 @@ img{max-width:100%;display:block}
 
   <nav class="mobile-menu" id="mobileMenu">
     <a href="<?= siteUrl($slug) ?>"            onclick="closeMobileMenu()">🏠 首頁</a>
-    <a href="<?= siteUrl($slug,'services') ?>" onclick="closeMobileMenu()">🛠️ 服務項目</a>
-    <a href="<?= siteUrl($slug,'cases') ?>"    onclick="closeMobileMenu()"><?= $_casesIcon ?> <?= $_casesLabel ?></a>
-    <?php if ($_hasArticles): ?>
+    <?php if ($_showServices): ?>
+    <a href="<?= siteUrl($slug,'services') ?>" onclick="closeMobileMenu()">🛠️ <?= h($_servicesLabel) ?></a>
+    <?php endif; ?>
+    <?php if ($_showCases): ?>
+    <a href="<?= siteUrl($slug,'cases') ?>"    onclick="closeMobileMenu()"><?= $_casesIcon ?> <?= h($_casesLabelOverride) ?></a>
+    <?php endif; ?>
+    <?php if ($_hasArticles && $_showArticlesNav): ?>
       <a href="<?= h($_columnUrl) ?>" onclick="closeMobileMenu()">📝 專欄</a>
     <?php endif; ?>
-    <a href="<?= siteUrl($slug,'testimonials') ?>" onclick="closeMobileMenu()">⭐ 客戶好評</a>
+    <?php if ($_showTestimonials): ?>
+    <a href="<?= siteUrl($slug,'testimonials') ?>" onclick="closeMobileMenu()">⭐ <?= h($_testimonialsLabel) ?></a>
+    <?php endif; ?>
     <?php if ($phone): ?>
       <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$phone)) ?>" class="highlight">📞 <?= h($phone) ?></a>
     <?php endif; ?>
