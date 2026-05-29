@@ -10,5 +10,7 @@
     "cases": "關於奧喜",
     "testimonials": "顧客分享"
   },
-  "_comment_pages": "key=URL 對應的 site/*.php pageKey；value=覆寫到 nav 的中文標題。articles 不在這代表自動隱藏。"
+  "_comment_pages": "key=URL 對應的 site/*.php pageKey；value=覆寫到 nav 的中文標題。articles 不在這代表自動隱藏。",
+  "hide_emoji": true,
+  "_comment_hide_emoji": "true=footer/nav/tab 全部去 emoji（保持極簡和風風格）"
 }

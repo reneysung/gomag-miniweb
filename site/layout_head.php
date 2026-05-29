@@ -84,6 +84,7 @@ $_logoIcon   = $_isFood ? '🍝' : '🌊';
 require_once __DIR__ . '/../includes/minisite_template_loader.php';
 $_mtpl_nav = $client['minisite_template'] ?? '_default';
 $_navPages = ($_mtpl_nav !== '_default') ? minisiteTemplatePages($_mtpl_nav) : [];
+$_hideEmoji = ($_mtpl_nav !== '_default') && minisiteTemplateHidesEmoji($_mtpl_nav);
 $_servicesLabel = $_navPages['services'] ?? '服務項目';
 $_casesLabelOverride = $_navPages['cases'] ?? $_casesLabel;
 $_testimonialsLabel  = $_navPages['testimonials'] ?? '客戶好評';
@@ -286,9 +287,9 @@ img{max-width:100%;display:block}
 <!-- Top Info Bar -->
 <div class="topbar-strip">
   <div class="container inner">
-    <div>📞 <?= h($phone) ?>&nbsp;&nbsp;📍 <?= h($client['address'] ?? '') ?></div>
+    <div><?= $_hideEmoji ? '' : '📞 ' ?><?= h($phone) ?>&nbsp;&nbsp;<?= $_hideEmoji ? '' : '📍 ' ?><?= h($client['address'] ?? '') ?></div>
     <div class="links">
-      <?php if ($lineUrl): ?><a href="<?= h($lineUrl) ?>" target="_blank">💬 LINE 聯絡</a><?php endif; ?>
+      <?php if ($lineUrl): ?><a href="<?= h($lineUrl) ?>" target="_blank"><?= $_hideEmoji ? 'LINE 聯絡' : '💬 LINE 聯絡' ?></a><?php endif; ?>
       <?php if ($fbUrl   !== '#'): ?><a href="<?= h($fbUrl)   ?>" target="_blank">📘 Facebook</a><?php endif; ?>
     </div>
   </div>
@@ -324,7 +325,7 @@ img{max-width:100%;display:block}
       <a href="<?= siteUrl($slug,'testimonials') ?>" class="<?= $pageKey==='testimonials'?'active':'' ?>"><?= h($_testimonialsLabel) ?></a>
       <?php endif; ?>
       <?php if ($phone): ?>
-        <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$phone)) ?>" class="btn-contact">📞 <?= h($phone) ?></a>
+        <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$phone)) ?>" class="btn-contact"><?= $_hideEmoji ? '' : '📞 ' ?><?= h($phone) ?></a>
       <?php endif; ?>
     </nav>
 
@@ -332,24 +333,24 @@ img{max-width:100%;display:block}
   </div>
 
   <nav class="mobile-menu" id="mobileMenu">
-    <a href="<?= siteUrl($slug) ?>"            onclick="closeMobileMenu()">🏠 首頁</a>
+    <a href="<?= siteUrl($slug) ?>"            onclick="closeMobileMenu()"><?= $_hideEmoji ? '' : '🏠 ' ?>首頁</a>
     <?php if ($_showServices): ?>
-    <a href="<?= siteUrl($slug,'services') ?>" onclick="closeMobileMenu()">🛠️ <?= h($_servicesLabel) ?></a>
+    <a href="<?= siteUrl($slug,'services') ?>" onclick="closeMobileMenu()"><?= $_hideEmoji ? '' : '🛠️ ' ?><?= h($_servicesLabel) ?></a>
     <?php endif; ?>
     <?php if ($_showCases): ?>
-    <a href="<?= siteUrl($slug,'cases') ?>"    onclick="closeMobileMenu()"><?= $_casesIcon ?> <?= h($_casesLabelOverride) ?></a>
+    <a href="<?= siteUrl($slug,'cases') ?>"    onclick="closeMobileMenu()"><?= $_hideEmoji ? '' : ($_casesIcon . ' ') ?><?= h($_casesLabelOverride) ?></a>
     <?php endif; ?>
     <?php if ($_hasArticles && $_showArticlesNav): ?>
-      <a href="<?= h($_columnUrl) ?>" onclick="closeMobileMenu()">📝 專欄</a>
+      <a href="<?= h($_columnUrl) ?>" onclick="closeMobileMenu()"><?= $_hideEmoji ? '' : '📝 ' ?>專欄</a>
     <?php endif; ?>
     <?php if ($_showTestimonials): ?>
-    <a href="<?= siteUrl($slug,'testimonials') ?>" onclick="closeMobileMenu()">⭐ <?= h($_testimonialsLabel) ?></a>
+    <a href="<?= siteUrl($slug,'testimonials') ?>" onclick="closeMobileMenu()"><?= $_hideEmoji ? '' : '⭐ ' ?><?= h($_testimonialsLabel) ?></a>
     <?php endif; ?>
     <?php if ($phone): ?>
-      <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$phone)) ?>" class="highlight">📞 <?= h($phone) ?></a>
+      <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$phone)) ?>" class="highlight"><?= $_hideEmoji ? '' : '📞 ' ?><?= h($phone) ?></a>
     <?php endif; ?>
     <?php if ($lineUrl): ?>
-      <a href="<?= h($lineUrl) ?>" class="highlight" target="_blank">💬 LINE 諮詢</a>
+      <a href="<?= h($lineUrl) ?>" class="highlight" target="_blank"><?= $_hideEmoji ? 'LINE 諮詢' : '💬 LINE 諮詢' ?></a>
     <?php endif; ?>
   </nav>
 </header>

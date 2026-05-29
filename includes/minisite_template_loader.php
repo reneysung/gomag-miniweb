@@ -88,6 +88,17 @@ function minisiteTemplateRecommend(?string $categoryName): string {
 }
 
 /**
+ * 該 template 是否要在 footer/nav/tabbar 隱藏 emoji（meta.json hide_emoji=true）
+ */
+function minisiteTemplateHidesEmoji(string $slug): bool {
+    $slug = preg_replace('/[^a-z0-9_-]/i', '', $slug);
+    $metaFile = MINISITE_TEMPLATE_DIR . '/' . $slug . '/meta.json';
+    if (!is_file($metaFile)) return false;
+    $meta = json_decode((string)file_get_contents($metaFile), true) ?: [];
+    return !empty($meta['hide_emoji']);
+}
+
+/**
  * 取 template 提供的頁面對應表 — meta.json 的 pages 欄位
  * @return array<string,string>  key=pageKey (services/cases/testimonials), value=nav 文案
  */
