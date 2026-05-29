@@ -139,7 +139,7 @@ c7cf5e3 Initial commit + Phase A: gomag design system foundation
 
 ### 子服務 IA 新增表（2026-05-21，見「子服務 IA」段）
 - `geo_category_pages` — 城市×分類×**子服務**交叉頁內容（intro_html + faqs JSON + meta + `service_slug`/`service_name`）。`service_slug=''`＝大分類樞紐層；填值＝子服務頁。unique key `(city_slug, category_id, service_slug)`。
-- `service_keywords` — 關鍵字池（`category_id, slug, name, page_slug, sort, is_active`）。`page_slug=''`＝獨立頁；填值＝同義詞折進該頁（避 doorway）。
+- `service_keywords` — 關鍵字池（`category_id, slug, name, page_slug, sort_order, is_active`，注意排序欄是 sort_order）。`page_slug=''`＝獨立頁；填值＝同義詞折進該頁（避 doorway）。
 - `client_service_keywords` — 店家 ⇄ 關鍵字 多對多（店家標 ~3 組）。
 - `guides` — 攻略文（`slug, title, body_html, city_slug, category_id, status, published_at`）；城市專屬優先。
 - `clients.city_slug` — 從地址 deriveCitySlug() 推導（2026-05-21 修郵遞區號/台灣前綴 bug，21 家歸位）。
