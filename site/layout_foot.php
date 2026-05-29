@@ -38,16 +38,25 @@ $client  = $site['client'];
       <div>
         <div class="footer-h">快速連結</div>
         <a class="footer-link" href="<?= siteUrl($slug) ?>">🏠 首頁</a>
-        <a class="footer-link" href="<?= siteUrl($slug,'services') ?>">🛠️ 服務項目</a>
-        <a class="footer-link" href="<?= siteUrl($slug,'cases') ?>"><?= $_casesIcon ?? '📸' ?> <?= $_casesLabel ?? '施工案例' ?></a>
+        <?php if ($_showServices ?? true): ?>
+        <a class="footer-link" href="<?= siteUrl($slug,'services') ?>">🛠️ <?= h($_servicesLabel ?? '服務項目') ?></a>
+        <?php endif; ?>
+        <?php if ($_showCases ?? true): ?>
+        <a class="footer-link" href="<?= siteUrl($slug,'cases') ?>"><?= $_casesIcon ?? '📸' ?> <?= h($_casesLabelOverride ?? $_casesLabel ?? '施工案例') ?></a>
+        <?php endif; ?>
+        <?php if ($_showTestimonials ?? true): ?>
+        <a class="footer-link" href="<?= siteUrl($slug,'testimonials') ?>">⭐ <?= h($_testimonialsLabel ?? '客戶好評') ?></a>
+        <?php endif; ?>
         <a class="footer-link" href="<?= siteUrl($slug) ?>#contact">📍 聯絡我們</a>
       </div>
+      <?php if ($_showServices ?? true): ?>
       <div>
-        <div class="footer-h">服務項目</div>
-        <?php foreach (array_slice($site['services'],0,5) as $svc): ?>
+        <div class="footer-h"><?= h($_servicesLabel ?? '服務項目') ?></div>
+        <?php foreach (array_slice($site['services'] ?? [], 0, 5) as $svc): ?>
           <a class="footer-link" href="<?= siteUrl($slug,'services') ?>#svc-<?= $svc['id'] ?>"><?= h($svc['name']) ?></a>
         <?php endforeach; ?>
       </div>
+      <?php endif; ?>
     </div>
     <div class="footer-bottom">
       © <?= date('Y') ?> <?= h($client['brand_name']) ?> · 版權所有
@@ -60,10 +69,14 @@ $client  = $site['client'];
 <nav class="bottom-tabbar">
   <a href="<?= siteUrl($slug) ?>"            class="tab-item <?= $pageKey==='home'?'active':'' ?>">
     <span class="icon">🏠</span>首頁</a>
+  <?php if ($_showServices ?? true): ?>
   <a href="<?= siteUrl($slug,'services') ?>" class="tab-item <?= $pageKey==='services'?'active':'' ?>">
-    <span class="icon">🛠️</span>服務</a>
+    <span class="icon">🛠️</span><?= h(mb_substr($_servicesLabel ?? '服務', 0, 2)) ?></a>
+  <?php endif; ?>
+  <?php if ($_showCases ?? true): ?>
   <a href="<?= siteUrl($slug,'cases') ?>"    class="tab-item <?= $pageKey==='cases'?'active':'' ?>">
-    <span class="icon"><?= $_casesIcon ?? '📸' ?></span><?= ($_isFood ?? false) ? '作品' : '案例' ?></a>
+    <span class="icon"><?= $_casesIcon ?? '📸' ?></span><?= h(mb_substr($_casesLabelOverride ?? (($_isFood ?? false) ? '作品' : '案例'), 0, 2)) ?></a>
+  <?php endif; ?>
   <?php if ($phone): ?>
   <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$phone)) ?>" class="tab-item accent">
     <span class="icon">📞</span>電話</a>

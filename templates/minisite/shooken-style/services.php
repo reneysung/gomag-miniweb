@@ -22,7 +22,7 @@ $allSkus = [
         'name'  => '長崎蛋糕・8 片',
         'price' => 'NT$ 225',
         'usage' => '小家庭',
-        'image' => '',
+        'image' => 'uploads/clients/oishii/p5-castella-8p.jpg',
         'desc'  => '8 片包裝，適合小家庭分享或下午茶聚會。',
     ],
     [
@@ -36,14 +36,14 @@ $allSkus = [
         'name'  => '長崎蛋糕・16 片',
         'price' => 'NT$ 350',
         'usage' => '商務送禮',
-        'image' => '',
+        'image' => 'uploads/clients/oishii/p6-castella-16p.jpg',
         'desc'  => '中型商務送禮、團體分享適用。',
     ],
     [
         'name'  => '長崎蛋糕・24 片',
         'price' => 'NT$ 560',
         'usage' => '大型聚會',
-        'image' => '',
+        'image' => 'uploads/clients/oishii/p7-castella-24p.jpg',
         'desc'  => '大家庭聚會、企業團拜首選。',
     ],
     [

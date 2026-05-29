@@ -41,34 +41,51 @@ $bgImg = !empty($client['hero_image_path']) ? BASE_URL . '/' . htmlspecialchars(
       <div class="ss-reviews-list">
         <?php foreach ($reviews as $r): ?>
         <?php
-          $_src   = $r['source'] ?? '';
-          $_url   = $r['source_url'] ?? '';
-          $_label = ['blog' => '部落客分享', 'google' => 'Google 評論', 'fb' => 'FB 評論', 'ig' => 'IG 分享', 'demo' => '範例'][$_src] ?? '';
+          $_src    = $r['source'] ?? '';
+          $_url    = $r['source_url'] ?? '';
+          $_avatar = !empty($r['reviewer_avatar']) ? BASE_URL . '/' . htmlspecialchars($r['reviewer_avatar']) : '';
+          // 統一稱「網友分享」（含部落格／社群）— 對訪客更平易近人
+          $_label = ['blog' => '網友分享', 'google' => 'Google 評論', 'fb' => 'FB 評論', 'ig' => 'IG 分享', 'demo' => '範例'][$_src] ?? '';
         ?>
         <article class="ss-review-card">
-          <header class="ss-review-header">
-            <div>
-              <h3 class="ss-review-author"><?= htmlspecialchars($r['reviewer_name'] ?? '匿名') ?></h3>
-              <?php if ($_label): ?>
-              <div class="ss-review-source"><?= htmlspecialchars($_label) ?></div>
-              <?php endif; ?>
-            </div>
-            <?php if (!empty($r['rating']) && (int)$r['rating'] >= 4): ?>
-            <div class="ss-review-rating"><?= str_repeat('★', (int)$r['rating']) ?></div>
+          <div class="ss-review-thumb">
+            <?php if ($_avatar): ?>
+              <img src="<?= $_avatar ?>" alt="<?= htmlspecialchars($r['reviewer_name'] ?? '') ?>" loading="lazy">
+            <?php else: ?>
+              <div class="ss-review-thumb-placeholder">
+                <svg viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <circle cx="30" cy="22" r="8"/>
+                  <path d="M14 48 Q14 36 30 36 Q46 36 46 48" stroke-linecap="round"/>
+                </svg>
+              </div>
             <?php endif; ?>
-          </header>
+          </div>
 
-          <p class="ss-review-text"><?= htmlspecialchars(mb_strimwidth(strip_tags($r['content'] ?? ''), 0, 280, '…')) ?></p>
+          <div class="ss-review-body">
+            <header class="ss-review-header">
+              <div>
+                <h3 class="ss-review-author"><?= htmlspecialchars($r['reviewer_name'] ?? '匿名') ?></h3>
+                <?php if ($_label): ?>
+                <div class="ss-review-source"><?= htmlspecialchars($_label) ?></div>
+                <?php endif; ?>
+              </div>
+              <?php if (!empty($r['rating']) && (int)$r['rating'] >= 4): ?>
+              <div class="ss-review-rating"><?= str_repeat('★', (int)$r['rating']) ?></div>
+              <?php endif; ?>
+            </header>
 
-          <?php if ($_url): ?>
-          <a class="ss-review-link" href="<?= htmlspecialchars($_url) ?>" target="_blank" rel="noopener nofollow">閱讀原文 ↗</a>
-          <?php endif; ?>
+            <p class="ss-review-text"><?= htmlspecialchars(mb_strimwidth(strip_tags($r['content'] ?? ''), 0, 280, '…')) ?></p>
+
+            <?php if ($_url): ?>
+            <a class="ss-review-link" href="<?= htmlspecialchars($_url) ?>" target="_blank" rel="noopener nofollow">閱讀原文 ↗</a>
+            <?php endif; ?>
+          </div>
         </article>
         <?php endforeach; ?>
       </div>
 
       <p class="ss-reviews-disclaimer">
-        以上分享來源自獨立部落客之公開文章，未經任何贊助或合作。
+        以上分享來源自網友公開文章，未經任何贊助或合作。
       </p>
       <?php endif; ?>
 

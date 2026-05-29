@@ -16,11 +16,28 @@ if (!empty($client['process_gallery'])) {
     if (is_array($_pg)) $processGallery = array_slice($_pg, 0, 4);
 }
 
+// 4 原料 SVG icon（線條極簡風，配深棕主色）
 $ingredients = [
-    ['name' => '雞　蛋', 'en' => 'EGG',    'desc' => '蛋香為長崎蛋糕的靈魂。新鮮雞蛋是綿密口感的根本。'],
-    ['name' => '砂　糖', 'en' => 'SUGAR',  'desc' => '純粹甜度，不加蜂蜜，保留蛋與麥芽的本味。'],
-    ['name' => '麵　粉', 'en' => 'FLOUR',  'desc' => '低筋麵粉手工拌入，撐起鬆軟濕潤的蛋糕體。'],
-    ['name' => '麥　芽', 'en' => 'MALT',   'desc' => '麥芽糖漿是奧喜口感的靈魂，賦予醇厚回甘。'],
+    [
+        'name' => '雞　蛋', 'en' => 'EGG',
+        'desc' => '蛋香為長崎蛋糕的靈魂。新鮮雞蛋是綿密口感的根本。',
+        'svg'  => '<svg viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-width="1.5"><ellipse cx="30" cy="32" rx="16" ry="22"/><path d="M22 26 Q26 22 30 22 Q34 22 38 26" stroke-linecap="round"/></svg>',
+    ],
+    [
+        'name' => '砂　糖', 'en' => 'SUGAR',
+        'desc' => '純粹甜度，不加蜂蜜，保留蛋與麥芽的本味。',
+        'svg'  => '<svg viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="14" y="20" width="32" height="24" rx="1"/><line x1="22" y1="20" x2="22" y2="44"/><line x1="30" y1="20" x2="30" y2="44"/><line x1="38" y1="20" x2="38" y2="44"/><line x1="14" y1="32" x2="46" y2="32"/></svg>',
+    ],
+    [
+        'name' => '麵　粉', 'en' => 'FLOUR',
+        'desc' => '低筋麵粉手工拌入，撐起鬆軟濕潤的蛋糕體。',
+        'svg'  => '<svg viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 44 L20 18 L40 18 L44 44 Z" stroke-linejoin="round"/><line x1="16" y1="44" x2="44" y2="44"/><line x1="22" y1="22" x2="38" y2="22"/><circle cx="26" cy="30" r="1.5" fill="currentColor" stroke="none"/><circle cx="32" cy="34" r="1.5" fill="currentColor" stroke="none"/><circle cx="36" cy="28" r="1.5" fill="currentColor" stroke="none"/></svg>',
+    ],
+    [
+        'name' => '麥　芽', 'en' => 'MALT',
+        'desc' => '麥芽糖漿是奧喜口感的靈魂，賦予醇厚回甘。',
+        'svg'  => '<svg viewBox="0 0 60 60" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M30 12 L30 48" stroke-linecap="round"/><path d="M30 18 Q24 22 22 28 Q26 28 30 26" stroke-linejoin="round"/><path d="M30 18 Q36 22 38 28 Q34 28 30 26" stroke-linejoin="round"/><path d="M30 26 Q24 30 22 36 Q26 36 30 34" stroke-linejoin="round"/><path d="M30 26 Q36 30 38 36 Q34 36 30 34" stroke-linejoin="round"/><path d="M30 34 Q24 38 22 44 Q26 44 30 42" stroke-linejoin="round"/><path d="M30 34 Q36 38 38 44 Q34 44 30 42" stroke-linejoin="round"/></svg>',
+    ],
 ];
 ?>
 
@@ -40,7 +57,7 @@ $ingredients = [
   <section class="ss-section ss-section--cream">
     <div class="ss-container">
       <div class="ss-h2-en">NAMING</div>
-      <h2 class="ss-h2">關於「奧喜」</h2>
+      <h2 class="ss-h2">品牌命名由來</h2>
       <span class="ss-h2-line"></span>
       <div class="ss-about-body">
         <p>奧喜長崎蛋糕的「奧喜」，<strong>取自日文「おいしい」</strong>，意為「好吃」。</p>
@@ -73,6 +90,7 @@ $ingredients = [
       <div class="ss-ingredients">
         <?php foreach ($ingredients as $ing): ?>
         <div class="ss-ingredient">
+          <div class="ss-ingredient-icon"><?= $ing['svg'] ?></div>
           <div class="ss-ingredient-en"><?= htmlspecialchars($ing['en']) ?></div>
           <h3 class="ss-ingredient-name"><?= htmlspecialchars($ing['name']) ?></h3>
           <p class="ss-ingredient-desc"><?= htmlspecialchars($ing['desc']) ?></p>

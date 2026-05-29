@@ -493,6 +493,13 @@ body {
   background: var(--ss-ivory-soft);
   border-top: 2px solid var(--ss-gold);
 }
+.ss-ingredient-icon {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 16px;
+  color: var(--ss-brown);
+}
+.ss-ingredient-icon svg { width: 100%; height: 100%; }
 .ss-ingredient-en {
   font-family: "Manrope", sans-serif;
   font-size: .72rem;
@@ -525,10 +532,38 @@ body {
 }
 .ss-review-card {
   background: #fff;
-  padding: 32px 36px;
+  padding: 28px 32px;
   border: 1px solid var(--ss-line);
   position: relative;
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 24px;
+  align-items: start;
 }
+.ss-review-thumb {
+  width: 100px;
+  height: 100px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--ss-ivory);
+  flex-shrink: 0;
+}
+.ss-review-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.ss-review-thumb-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ss-brown);
+}
+.ss-review-thumb-placeholder svg { width: 56px; height: 56px; }
+.ss-review-body { min-width: 0; }
 .ss-review-header {
   display: flex;
   justify-content: space-between;
@@ -594,7 +629,9 @@ body {
   .ss-sku-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
   .ss-ingredients { grid-template-columns: repeat(2, 1fr); gap: 16px; }
   .ss-subpage-hero { padding: 64px 0 48px; }
-  .ss-review-card { padding: 24px 20px; }
+  .ss-review-card { padding: 24px 20px; grid-template-columns: 70px 1fr; gap: 16px; }
+  .ss-review-thumb { width: 70px; height: 70px; }
+  .ss-review-thumb-placeholder svg { width: 40px; height: 40px; }
   .ss-review-header { flex-direction: column; gap: 8px; }
 }
 @media (max-width: 480px) {
