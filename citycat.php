@@ -75,19 +75,25 @@ $clients = [];
 if ($isSub) {
     // 子服務頁：列出該城、有標到「effective page = svc」關鍵字的店
     try {
+        // 列店條件：本城地址店（city_slug 相符）OR 在本城有啟用的城市行銷頁變體
+        // （公司地址只在一城，但跨縣行銷頁要在該城的關鍵字頁被列出）
         $sql = "
-            SELECT DISTINCT $cols
+            SELECT DISTINCT $cols,
+                   (ccp.client_id IS NOT NULL) AS via_variant
             FROM clients cl
             JOIN client_service_keywords csk ON csk.client_id = cl.id
             JOIN service_keywords sk ON sk.id = csk.service_keyword_id
                  AND sk.category_id = ? AND sk.is_active = 1
-            WHERE cl.is_active = 1 AND cl.city_slug = ?
+            LEFT JOIN client_city_pages ccp
+                 ON ccp.client_id = cl.id AND ccp.city_slug = ? AND ccp.is_active = 1
+            WHERE cl.is_active = 1
+              AND (cl.city_slug = ? OR ccp.client_id IS NOT NULL)
               AND COALESCE(NULLIF(sk.page_slug, ''), sk.slug) = ?
               AND cl.slug NOT IN ($dupPh)
             ORDER BY cl.is_placeholder ASC, cl.id DESC
         ";
         $stmt = $db->prepare($sql);
-        $stmt->execute(array_merge([$catId, $slug, $svcSlug], $dupSkip));
+        $stmt->execute(array_merge([$catId, $slug, $slug, $svcSlug], $dupSkip));
         $clients = $stmt->fetchAll();
     } catch (\Throwable $e) {
         $clients = [];  // 關鍵字表未建時不致命（內容頁仍可渲染）
@@ -290,7 +296,7 @@ if ($navServices):
         $isPH = !empty($cl['is_placeholder']);
         $cardClass = 'g-store-card' . ($isPH ? ' g-store-card-ph' : '');
     ?>
-    <a class="<?= $cardClass ?>" href="<?= h(clientStoreUrl($cl)) ?>">
+    <a class="<?= $cardClass ?>" href="<?= h(clientStoreUrl($cl, !empty($cl['via_variant']) ? $slug : '')) ?>">
       <div class="g-store-img" <?= $cHero ? 'style="background-image:url(\''.$cHero.'\')"' : '' ?>>
         <?php if (!$cHero): ?>
         <div class="g-store-img-fallback"><span class="icon"><?= h($catIcon) ?></span><span class="label"><?= h($catName) ?></span></div>

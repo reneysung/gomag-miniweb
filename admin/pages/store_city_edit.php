@@ -90,6 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // 共用
         'hero_image_path'        => $heroPath ?: null,
         'filter_cases_by_region' => !empty($_POST['filter_cases_by_region']) ? 1 : 0,
+        'hide_shared_sections'   => !empty($_POST['hide_shared_sections']) ? 1 : 0,
         'sort_order'             => (int)($_POST['sort_order'] ?? 0),
         'is_active'              => !empty($_POST['is_active']) ? 1 : 0,
     ];
@@ -182,6 +183,11 @@ require_once __DIR__ . '/../includes/layout_head.php';
       <div class="form-group">
         <label><input type="checkbox" name="filter_cases_by_region" value="1" <?= (!$row || $row['filter_cases_by_region']) ? 'checked' : '' ?>> 案例依城市篩選</label>
         <div class="hint">勾選後此城市頁只顯示 location 對應該城市的案例（自動依 location 前綴判斷）。預設勾。</div>
+      </div>
+
+      <div class="form-group">
+        <label><input type="checkbox" name="hide_shared_sections" value="1" <?= (!empty($row['hide_shared_sections'])) ? 'checked' : '' ?>> 只顯示本頁自寫內容（隱藏共用區塊）</label>
+        <div class="hint">勾選後本城市頁會藏掉「服務項目、精選菜色、評價、網友分享、相似店家」等從主檔來的共用區塊，只留 Hero ＋ 上方「行銷頁延伸內容(HTML)」＋ 右側聯絡卡 ＋ 城市切換。<strong>適合每城內容完全自寫、避免各城重複內容（doorway）的情況</strong>。預設不勾＝沿用主檔共用區塊。</div>
       </div>
     </div>
   </div>

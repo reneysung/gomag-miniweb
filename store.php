@@ -133,6 +133,7 @@ if ($client['has_minisite']) {
 // 同一個客戶可以開多個城市行銷頁（如亞雷台中／亞雷彰化），各自獨立 SEO 文案、案例篩選。
 // 變體 row 缺欄位則 fallback 主檔，無變體則 404。
 $cityVariant = null;
+$hideShared  = false;  // 城市變體頁勾「只顯示自寫內容」時，藏服務項目以下的共用區塊
 $citySlug = strtolower(trim($_GET['city'] ?? ''));
 if ($citySlug !== '') {
     $cvStmt = $db->prepare("SELECT * FROM client_city_pages WHERE client_id=? AND city_slug=? AND is_active=1 LIMIT 1");
@@ -145,6 +146,7 @@ if ($citySlug !== '') {
     foreach (['brand_name','store_meta_title','store_meta_desc','store_keywords','store_og_image','hero_image_path','landing_extra_content'] as $_f) {
         if (!empty($cityVariant[$_f])) $client[$_f] = $cityVariant[$_f];
     }
+    $hideShared = !empty($cityVariant['hide_shared_sections']);
     // 依城市篩案例（location 前綴對 city_slug）
     if (!empty($cityVariant['filter_cases_by_region'])) {
         require_once __DIR__ . '/includes/front_functions.php';
@@ -695,7 +697,7 @@ if ($client['about_text'] || ($aboutTags && is_array($aboutTags))):
 
 <!-- ═══════ Modular Blocks（新系統 — 優先渲染）═══════ -->
 <?php if ($useBlocks): ?>
-<?php renderStoreBlocks($cid); ?>
+<?php if (!$hideShared) renderStoreBlocks($cid); ?>
 
   </div><!-- /.g-store-main -->
 
@@ -773,6 +775,8 @@ if ($client['about_text'] || ($aboutTags && is_array($aboutTags))):
 </div><!-- /.g-store-body -->
 <?php endif; ?>
 
+<?php /* 城市變體勾「只顯示自寫內容」→ 藏「服務項目以下」共用區塊（評價/網友分享等）；城市切換 nav 例外保留 */ ?>
+<?php if (!$hideShared): ?>
 <!-- ═══════ 服務項目（舊 fallback — 沒 blocks 才用）═══════ -->
 <?php if (!$useBlocks && $services): ?>
 <section class="m-section" style="background:var(--m-bg);">
@@ -1120,6 +1124,7 @@ if ($cityVariant && !empty($cityVariant['external_reviews_json'])) {
   </div>
 </section>
 <?php endif; ?>
+<?php endif; /* /hideShared：服務項目以下共用區塊結束，以下城市切換 nav 一律顯示 */ ?>
 
 <!-- ═══════ 多縣市互鏈：該客戶有多城市方案時列出其他城市 ═══════ -->
 <?php
@@ -1156,7 +1161,7 @@ $otherCities = $cityVariant
 </section>
 <?php endif; ?>
 
-<?php if ($useBlocks && $similarStores): ?>
+<?php if ($useBlocks && $similarStores && !$hideShared): ?>
 <!-- ═══════ Similar Stores（同分類隨機 4 卡）═══════ -->
 <section class="g-similar-block">
   <div class="g-similar-inner">

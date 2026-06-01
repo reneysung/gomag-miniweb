@@ -143,11 +143,16 @@ function clientPublicUrl(array $cl): string {
  *
  * 跟 clientPublicUrl 的差別：本 helper 不管 has_minisite 一律回 /store/{slug}。
  */
-function clientStoreUrl(array $cl): string {
+function clientStoreUrl(array $cl, string $cityVariantSlug = ''): string {
     $sub = $cl['subdomain'] ?: $cl['slug'];
-    return (IS_LOCAL || IS_STAGING)
-        ? BASE_URL . '/store.php?sub=' . urlencode($sub)
-        : 'https://www.gomag.com.tw/store/' . urlencode($sub);
+    if (IS_LOCAL || IS_STAGING) {
+        $u = BASE_URL . '/store.php?sub=' . urlencode($sub);
+        if ($cityVariantSlug !== '') $u .= '&city=' . urlencode($cityVariantSlug);
+        return $u;
+    }
+    $u = 'https://www.gomag.com.tw/store/' . urlencode($sub);
+    if ($cityVariantSlug !== '') $u .= '/' . urlencode($cityVariantSlug);
+    return $u;
 }
 
 /**
@@ -357,8 +362,10 @@ function caseThumb(string $path): string {
  */
 function caseRegionMap(): array {
     return [
-        'taichung' => ['label' => '台中', 'prefix' => '台中'],
-        'changhua' => ['label' => '彰化', 'prefix' => '彰化'],
+        'taichung'  => ['label' => '台中', 'prefix' => '台中'],
+        'changhua'  => ['label' => '彰化', 'prefix' => '彰化'],
+        'kaohsiung' => ['label' => '高雄', 'prefix' => '高雄'],
+        'taitung'   => ['label' => '台東', 'prefix' => '台東'],
     ];
 }
 

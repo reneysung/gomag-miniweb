@@ -993,7 +993,7 @@ modeRich.addEventListener('click', () => {
     </div>
 
     <div class="form-group-admin">
-      <label>🧭 服務關鍵字（決定這家店出現在哪些子服務頁；建議勾 3 個內）</label>
+      <label>🧭 服務關鍵字（決定這家店出現在哪些子服務頁；建議勾 5 個內）</label>
       <?php if ($kwPool): ?>
       <div id="svc-kw-box" style="display:flex; flex-wrap:wrap; gap:8px;">
         <?php foreach ($kwPool as $kw):
@@ -1006,14 +1006,14 @@ modeRich.addEventListener('click', () => {
         </label>
         <?php endforeach; ?>
       </div>
-      <div class="hint">勾選後這家店會出現在對應「城市×子服務」頁（例：勾「清潔」→ 出現在 <code>/city/{城市}/home-service/cleaning</code>）。同義詞會折進主頁。預設勾 3 個內。</div>
+      <div class="hint">勾選後這家店會出現在對應「城市×子服務」頁（例：勾「清潔」→ 出現在 <code>/city/{城市}/home-service/cleaning</code>）。同義詞會折進主頁。預設勾 5 個內。</div>
       <script>
       (function(){
         var box=document.getElementById('svc-kw-box'); if(!box) return;
         box.addEventListener('change',function(e){
           if(!e.target.classList.contains('svc-kw-cb')) return;
           var on=box.querySelectorAll('.svc-kw-cb:checked');
-          if(on.length>3){ e.target.checked=false; alert('建議一家店勾 3 個服務關鍵字內，聚焦比較有效。'); }
+          if(on.length>5){ e.target.checked=false; alert('建議一家店勾 5 個服務關鍵字內，聚焦比較有效。'); }
           box.querySelectorAll('.svc-kw-cb').forEach(function(cb){
             var l=cb.closest('label');
             if(cb.checked){ l.style.borderColor='#FF5A36'; l.style.background='#FFEDE8'; }
