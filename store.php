@@ -1132,7 +1132,7 @@ $otherCities = $cityVariant
     ? array_values(array_filter($cityVariantList, fn($c) => $c['city_slug'] !== $citySlug))
     : $cityVariantList;
 ?>
-<?php if (count($cityVariantList) >= 2): ?>
+<?php if (count($cityVariantList) >= 2 && empty($client['hide_city_grid_section'])): ?>
 <section class="m-section" style="background:var(--m-bg-alt); border-top:1px solid var(--m-border); border-bottom:1px solid var(--m-border);">
   <div class="m-container">
     <h2 class="m-section-title" style="text-align:center; margin-bottom:10px;">
