@@ -57,6 +57,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'store_meta_desc'        => trim($_POST['store_meta_desc'] ?? ''),
         'store_keywords'         => trim($_POST['store_keywords'] ?? ''),
         'store_og_image'         => trim($_POST['store_og_image'] ?? ''),
+        // Hero 圖顯示方式：cover=照片填滿(裁切) / contain=Logo 完整顯示(不裁切)
+        'hero_image_fit'         => (($_POST['hero_image_fit'] ?? 'cover') === 'contain') ? 'contain' : 'cover',
         // Mini-site SEO 欄位 — {sub}.gomag.com.tw 用（migration 017）
         'minisite_meta_title'    => trim($_POST['minisite_meta_title'] ?? '') ?: null,
         'minisite_meta_desc'     => trim($_POST['minisite_meta_desc'] ?? '') ?: null,
@@ -648,6 +650,16 @@ body[data-current-tab="minisite"] .tab-section[data-tab="store"] { display:none;
         <input type="file" name="hero_image" class="form-control" accept="image/*"
                onchange="previewImage(this,'hero_preview')">
         <div class="hint">建議尺寸：1920×800px，JPG</div>
+      </div>
+
+      <div class="form-group-admin">
+        <label>Hero 圖顯示方式</label>
+        <?php $_fit = ($client['hero_image_fit'] ?? 'cover') === 'contain' ? 'contain' : 'cover'; ?>
+        <select name="hero_image_fit" class="form-control" style="max-width:320px;">
+          <option value="cover"   <?= $_fit==='cover'   ? 'selected' : '' ?>>照片（填滿框、自動裁切邊緣）</option>
+          <option value="contain" <?= $_fit==='contain' ? 'selected' : '' ?>>Logo（完整顯示、不裁切不變形）</option>
+        </select>
+        <div class="hint">上傳的是<strong>照片</strong>選「填滿」；上傳的是<strong>Logo／商標</strong>選「完整顯示」，這樣不管圖什麼比例都不會被切掉或拉歪。</div>
       </div>
     </div>
   </div>

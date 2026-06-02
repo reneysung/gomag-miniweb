@@ -408,9 +408,10 @@ if ($showTopBanner):
       </div>
     </div>
 
-    <div class="g-store-hero-image">
+    <?php $_heroFit = ($client['hero_image_fit'] ?? 'cover') === 'contain' ? 'contain' : 'cover'; ?>
+    <div class="g-store-hero-image"<?= $_heroFit === 'contain' ? ' style="background:#fff"' : '' ?>>
       <?php if ($client['hero_image_path']): ?>
-      <img src="<?= BASE_URL ?>/<?= h($client['hero_image_path']) ?>" alt="<?= h($client['brand_name']) ?>">
+      <img src="<?= BASE_URL ?>/<?= h($client['hero_image_path']) ?>" alt="<?= h($client['brand_name']) ?>" style="object-fit: <?= $_heroFit ?>;<?= $_heroFit === 'contain' ? ' padding:18px;' : '' ?>">
       <?php else: ?>
       <div class="g-store-hero-image-fallback"><?= h($client['cat_icon'] ?? '🏪') ?></div>
       <?php endif; ?>
