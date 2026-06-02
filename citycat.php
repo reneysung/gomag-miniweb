@@ -162,7 +162,7 @@ if (!empty($geo['meta_title'])) {
 }
 $metaDesc = !empty($geo['meta_desc'])
     ? $geo['meta_desc']
-    : "{$cityName}{$pageLabel}店家精選：在地口碑名單、評價、營業資訊一次看。共收錄 {$totalStores} 家。";
+    : "{$cityName}{$pageLabel}店家精選：在地口碑名單、評價、營業資訊一次看。" . ($showCount ? "共收錄 {$realCount} 家。" : "");
 $canonical = (IS_LOCAL || IS_STAGING)
     ? BASE_URL . '/citycat.php?slug=' . urlencode($slug) . '&cat=' . urlencode($catSlug) . ($isSub ? '&svc=' . urlencode($svcSlug) : '')
     : 'https://www.gomag.com.tw' . $selfPath;
