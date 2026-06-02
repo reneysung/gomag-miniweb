@@ -150,9 +150,16 @@ $catUrl   = (IS_LOCAL || IS_STAGING)
     : 'https://www.gomag.com.tw' . $catPath;
 
 // ─── SEO ─────────────────────────────────────────────────
-$pageTitle = !empty($geo['meta_title'])
-    ? $geo['meta_title']
-    : "{$cityName}{$pageLabel}推薦｜{$totalStores} 家在地口碑商家";
+// 家數進 title：只有「真實店家數」≥ 門檻才顯示，少於門檻不自曝短（避免「1 家」之類弱標題、數字變動 SEO 不穩）
+$titleMinCount = 5;                       // ← 要調門檻改這裡
+$showCount     = $realCount >= $titleMinCount;
+if (!empty($geo['meta_title'])) {
+    $pageTitle = $geo['meta_title'] . ($showCount ? "｜共 {$realCount} 家" : '');
+} else {
+    $pageTitle = $showCount
+        ? "{$cityName}{$pageLabel}推薦｜{$realCount} 家在地口碑商家"
+        : "{$cityName}{$pageLabel}推薦｜在地口碑商家";
+}
 $metaDesc = !empty($geo['meta_desc'])
     ? $geo['meta_desc']
     : "{$cityName}{$pageLabel}店家精選：在地口碑名單、評價、營業資訊一次看。共收錄 {$totalStores} 家。";
