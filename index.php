@@ -281,28 +281,54 @@ require_once __DIR__ . '/main/layout_head.php';
     <a href="<?= BASE_URL ?>/category.php?slug=<?= h($catGroup['cat_slug']) ?>" class="g-section-link">看全部 <?= h($catGroup['cat_name']) ?></a>
   </div>
 
-  <div class="g-store-grid">
-    <?php foreach ($catGroup['clients'] as $cl):
-      $heroImg = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
-      $linkUrl = clientStoreUrl($cl);
+  <?php
+    // 雜誌式：第一家 = 大卡（橫式），其餘 = 小卡
+    $_magClients = $catGroup['clients'];
+    $_big = array_shift($_magClients);
+  ?>
+  <div class="g-mag">
+    <?php if ($_big):
+      $_bHero = $_big['hero_image_path'] ? BASE_URL . '/' . h($_big['hero_image_path']) : '';
     ?>
-    <a class="g-store-card" href="<?= $linkUrl ?>">
-      <div class="g-store-img" <?= $heroImg ? 'style="background-image:url(\''.$heroImg.'\')"' : '' ?>>
-        <?php if (!$heroImg): ?>
-        <div class="g-store-img-fallback">
-          <span class="icon"><?= h($catGroup['cat_icon']) ?></span>
-          <span class="label"><?= h($catGroup['cat_name']) ?></span>
-        </div>
+    <a class="g-mag-hero" href="<?= clientStoreUrl($_big) ?>">
+      <div class="g-mag-hero-img" <?= $_bHero ? 'style="background-image:url(\''.$_bHero.'\')"' : '' ?>>
+        <?php if (!$_bHero): ?><div class="g-mag-hero-img-fallback"><?= h($catGroup['cat_icon']) ?></div><?php endif; ?>
+      </div>
+      <div class="g-mag-hero-body">
+        <span class="g-mag-hero-pill"><?= h($catGroup['cat_icon']) ?> <?= h($catGroup['cat_name']) ?>精選</span>
+        <div class="g-mag-hero-name"><?= h($_big['brand_name']) ?></div>
+        <?php if ($_big['tagline']): ?>
+        <div class="g-mag-hero-tag"><?= h(mb_strimwidth($_big['tagline'], 0, 60, '…', 'UTF-8')) ?></div>
         <?php endif; ?>
+        <span class="g-mag-hero-cta">查看店家 →</span>
       </div>
-      <div class="g-store-meta-top">
-        <div class="g-store-name"><?= h($cl['brand_name']) ?></div>
-      </div>
-      <?php if ($cl['tagline']): ?>
-      <div class="g-store-cat-label"><?= h(mb_strimwidth($cl['tagline'], 0, 36, '…', 'UTF-8')) ?></div>
-      <?php endif; ?>
     </a>
-    <?php endforeach; ?>
+    <?php endif; ?>
+
+    <?php if ($_magClients): ?>
+    <div class="g-store-grid g-store-grid--mag">
+      <?php foreach ($_magClients as $cl):
+        $heroImg = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
+      ?>
+      <a class="g-store-card" href="<?= clientStoreUrl($cl) ?>">
+        <div class="g-store-img" <?= $heroImg ? 'style="background-image:url(\''.$heroImg.'\')"' : '' ?>>
+          <?php if (!$heroImg): ?>
+          <div class="g-store-img-fallback">
+            <span class="icon"><?= h($catGroup['cat_icon']) ?></span>
+            <span class="label"><?= h($catGroup['cat_name']) ?></span>
+          </div>
+          <?php endif; ?>
+        </div>
+        <div class="g-store-meta-top">
+          <div class="g-store-name"><?= h($cl['brand_name']) ?></div>
+        </div>
+        <?php if ($cl['tagline']): ?>
+        <div class="g-store-cat-label"><?= h(mb_strimwidth($cl['tagline'], 0, 36, '…', 'UTF-8')) ?></div>
+        <?php endif; ?>
+      </a>
+      <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
   </div>
 </section>
 <?php endforeach; ?>
