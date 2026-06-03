@@ -421,6 +421,17 @@ if ($showTopBanner):
 
 <?php else: ?>
 <!-- ═══════ Store Hero（舊樣式 — 未啟用 blocks 的客戶）═══════ -->
+<?php if (!empty($client['hero_image_path'])): ?>
+<!-- 店面圖橫幅（hero_image_path 存在時自動顯示，無則完全不出現） -->
+<section style="background:var(--m-bg-alt); padding:0;">
+  <div style="max-width:1100px; margin:0 auto; padding:0 20px;">
+    <div style="aspect-ratio:16/6; overflow:hidden; border-radius:0 0 16px 16px; background:#efeae6;">
+      <img src="<?= BASE_URL ?>/<?= h($client['hero_image_path']) ?>" alt="<?= h($client['brand_name']) ?>" loading="lazy"
+           style="width:100%; height:100%; object-fit:cover; display:block;">
+    </div>
+  </div>
+</section>
+<?php endif; ?>
 <section style="background:var(--m-bg-alt); border-top:1px solid var(--m-border); padding:40px 0;">
   <div class="m-container">
     <div style="display:grid; grid-template-columns: 1.4fr 1fr; gap:40px; align-items:start;">
