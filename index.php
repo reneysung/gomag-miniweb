@@ -264,7 +264,7 @@ require_once __DIR__ . '/main/layout_head.php';
 <section class="g-section" style="background:var(--g-bg-alt);">
   <div class="g-section-head">
     <div>
-      <h2 class="g-section-title">📍 依縣市瀏覽</h2>
+      <h2 class="g-section-title">依縣市瀏覽</h2>
       <p class="g-section-sub">六大直轄市在地口碑商家，點進看城市專屬名單</p>
     </div>
     <a href="<?= BASE_URL ?>/city.php" class="g-section-link">所有縣市</a>
@@ -272,31 +272,25 @@ require_once __DIR__ . '/main/layout_head.php';
   <div class="g-explore-grid g-city6-grid">
     <?php foreach ($sixDuSlugs as $cs):
       $m = $sixDuMeta[$cs] ?? null; if (!$m) continue;
-      $cnt   = (int)($sixDuCount[$cs] ?? 0);
-      $cover = !empty($m['hero_image']) ? BASE_URL . '/' . h($m['hero_image']) : '';
+      $cnt = (int)($sixDuCount[$cs] ?? 0);
+      $cover = '';
+      if (!empty($m['hero_image'])) {
+        $cover = preg_match('#^https?://#i', $m['hero_image']) ? h($m['hero_image']) : BASE_URL . '/' . h($m['hero_image']);
+      }
     ?>
     <a class="g-explore-card" href="<?= BASE_URL ?>/city.php?slug=<?= h($cs) ?>">
       <?php if ($cover): ?>
       <div class="g-explore-card-img" style="background-image:url('<?= $cover ?>');"></div>
       <?php else: ?>
-      <div class="g-explore-card-fallback">📍</div>
+      <div class="g-explore-card-fallback"></div>
       <?php endif; ?>
       <div class="g-explore-card-overlay">
-        <div class="g-explore-card-name">📍 <?= h($m['name']) ?></div>
+        <div class="g-explore-card-name"><?= h($m['name']) ?></div>
         <div class="g-explore-card-count"><?= $cnt > 0 ? $cnt . ' 家店家' : '探索在地商家' ?></div>
       </div>
     </a>
     <?php endforeach; ?>
   </div>
-  <?php if (!empty($otherCityPills)): ?>
-  <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:16px;">
-    <?php foreach ($otherCityPills as $cityName => $cnt): $citySlug = $cityNameToSlug[$cityName]; ?>
-    <a class="g-cat-pill" href="<?= BASE_URL ?>/city.php?slug=<?= h($citySlug) ?>">
-      📍 <?= h($cityName) ?> <span class="g-cat-pill-count"><?= $cnt ?></span>
-    </a>
-    <?php endforeach; ?>
-  </div>
-  <?php endif; ?>
 </section>
 
 <!-- ═══════ 精選分類（後台勾選 home_featured 的分類，可多個）═══════ -->
@@ -304,7 +298,7 @@ require_once __DIR__ . '/main/layout_head.php';
 <section class="g-section">
   <div class="g-section-head">
     <div>
-      <h2 class="g-section-title"><?= h($catGroup['cat_icon']) ?> <?= h($catGroup['cat_name']) ?>精選</h2>
+      <h2 class="g-section-title"><?= h($catGroup['cat_name']) ?>精選</h2>
       <p class="g-section-sub">在地口碑代表店家</p>
     </div>
     <a href="<?= BASE_URL ?>/category.php?slug=<?= h($catGroup['cat_slug']) ?>" class="g-section-link">看全部 <?= h($catGroup['cat_name']) ?></a>
@@ -324,7 +318,7 @@ require_once __DIR__ . '/main/layout_head.php';
         <?php if (!$_bHero): ?><div class="g-mag-hero-img-fallback"><?= h($catGroup['cat_icon']) ?></div><?php endif; ?>
       </div>
       <div class="g-mag-hero-body">
-        <span class="g-mag-hero-pill"><?= h($catGroup['cat_icon']) ?> <?= h($catGroup['cat_name']) ?>精選</span>
+        <span class="g-mag-hero-pill"><?= h($catGroup['cat_name']) ?>精選</span>
         <div class="g-mag-hero-name"><?= h($_big['brand_name']) ?></div>
         <?php if ($_big['tagline']): ?>
         <div class="g-mag-hero-tag"><?= h(mb_strimwidth($_big['tagline'], 0, 60, '…', 'UTF-8')) ?></div>
@@ -367,7 +361,7 @@ require_once __DIR__ . '/main/layout_head.php';
 <section class="g-section" style="background:var(--g-bg-alt);">
   <div class="g-section-head">
     <div>
-      <h2 class="g-section-title">🆕 本月新加入</h2>
+      <h2 class="g-section-title">本月新加入</h2>
       <p class="g-section-sub"><?= date('Y 年 n 月') ?>・新增 <?= count($newThisMonth) ?> 家店家</p>
     </div>
   </div>

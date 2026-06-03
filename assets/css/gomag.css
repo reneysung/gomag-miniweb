@@ -252,16 +252,19 @@
   letter-spacing: -0.02em;
   color: var(--g-ink);
   margin: 0;
+  position: relative;
+  padding-left: 18px;
 }
-/* 分類標題存在感：標題下加一條橘紅 accent bar */
-.g-section-title::after {
+/* 分類標題存在感：左側橘紅粗豎條（取代 emoji） */
+.g-section-title::before {
   content: "";
-  display: block;
-  width: 46px;
-  height: 4px;
-  margin-top: 12px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--g-accent), #ff8a6f);
+  position: absolute;
+  left: 0;
+  top: 0.12em;
+  height: 0.82em;
+  width: 6px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, var(--g-accent), #ff8a6f);
 }
 .g-section-title-meta {
   font-size: 0.6em;
