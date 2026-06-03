@@ -847,7 +847,9 @@
   .g-cat-nav { padding: 12px 20px; }
 }
 @media (max-width: 640px) {
-  .g-store-grid { grid-template-columns: 1fr; gap: 16px; }
+  .g-store-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .g-store-grid .g-store-name { font-size: 14px; }
+  .g-store-grid .g-store-cat-label { font-size: 12px; }
   .g-hero { height: 380px; }
   .g-hero-content { padding: 0 20px; }
   .g-explore-grid { grid-template-columns: 1fr; }
