@@ -597,7 +597,13 @@
   .g-explore-grid--4col { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 640px) {
-  .g-explore-grid--4col { grid-template-columns: 1fr; }
+  /* 手機：12 大分類改「2 欄小卡」，原本 1 欄整頁大圖太佔版面、要滑很久 */
+  .g-explore-grid.g-explore-grid--4col { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .g-explore-grid--4col .g-explore-card { aspect-ratio: 1.3; border-radius: 12px; }
+  .g-explore-grid--4col .g-explore-card-overlay { padding: 12px; }
+  .g-explore-grid--4col .g-explore-card-name { font-size: 15px; margin-bottom: 2px; }
+  .g-explore-grid--4col .g-explore-card-count { font-size: 11px; }
+  .g-explore-grid--4col .g-explore-card-arrow { display: none; }
 }
 .g-explore-card-arrow {
   position: absolute;
