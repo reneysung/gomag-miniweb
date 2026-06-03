@@ -253,6 +253,16 @@
   color: var(--g-ink);
   margin: 0;
 }
+/* 分類標題存在感：標題下加一條橘紅 accent bar */
+.g-section-title::after {
+  content: "";
+  display: block;
+  width: 46px;
+  height: 4px;
+  margin-top: 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--g-accent), #ff8a6f);
+}
 .g-section-title-meta {
   font-size: 0.6em;
   font-weight: 500;
@@ -608,11 +618,14 @@
 
 /* 六都瀏覽卡：desktop 3 欄、mobile 2 欄小卡 */
 .g-city6-grid { grid-template-columns: repeat(3, 1fr); }
+.g-city6-grid .g-explore-card { aspect-ratio: 1.9; }          /* 六都卡矮一點，不佔版面 */
+.g-city6-grid .g-explore-card-fallback { font-size: 30px; }   /* 無圖城市的 📍 縮小 */
 @media (max-width: 640px) {
   .g-explore-grid.g-city6-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .g-city6-grid .g-explore-card { aspect-ratio: 1.4; border-radius: 12px; }
-  .g-city6-grid .g-explore-card-overlay { padding: 12px; }
-  .g-city6-grid .g-explore-card-name { font-size: 15px; margin-bottom: 2px; }
+  .g-city6-grid .g-explore-card { aspect-ratio: 2.1; border-radius: 12px; }
+  .g-city6-grid .g-explore-card-fallback { font-size: 26px; }
+  .g-city6-grid .g-explore-card-overlay { padding: 10px 12px; }
+  .g-city6-grid .g-explore-card-name { font-size: 15px; margin-bottom: 1px; }
   .g-city6-grid .g-explore-card-count { font-size: 11px; }
 }
 

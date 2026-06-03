@@ -22,6 +22,14 @@ $categories = $db->query("
 // 後台「在首頁精選展示」checkbox 控制；沒勾的客戶不會出現在首頁精選區
 // RWD：桌機 4 / 平板 2 / 手機 1，所以每組 4 家剛好填滿一整列
 $featuredByCategory = [];
+$seenBrandKeys = ['b' => [], 'i' => []];  // 首頁精選去重：同品牌(去城市/服務詞)或同張圖只出現一次
+$brandKeyFn = function(array $r): string {
+    $n = (string)($r['brand_name'] ?? '');
+    $n = preg_replace('/臺北|台北|新北|桃園|臺中|台中|臺南|台南|高雄|基隆|新竹|苗栗|彰化|南投|雲林|嘉義|屏東|宜蘭|花蓮|臺東|台東/u', '', $n);
+    $n = preg_replace('/汽車|鍍膜|包膜|美容|美髮|清潔|驗屋|科技|外燴|辦桌|宴會|餐廳|團隊|公司|工程|企業社|有限|工作室|專業|養生|會館|生活/u', '', $n);
+    $n = preg_replace('/[\s\x{3000}【】（）()\[\]・·\-—｜|、。市縣店館所]/u', '', $n);
+    return $n !== '' ? $n : (string)($r['brand_name'] ?? '');
+};
 $pickStmt = $db->prepare("
     SELECT cl.id, cl.subdomain, cl.slug, cl.brand_name, cl.tagline, cl.industry,
            cl.has_minisite, cl.external_website_url, cl.hero_image_path,
@@ -38,13 +46,24 @@ foreach ($categories as $cat) {
     if ($cat['client_count'] == 0) continue;
     $pickStmt->execute([$cat['id']]);
     $rows = $pickStmt->fetchAll();
-    if (!$rows) continue;  // 該分類沒有精選客戶就跳過
+    // 去重：同品牌(去城市/服務詞)或同張圖只留第一個
+    $deduped = [];
+    foreach ($rows as $r) {
+        $bk  = $brandKeyFn($r);
+        $img = $r['hero_image_path'] ?? '';
+        if (isset($seenBrandKeys['b'][$bk])) continue;
+        if ($img !== '' && isset($seenBrandKeys['i'][$img])) continue;
+        $seenBrandKeys['b'][$bk] = 1;
+        if ($img !== '') $seenBrandKeys['i'][$img] = 1;
+        $deduped[] = $r;
+    }
+    if (!$deduped) continue;  // 該分類沒有精選客戶就跳過
     $featuredByCategory[] = [
         'cat_id'      => $cat['id'],
         'cat_name'    => $cat['name'],
         'cat_slug'    => $cat['slug'],
         'cat_icon'    => $cat['icon'],
-        'clients'     => $rows,
+        'clients'     => $deduped,
     ];
 }
 
