@@ -82,6 +82,21 @@ $cityCounts = array_filter($cityCounts, function($cnt, $name) use ($cityNameToSl
     return $cnt >= 3 && isset($cityNameToSlug[$name]);
 }, ARRAY_FILTER_USE_BOTH);
 
+// ─── 六都瀏覽卡（固定六直轄市，不論店家數；點進去照常進縣市頁）────
+$sixDuSlugs  = ['taipei','newtaipei','taoyuan','taichung','tainan','kaohsiung'];
+$sixDuCount  = $db->query("SELECT city_slug, COUNT(*) AS c FROM clients
+    WHERE is_active=1 AND city_slug IN ('taipei','newtaipei','taoyuan','taichung','tainan','kaohsiung')
+    GROUP BY city_slug")->fetchAll(PDO::FETCH_KEY_PAIR);
+$sixDuMeta = [];
+foreach ($db->query("SELECT slug,name,hero_image FROM cities
+    WHERE slug IN ('taipei','newtaipei','taoyuan','taichung','tainan','kaohsiung')") as $r) {
+    $sixDuMeta[$r['slug']] = $r;
+}
+// 非六都、但有店家的縣市（保留可見，例：嘉義）→ 放六都卡下方 pills
+$otherCityPills = array_filter($cityCounts, function($cnt, $name) use ($cityNameToSlug, $sixDuSlugs) {
+    return isset($cityNameToSlug[$name]) && !in_array($cityNameToSlug[$name], $sixDuSlugs, true);
+}, ARRAY_FILTER_USE_BOTH);
+
 // ─── 取啟用中的 Banner（如有）─────────────────────
 $banners = [];
 try {
@@ -216,28 +231,44 @@ require_once __DIR__ . '/main/layout_head.php';
   </div>
 </section>
 
-<!-- ═══════ 縣市瀏覽 ═══════ -->
-<?php if (!empty($cityCounts)): ?>
+<!-- ═══════ 縣市瀏覽：六都卡 + 其他縣市 pills ═══════ -->
 <section class="g-section" style="background:var(--g-bg-alt);">
   <div class="g-section-head">
     <div>
       <h2 class="g-section-title">📍 依縣市瀏覽</h2>
-      <p class="g-section-sub">在地店家依城市分區，找你附近的口碑商家</p>
+      <p class="g-section-sub">六大直轄市在地口碑商家，點進看城市專屬名單</p>
     </div>
     <a href="<?= BASE_URL ?>/city.php" class="g-section-link">所有縣市</a>
   </div>
-  <div style="display:flex; flex-wrap:wrap; gap:10px;">
-    <?php foreach ($cityCounts as $cityName => $cnt):
-      $citySlug = $cityNameToSlug[$cityName];
+  <div class="g-explore-grid g-city6-grid">
+    <?php foreach ($sixDuSlugs as $cs):
+      $m = $sixDuMeta[$cs] ?? null; if (!$m) continue;
+      $cnt   = (int)($sixDuCount[$cs] ?? 0);
+      $cover = !empty($m['hero_image']) ? BASE_URL . '/' . h($m['hero_image']) : '';
     ?>
-    <a class="g-cat-pill" href="<?= BASE_URL ?>/city.php?slug=<?= h($citySlug) ?>">
-      📍 <?= h($cityName) ?>
-      <span class="g-cat-pill-count"><?= $cnt ?></span>
+    <a class="g-explore-card" href="<?= BASE_URL ?>/city.php?slug=<?= h($cs) ?>">
+      <?php if ($cover): ?>
+      <div class="g-explore-card-img" style="background-image:url('<?= $cover ?>');"></div>
+      <?php else: ?>
+      <div class="g-explore-card-fallback">📍</div>
+      <?php endif; ?>
+      <div class="g-explore-card-overlay">
+        <div class="g-explore-card-name">📍 <?= h($m['name']) ?></div>
+        <div class="g-explore-card-count"><?= $cnt > 0 ? $cnt . ' 家店家' : '探索在地商家' ?></div>
+      </div>
     </a>
     <?php endforeach; ?>
   </div>
+  <?php if (!empty($otherCityPills)): ?>
+  <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:16px;">
+    <?php foreach ($otherCityPills as $cityName => $cnt): $citySlug = $cityNameToSlug[$cityName]; ?>
+    <a class="g-cat-pill" href="<?= BASE_URL ?>/city.php?slug=<?= h($citySlug) ?>">
+      📍 <?= h($cityName) ?> <span class="g-cat-pill-count"><?= $cnt ?></span>
+    </a>
+    <?php endforeach; ?>
+  </div>
+  <?php endif; ?>
 </section>
-<?php endif; ?>
 
 <!-- ═══════ 精選分類（後台勾選 home_featured 的分類，可多個）═══════ -->
 <?php foreach ($featuredByCategory as $catGroup): ?>

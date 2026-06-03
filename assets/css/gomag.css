@@ -605,6 +605,16 @@
   .g-explore-grid--4col .g-explore-card-count { font-size: 11px; }
   .g-explore-grid--4col .g-explore-card-arrow { display: none; }
 }
+
+/* 六都瀏覽卡：desktop 3 欄、mobile 2 欄小卡 */
+.g-city6-grid { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 640px) {
+  .g-explore-grid.g-city6-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .g-city6-grid .g-explore-card { aspect-ratio: 1.4; border-radius: 12px; }
+  .g-city6-grid .g-explore-card-overlay { padding: 12px; }
+  .g-city6-grid .g-explore-card-name { font-size: 15px; margin-bottom: 2px; }
+  .g-city6-grid .g-explore-card-count { font-size: 11px; }
+}
 .g-explore-card-arrow {
   position: absolute;
   top: 18px; right: 18px;
