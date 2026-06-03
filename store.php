@@ -159,12 +159,18 @@ if ($citySlug !== '') {
 
 // SEO：客戶自定 > 自動產生
 // 行銷頁 SEO 預設：有小官網的客戶 → 行銷頁走「口碑/評價」角度，與小官網(品牌/服務)錯開，避免兩頁互搶排名(cannibalization)
+// 城市名稱（依 client.city_slug 從 cities 表抓；無 → fallback 台南）
+$_cityName = '台南';
+if (!empty($client['city_slug'])) {
+    $_cm = getCityMap();
+    if (isset($_cm[$client['city_slug']])) $_cityName = $_cm[$client['city_slug']];
+}
 if (!empty($client['store_meta_title'])) {
     $pageTitle = $client['store_meta_title'];
 } elseif (!empty($client['has_minisite'])) {
     $pageTitle = $client['brand_name'] . '評價・口碑推薦｜真實客戶評論' . ($client['cat_name'] ? '・' . $client['cat_name'] : '');
 } else {
-    $pageTitle = $client['brand_name'] . '｜' . ($client['tagline'] ?? '台南' . ($client['cat_name'] ?? '') . '店家');
+    $pageTitle = $client['brand_name'] . '｜' . ($client['tagline'] ?? $_cityName . ($client['cat_name'] ?? '') . '店家');
 }
 if (!empty($client['store_meta_desc'])) {
     $metaDesc = $client['store_meta_desc'];
@@ -173,7 +179,7 @@ if (!empty($client['store_meta_desc'])) {
 } else {
     $metaDesc = $client['about_text']
         ? mb_strimwidth(strip_tags($client['about_text']), 0, 150, '…')
-        : "台南{$client['cat_name']}店家：{$client['brand_name']}";
+        : "{$_cityName}{$client['cat_name']}店家：{$client['brand_name']}";
 }
 $metaKeywords = !empty($client['store_keywords']) ? $client['store_keywords'] : '';
 $ogImage = !empty($client['store_og_image'])
