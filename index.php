@@ -80,6 +80,16 @@ $newThisMonth = $db->query("
     ORDER BY cl.created_at DESC
     LIMIT 6
 ")->fetchAll();
+// 本月新加入也去重：已在「精選」出現過的同品牌/同圖不再出現（全頁不重複）
+$newThisMonth = array_values(array_filter($newThisMonth, function($r) use (&$seenBrandKeys, $brandKeyFn) {
+    $bk  = $brandKeyFn($r);
+    $img = $r['hero_image_path'] ?? '';
+    if (isset($seenBrandKeys['b'][$bk])) return false;
+    if ($img !== '' && isset($seenBrandKeys['i'][$img])) return false;
+    $seenBrandKeys['b'][$bk] = 1;
+    if ($img !== '') $seenBrandKeys['i'][$img] = 1;
+    return true;
+}));
 
 // ─── 統計總客戶數 ─────────────────────────────────
 $totalClients = (int)$db->query("SELECT COUNT(*) FROM clients WHERE is_active=1")->fetchColumn();
