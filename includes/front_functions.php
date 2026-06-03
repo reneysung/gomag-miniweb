@@ -156,6 +156,17 @@ function clientStoreUrl(array $cl, string $cityVariantSlug = ''): string {
 }
 
 /**
+ * 圖片網址容錯：值若已是絕對網址(http/https)直接回傳，否則接 BASE_URL。
+ * 根治「hero_image_path 存成絕對網址 → 又接 BASE_URL → 雙網址壞圖」。
+ */
+function mediaUrl(?string $path): string {
+    $path = trim((string)$path);
+    if ($path === '') return '';
+    if (preg_match('#^https?://#i', $path)) return $path;
+    return BASE_URL . '/' . ltrim($path, '/');
+}
+
+/**
  * 依子網域載入完整前台資料
  * 查 clients.subdomain 欄位（新架構）
  * 如果找不到則 fallback 到 clients.slug（相容舊資料）

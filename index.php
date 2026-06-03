@@ -78,18 +78,23 @@ $newThisMonth = $db->query("
     WHERE cl.is_active = 1
       AND cl.created_at >= DATE_FORMAT(NOW(), '%Y-%m-01')
     ORDER BY cl.created_at DESC
-    LIMIT 6
+    LIMIT 30
 ")->fetchAll();
-// 本月新加入也去重：已在「精選」出現過的同品牌/同圖不再出現（全頁不重複）
-$newThisMonth = array_values(array_filter($newThisMonth, function($r) use (&$seenBrandKeys, $brandKeyFn) {
+// 本月新加入去重 + 每分類最多 2 家（避免單一分類如汽車旅館洗版），最後取前 6
+$seenNewCat = [];
+$newThisMonth = array_values(array_filter($newThisMonth, function($r) use (&$seenBrandKeys, &$seenNewCat, $brandKeyFn) {
     $bk  = $brandKeyFn($r);
     $img = $r['hero_image_path'] ?? '';
+    $cs  = $r['cat_slug'] ?? '';
     if (isset($seenBrandKeys['b'][$bk])) return false;
     if ($img !== '' && isset($seenBrandKeys['i'][$img])) return false;
+    if ($cs !== '' && ($seenNewCat[$cs] ?? 0) >= 2) return false;
     $seenBrandKeys['b'][$bk] = 1;
     if ($img !== '') $seenBrandKeys['i'][$img] = 1;
+    if ($cs !== '') $seenNewCat[$cs] = ($seenNewCat[$cs] ?? 0) + 1;
     return true;
 }));
+$newThisMonth = array_slice($newThisMonth, 0, 6);
 
 // ─── 統計總客戶數 ─────────────────────────────────
 $totalClients = (int)$db->query("SELECT COUNT(*) FROM clients WHERE is_active=1")->fetchColumn();
@@ -151,7 +156,7 @@ require_once __DIR__ . '/main/layout_head.php';
 <?php if (!empty($banners)): ?>
 <section class="g-hero-carousel" id="g-hero">
   <?php foreach ($banners as $i => $b):
-    $imgUrl = BASE_URL . '/' . h($b['image_path']);
+    $imgUrl = h(mediaUrl($b['image_path']));
   ?>
   <div class="g-hero-slide<?= $i === 0 ? ' is-active' : '' ?>" style="background-image:url('<?= $imgUrl ?>');">
     <div class="g-hero-slide-overlay"></div>
@@ -236,12 +241,12 @@ require_once __DIR__ . '/main/layout_head.php';
       // 卡片背景優先用 categories.banner_image_path（分類專屬通用美圖）
       // 沒設才 fallback 到該分類底下第一家客戶的 hero
       if (!empty($cat['banner_image_path'])) {
-          $coverUrl = BASE_URL . '/' . h($cat['banner_image_path']);
+          $coverUrl = h(mediaUrl($cat['banner_image_path']));
       } else {
           $coverStmt = $db->prepare("SELECT hero_image_path FROM clients WHERE category_id=? AND is_active=1 AND hero_image_path IS NOT NULL AND hero_image_path != '' AND COALESCE(is_placeholder,0)=0 ORDER BY id DESC LIMIT 1");
           $coverStmt->execute([$cat['id']]);
           $cover = $coverStmt->fetchColumn();
-          $coverUrl = $cover ? BASE_URL . '/' . h($cover) : '';
+          $coverUrl = h(mediaUrl($cover));
       }
     ?>
     <a class="g-explore-card" href="<?= BASE_URL ?>/category.php?slug=<?= h($cat['slug']) ?>">
@@ -273,10 +278,7 @@ require_once __DIR__ . '/main/layout_head.php';
     <?php foreach ($sixDuSlugs as $cs):
       $m = $sixDuMeta[$cs] ?? null; if (!$m) continue;
       $cnt = (int)($sixDuCount[$cs] ?? 0);
-      $cover = '';
-      if (!empty($m['hero_image'])) {
-        $cover = preg_match('#^https?://#i', $m['hero_image']) ? h($m['hero_image']) : BASE_URL . '/' . h($m['hero_image']);
-      }
+      $cover = h(mediaUrl($m['hero_image']));
     ?>
     <a class="g-explore-card" href="<?= BASE_URL ?>/city.php?slug=<?= h($cs) ?>">
       <?php if ($cover): ?>
@@ -311,7 +313,7 @@ require_once __DIR__ . '/main/layout_head.php';
   ?>
   <div class="g-mag">
     <?php if ($_big):
-      $_bHero = $_big['hero_image_path'] ? BASE_URL . '/' . h($_big['hero_image_path']) : '';
+      $_bHero = h(mediaUrl($_big['hero_image_path']));
     ?>
     <a class="g-mag-hero" href="<?= clientStoreUrl($_big) ?>">
       <div class="g-mag-hero-img" <?= $_bHero ? 'style="background-image:url(\''.$_bHero.'\')"' : '' ?>>
@@ -331,7 +333,7 @@ require_once __DIR__ . '/main/layout_head.php';
     <?php if ($_magClients): ?>
     <div class="g-store-grid g-store-grid--mag">
       <?php foreach ($_magClients as $cl):
-        $heroImg = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
+        $heroImg = h(mediaUrl($cl['hero_image_path']));
       ?>
       <a class="g-store-card" href="<?= clientStoreUrl($cl) ?>">
         <div class="g-store-img" <?= $heroImg ? 'style="background-image:url(\''.$heroImg.'\')"' : '' ?>>
@@ -367,7 +369,7 @@ require_once __DIR__ . '/main/layout_head.php';
   </div>
   <div class="g-store-grid">
     <?php foreach ($newThisMonth as $cl):
-      $heroImg = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
+      $heroImg = h(mediaUrl($cl['hero_image_path']));
       $linkUrl = clientStoreUrl($cl);
       $daysAgo = (int)((time() - strtotime($cl['created_at'])) / 86400);
       $timeLabel = $daysAgo == 0 ? '今天' : ($daysAgo == 1 ? '昨天' : "{$daysAgo} 天前");
