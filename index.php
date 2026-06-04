@@ -152,6 +152,8 @@ $isHomepage = true;  // 觸發 main/layout_head.php 的 WebSite + SearchAction s
 require_once __DIR__ . '/main/layout_head.php';
 ?>
 
+<h1 class="g-sr-only">店家好口碑 — 全台在地店家口碑平台</h1>
+
 <!-- ═══════ Hero（g-* 設計，輪播 banners + 文案 overlay）═══════ -->
 <?php if (!empty($banners)): ?>
 <section class="g-hero-carousel" id="g-hero">
@@ -166,7 +168,7 @@ require_once __DIR__ . '/main/layout_head.php';
         <span class="g-hero-slide-tag-dot"></span>
         <span><?= h($b['subtitle'] ?: '在地優質店家・口碑驗證') ?></span>
       </div>
-      <h1 class="g-hero-slide-title"><?= h($b['title']) ?></h1>
+      <h2 class="g-hero-slide-title"><?= h($b['title']) ?></h2>
       <?php endif; ?>
       <form class="g-hero-slide-search" method="GET" action="<?= BASE_URL ?>/search.php" role="search">
         <input type="text" name="q" placeholder="搜尋店家、服務、地點…" autocomplete="off">
@@ -216,7 +218,7 @@ require_once __DIR__ . '/main/layout_head.php';
         <span class="g-hero-slide-tag-dot"></span>
         <span>全台 <?= $totalClients ?>+ 家在地優質店家</span>
       </div>
-      <h1 class="g-hero-slide-title">找在地好店家，<br><span>就上店家好口碑</span></h1>
+      <h2 class="g-hero-slide-title">找在地好店家，<br><span>就上店家好口碑</span></h2>
       <p class="g-hero-slide-desc">從餐飲到專業服務，全台口碑商家一站式找對店家。</p>
       <form class="g-hero-slide-search" method="GET" action="<?= BASE_URL ?>/search.php" role="search">
         <input type="text" name="q" placeholder="搜尋店家、服務、地點…" autocomplete="off">

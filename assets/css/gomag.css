@@ -2150,3 +2150,10 @@
   .g-hero-slide-search { max-width: 100%; }
   .g-hero-nav { display: none; }
 }
+
+/* 視覺隱藏（保留給螢幕閱讀器 + SEO 讀取，用於單一 H1） */
+.g-sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
