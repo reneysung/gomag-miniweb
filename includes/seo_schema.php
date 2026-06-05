@@ -653,30 +653,61 @@ function outputJsonLd(array $site, string $sub, string $pageKey): void {
         }
     }
 
-    // 6. 專欄列表頁：ItemList（articles 表，try/catch 防表未建）
+    // 6. 專欄列表頁：Blog + ItemList 雙寫
+    //   - Blog + blogPost：給 Google 認知為 blog navigation
+    //   - ItemList：給 carousel rich result 機會
+    //   雙寫 schema 是合法的，Google 接受同頁多個 @type
     if ($pageKey === 'articles') {
         try {
             $_artDb = getDB();
-            $_artStmt = $_artDb->prepare("SELECT slug, title FROM articles WHERE client_id=? AND is_active=1 AND slug IS NOT NULL AND slug<>'' ORDER BY published_at DESC, id DESC LIMIT 50");
+            $_artStmt = $_artDb->prepare("SELECT slug, title, summary, cover_image, published_at, COALESCE(updated_at, published_at) AS modified FROM articles WHERE client_id=? AND is_active=1 AND slug IS NOT NULL AND slug<>'' ORDER BY published_at DESC, id DESC LIMIT 50");
             $_artStmt->execute([(int)$client['id']]);
             $_artRows = $_artStmt->fetchAll(PDO::FETCH_ASSOC);
             $_artBase = getCanonicalUrl($sub, 'articles');
             $_artItems = [];
+            $_artBlogPosts = [];
             $_i = 1;
             foreach ($_artRows as $a) {
+                $_url = $_artBase . '/' . rawurlencode($a['slug']);
+                $_title = $a['title'] ?? '';
                 $_artItems[] = [
                     '@type'    => 'ListItem',
                     'position' => $_i++,
-                    'url'      => $_artBase . '/' . rawurlencode($a['slug']),
-                    'name'     => $a['title'] ?? '',
+                    'url'      => $_url,
+                    'name'     => $_title,
                 ];
+                $_bp = [
+                    '@type'      => 'BlogPosting',
+                    'headline'   => $_title,
+                    'url'        => $_url,
+                    'mainEntityOfPage' => $_url,
+                ];
+                if (!empty($a['summary'])) $_bp['description'] = $a['summary'];
+                if (!empty($a['cover_image'])) {
+                    $_bp['image'] = str_starts_with($a['cover_image'], 'http') ? $a['cover_image'] : BASE_URL . '/' . $a['cover_image'];
+                }
+                if (!empty($a['published_at'])) $_bp['datePublished'] = date('c', strtotime($a['published_at']));
+                if (!empty($a['modified']))     $_bp['dateModified']  = date('c', strtotime($a['modified']));
+                $_bp['author']    = ['@type' => 'Organization', 'name' => $client['brand_name']];
+                $_bp['publisher'] = ['@type' => 'Organization', 'name' => $client['brand_name']];
+                $_artBlogPosts[] = $_bp;
             }
             if ($_artItems) {
+                // ItemList（保留：carousel rich result 機會）
                 $schemas[] = [
                     '@context'        => 'https://schema.org',
                     '@type'           => 'ItemList',
                     'name'            => $client['brand_name'] . '專欄文章',
                     'itemListElement' => $_artItems,
+                ];
+                // Blog + blogPost（新增：Google blog 識別）
+                $schemas[] = [
+                    '@context' => 'https://schema.org',
+                    '@type'    => 'Blog',
+                    'name'     => $client['brand_name'] . '專欄',
+                    'url'      => $_artBase,
+                    'publisher' => ['@type' => 'Organization', 'name' => $client['brand_name']],
+                    'blogPost' => $_artBlogPosts,
                 ];
             }
         } catch (Exception $e) { /* articles 表未建或欄位不齊：跳過 */ }
