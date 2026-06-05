@@ -69,7 +69,7 @@ $pageLabel = $isSub ? $svcName : $catName;
 $dupSkip = getDuplicateSkipSlugs();
 $dupPh   = implode(',', array_fill(0, count($dupSkip), '?'));
 $cols = "cl.id, cl.subdomain, cl.slug, cl.brand_name, cl.tagline,
-         cl.has_minisite, cl.external_website_url, cl.hero_image_path,
+         cl.has_minisite, cl.external_website_url, cl.hero_image_path, cl.hero_image_fit,
          cl.address, cl.phone, cl.is_placeholder";
 $clients = [];
 if ($isSub) {
@@ -304,7 +304,7 @@ if ($navServices):
         $cardClass = 'g-store-card' . ($isPH ? ' g-store-card-ph' : '');
     ?>
     <a class="<?= $cardClass ?>" href="<?= h(clientStoreUrl($cl, !empty($cl['via_variant']) ? $slug : '')) ?>">
-      <div class="g-store-img" <?= $cHero ? 'style="background-image:url(\''.$cHero.'\')"' : '' ?>>
+      <div class="g-store-img"<?= gStoreImgStyle($cHero, $cl['hero_image_fit'] ?? null) ?>>
         <?php if (!$cHero): ?>
         <div class="g-store-img-fallback"><span class="icon"><?= h($catIcon) ?></span><span class="label"><?= h($catName) ?></span></div>
         <?php endif; ?>

@@ -156,6 +156,19 @@ function clientStoreUrl(array $cl, string $cityVariantSlug = ''): string {
 }
 
 /**
+ * 店家卡圖 g-store-img 的 inline style：contain 客戶(Logo) → 完整顯示+白底，否則填滿(cover)。
+ * $imgUrl 須為已可直接用的網址（呼叫端自行接 BASE_URL / h()）。
+ */
+function gStoreImgStyle(string $imgUrl, ?string $fit = 'cover'): string {
+    if ($imgUrl === '') return '';
+    $style = "background-image:url('" . $imgUrl . "')";
+    if (($fit ?: 'cover') === 'contain') {
+        $style .= ';background-size:contain;background-color:#fff';
+    }
+    return ' style="' . $style . '"';
+}
+
+/**
  * 圖片網址容錯：值若已是絕對網址(http/https)直接回傳，否則接 BASE_URL。
  * 根治「hero_image_path 存成絕對網址 → 又接 BASE_URL → 雙網址壞圖」。
  */

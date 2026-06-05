@@ -71,7 +71,7 @@ if (!$cat) {
 
 $clientsStmt = $db->prepare("
     SELECT cl.id, cl.subdomain, cl.slug, cl.brand_name, cl.tagline,
-           cl.has_minisite, cl.external_website_url, cl.hero_image_path,
+           cl.has_minisite, cl.external_website_url, cl.hero_image_path, cl.hero_image_fit,
            cl.address, cl.phone
     FROM clients cl
     WHERE cl.category_id = ? AND cl.is_active = 1 AND cl.slug NOT IN ($dupPh)
@@ -167,7 +167,7 @@ require_once __DIR__ . '/main/layout_head.php';
         $linkUrl = clientStoreUrl($cl);
       ?>
       <a class="m-store-card" href="<?= $linkUrl ?>">
-        <div class="cover" <?= $heroImg ? 'style="background-image:url(\''.$heroImg.'\')"' : '' ?>>
+        <div class="cover"<?= gStoreImgStyle($heroImg, $cl['hero_image_fit'] ?? null) ?>>
           <span class="cat-tag"><?= h($cat['icon']) ?> <?= h($cat['name']) ?></span>
         </div>
         <div class="body">
