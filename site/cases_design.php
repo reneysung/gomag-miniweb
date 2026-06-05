@@ -52,10 +52,28 @@ $cases = $site['cases'] ?? [];
 
 <section class="ed-page-hero animate-in">
   <span class="eyebrow">SELECTED WORKS</span>
-  <h1>作品案例</h1>
+  <h1>作品案例<?= $caseRegionLabel ? ' · ' . h($caseRegionLabel) : '' ?></h1>
   <div class="divider"></div>
   <p>每一件作品，都是與屋主共同打磨的空間敘事</p>
 </section>
+
+<!-- 地區切換列：僅在橫跨 2+ 地區時顯示 -->
+<?php if (!empty($caseAllRegions) && count($caseAllRegions) > 1):
+  $regionMap   = caseRegionMap();
+  $allCasesUrl = siteUrl($sub ?? $slug, 'cases');
+?>
+<nav class="ed-region-nav animate-in" aria-label="依地區瀏覽案例"
+     style="text-align:center;margin:0 auto 40px;display:flex;flex-wrap:wrap;justify-content:center;gap:10px;max-width:760px;padding:0 20px">
+  <a href="<?= h($allCasesUrl) ?>"
+     style="padding:9px 22px;border-radius:999px;font-size:.9rem;letter-spacing:.05em;text-decoration:none;border:1px solid #c8a57a;<?= empty($caseRegionLabel) ? 'background:#c8a57a;color:#fff' : 'color:#c8a57a;background:transparent' ?>">全部</a>
+  <?php foreach ($caseAllRegions as $rSlug): if (!isset($regionMap[$rSlug])) continue; ?>
+    <a href="<?= h($allCasesUrl . '?region=' . urlencode($rSlug)) ?>"
+       style="padding:9px 22px;border-radius:999px;font-size:.9rem;letter-spacing:.05em;text-decoration:none;border:1px solid #c8a57a;<?= ($caseRegion ?? '') === $rSlug ? 'background:#c8a57a;color:#fff' : 'color:#c8a57a;background:transparent' ?>">
+      <?= h($regionMap[$rSlug]['label']) ?>
+    </a>
+  <?php endforeach; ?>
+</nav>
+<?php endif; ?>
 
 <?php if (empty($cases)): ?>
 <div class="ed-empty">作品集整理中</div>
@@ -83,20 +101,14 @@ $cases = $site['cases'] ?? [];
   <?php if (!empty($c['description'])): ?>
   <p class="desc"><?= nl2br(h($c['description'])) ?></p>
   <?php endif; ?>
-  <?php if ($b || $a): ?>
-  <div class="ed-case-imgs">
-    <?php if ($b): ?>
-    <div class="ed-case-img-wrap">
-      <span class="label">Before</span>
-      <img src="<?= h($b) ?>" alt="<?= h($c['title']) ?> · 改造前">
-    </div>
-    <?php endif; ?>
-    <?php if ($a): ?>
-    <div class="ed-case-img-wrap">
-      <span class="label">After</span>
-      <img src="<?= h($a) ?>" alt="<?= h($c['title']) ?> · 改造後">
-    </div>
-    <?php endif; ?>
+  <?php
+    // 案例圖片：永遠單張（拿掉 Before/After 對照模式，避免照片擺位錯位）
+    // 優先用 after_image，沒有才退 before_image
+    $heroImg = $a ?: $b;
+  ?>
+  <?php if ($heroImg): ?>
+  <div class="ed-case-hero-img" style="margin-top:20px;border-radius:8px;overflow:hidden">
+    <img src="<?= h($heroImg) ?>" alt="<?= h($c['title']) ?>" style="width:100%;height:auto;display:block">
   </div>
   <?php endif; ?>
   <?php if ($caseDetailUrl): ?>

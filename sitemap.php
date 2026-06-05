@@ -174,7 +174,8 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
 
   <!-- 各客戶行銷頁（所有客戶都有；有 mini-site 的客戶 mini-site 在下方獨立列） -->
   <?php foreach ($clients as $cl):
-      $sub = $cl['subdomain'] ?: $cl['slug'];
+      // strtolower 對齊 store.php:9 的 canonical 大小寫
+      $sub = strtolower($cl['subdomain'] ?: $cl['slug']);
       $lastmod = date('Y-m-d', strtotime($cl['updated_at']));
   ?>
   <url>
@@ -193,7 +194,8 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
                           WHERE ccp.is_active=1
                           ORDER BY ccp.client_id, ccp.sort_order")->fetchAll();
     foreach ($cvRows as $cv):
-      $sub = $cv['subdomain'] ?: $cv['slug'];
+      // strtolower 對齊 store.php:9 的 canonical 大小寫
+      $sub = strtolower($cv['subdomain'] ?: $cv['slug']);
       $lastmod = date('Y-m-d', strtotime($cv['created_at']));
   ?>
   <url>
