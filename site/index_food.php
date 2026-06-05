@@ -71,9 +71,15 @@ require __DIR__ . '/layout_head.php';
       <span class="dine-eyebrow-text">WELCOME TO</span>
       <span class="dine-line"></span>
     </div>
-    <h1 class="dine-hero-title animate-in delay-1"><?= h($client['brand_name']) ?></h1>
+    <h1 class="dine-hero-title animate-in delay-1"><?= h($client['brand_name']) ?><?php if (!empty($client['tagline'])): ?><span class="dine-hero-title-sub">｜<?= h($client['tagline']) ?></span><?php endif; ?></h1>
     <p class="dine-hero-quote animate-in delay-2">
-      <span class="dine-qm">“</span><?= h($client['tagline'] ?? '一道道用心料理，等你慢慢品嚐') ?><span class="dine-qm">”</span>
+      <?php
+        // H1 已帶 tagline → quote 顯示 about 摘要；否則維持 tagline / 預設
+        $_dineQuote = !empty($client['tagline']) && !empty($client['about_text'])
+            ? mb_strimwidth(strip_tags($client['about_text']), 0, 60, '…')
+            : ($client['tagline'] ?? '一道道用心料理，等你慢慢品嚐');
+      ?>
+      <span class="dine-qm">“</span><?= h($_dineQuote) ?><span class="dine-qm">”</span>
     </p>
     <div class="dine-hero-actions animate-in delay-3">
       <?php if($lineUrl): ?>
@@ -325,7 +331,9 @@ body { background: var(--dine-bg); color: var(--dine-cream); }
 .dine-eyebrow { display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 36px; }
 .dine-line { display: block; width: 50px; height: 1px; background: rgba(245,230,200,0.5); }
 .dine-eyebrow-text { font-family: 'Cormorant Garamond', serif; font-style: italic; letter-spacing: 0.4em; font-size: .85rem; color: rgba(245,230,200,0.85); text-transform: uppercase; }
-.dine-hero-title { font-family: 'Cormorant Garamond', 'Noto Serif TC', serif; font-size: clamp(3rem, 9vw, 7rem); font-weight: 500; letter-spacing: -0.01em; line-height: 1; color: #fff; margin: 0 0 28px; text-shadow: 0 4px 40px rgba(0,0,0,0.6); }
+.dine-hero-title { font-family: 'Cormorant Garamond', 'Noto Serif TC', serif; font-size: clamp(3rem, 9vw, 7rem); font-weight: 500; letter-spacing: -0.01em; line-height: 1.05; color: #fff; margin: 0 0 28px; text-shadow: 0 4px 40px rgba(0,0,0,0.6); }
+.dine-hero-title-sub { display: inline-block; font-family: 'Cormorant Garamond', 'Noto Serif TC', serif; font-style: italic; font-size: 0.32em; font-weight: 400; letter-spacing: 0; color: rgba(245,230,200,0.88); margin-left: 8px; vertical-align: middle; text-shadow: 0 2px 18px rgba(0,0,0,0.5); }
+@media (max-width: 640px) { .dine-hero-title-sub { display: block; margin-top: 10px; font-size: 0.42em; } }
 .dine-hero-quote { font-family: 'Cormorant Garamond', 'Noto Serif TC', serif; font-style: italic; font-size: clamp(1.05rem, 1.8vw, 1.4rem); color: rgba(245,230,200,0.88); line-height: 1.55; margin: 0 auto 44px; max-width: 620px; text-shadow: 0 2px 16px rgba(0,0,0,0.5); }
 .dine-qm { font-family: 'Cormorant Garamond', serif; color: rgba(245,230,200,0.55); font-size: 1.4em; vertical-align: -0.1em; margin: 0 -2px; }
 .dine-hero-actions { display: flex; flex-direction: column; align-items: center; gap: 18px; margin-bottom: 32px; }

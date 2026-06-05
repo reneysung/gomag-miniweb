@@ -133,11 +133,17 @@ $ratingNum = preg_replace('/[★\s]/u', '', $rating) ?: '4.9';
     </div>
 
     <h1 class="hero-dine-title animate-in delay-1">
-      <?= h($client['brand_name']) ?>
+      <?= h($client['brand_name']) ?><?php if (!empty($client['tagline'])): ?><span class="hero-dine-title-sub">｜<?= h($client['tagline']) ?></span><?php endif; ?>
     </h1>
 
     <p class="hero-dine-quote animate-in delay-2">
-      <span class="dine-quote-mark">“</span><?= h($client['tagline'] ?? '一道道用心料理，等你慢慢品嚐') ?><span class="dine-quote-mark">”</span>
+      <?php
+        // H1 已帶 tagline → quote 顯示 about 摘要；否則維持 tagline / 預設
+        $_dineQuote = !empty($client['tagline']) && !empty($client['about_text'])
+            ? mb_strimwidth(strip_tags($client['about_text']), 0, 60, '…')
+            : ($client['tagline'] ?? '一道道用心料理，等你慢慢品嚐');
+      ?>
+      <span class="dine-quote-mark">“</span><?= h($_dineQuote) ?><span class="dine-quote-mark">”</span>
     </p>
 
     <div class="hero-dine-actions animate-in delay-3">
@@ -241,10 +247,25 @@ $ratingNum = preg_replace('/[★\s]/u', '', $rating) ?: '4.9';
   font-size: clamp(3.2rem, 9vw, 7rem);
   font-weight: 500;
   letter-spacing: -0.01em;
-  line-height: 1;
+  line-height: 1.05;
   color: #fff;
   margin: 0 0 32px;
   text-shadow: 0 4px 40px rgba(0,0,0,0.6);
+}
+.hero-dine-title-sub {
+  display: inline-block;
+  font-family: 'Cormorant Garamond', 'Noto Serif TC', serif;
+  font-style: italic;
+  font-size: 0.32em;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: rgba(245,230,200,0.88);
+  margin-left: 8px;
+  vertical-align: middle;
+  text-shadow: 0 2px 18px rgba(0,0,0,0.5);
+}
+@media (max-width: 640px) {
+  .hero-dine-title-sub { display: block; margin-top: 10px; font-size: 0.42em; }
 }
 
 /* Quote */
