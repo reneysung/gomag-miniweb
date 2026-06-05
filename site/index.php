@@ -788,7 +788,7 @@ if($featured): ?>
             <span style="display:inline-block;background:rgba(var(--g-ink-rgb),.08);color:var(--g-ink);font-size:.72rem;font-weight:700;padding:2px 10px;border-radius:12px"><?= h($t['svc_name']) ?></span>
           <?php endif; ?>
           <?php if(!empty($t['source_url'])): ?>
-            <a href="<?= h($t['source_url']) ?>" target="_blank" rel="noopener" style="display:inline-block;margin-top:10px;font-size:.78rem;color:var(--g-ink);text-decoration:none;font-weight:600">📖 閱讀全文 →</a>
+            <a href="<?= h($t['source_url']) ?>" target="_blank" rel="noopener nofollow ugc" style="display:inline-block;margin-top:10px;font-size:.78rem;color:var(--g-ink);text-decoration:none;font-weight:600">📖 閱讀全文 →</a>
           <?php endif; ?>
         </div>
       </div>

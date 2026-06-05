@@ -8,10 +8,30 @@ require_once __DIR__ . '/../includes/front_functions.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-// 只接受 POST
+// 這是聯絡表單的 POST 處理端點，不是給人瀏覽的頁面。
+// 用瀏覽器直接開(GET)→ 跳該客戶 LINE（沒設則跳首頁）。
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['ok'=>false,'msg'=>'方法不允許']);
+    $sub = getSubdomain();
+    $_target = $sub ? siteUrl($sub) : (BASE_URL . '/');  // fallback：首頁
+    if ($sub) {
+        try {
+            $_site = loadSiteData($sub);
+            if ($_site && !empty($_site['social'])) {
+                $_s = $_site['social'];
+                $_lu = '';
+                if (!empty($_s['line_url']) && filter_var($_s['line_url'], FILTER_VALIDATE_URL)) {
+                    $_lu = $_s['line_url'];
+                } elseif (!empty($_s['line_id'])) {
+                    $_rid = ltrim(trim($_s['line_id']), '@');
+                    if (preg_match('/^[a-zA-Z0-9_\-]+$/', $_rid)) {
+                        $_lu = 'https://line.me/R/ti/p/@' . $_rid;
+                    }
+                }
+                if ($_lu) $_target = $_lu;
+            }
+        } catch (Exception $e) { /* fallback 已設首頁 */ }
+    }
+    header('Location: ' . $_target, true, 302);
     exit;
 }
 

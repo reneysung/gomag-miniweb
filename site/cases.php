@@ -68,11 +68,23 @@ if ($caseRegion !== '') {
     // SEO 覆寫（layout_head 透過 getSeo($site,'cases') 讀）
     $seoTitle = "{$caseRegionLabel}{$bizNoun}案例｜{$brand}";
     $seoDesc  = "{$brand}{$caseRegionLabel}地區{$bizNoun}施工實績：裝潢細清、石材晶化、地毯清洗、地板打蠟保養，真實 Before／After 對比案例參考。免費到府估價。";
+
+    // og:image 優先：seo_settings.cases.og_image > 該地區第一筆案例的 after_image > 客戶 hero_image_path
+    $_regionOg = $site['seo']['cases']['og_image'] ?? '';
+    if (!$_regionOg && !empty($site['cases'])) {
+        foreach ($site['cases'] as $_rc) {
+            if (!empty($_rc['after_image'])) { $_regionOg = $_rc['after_image']; break; }
+            if (!empty($_rc['before_image'])) { $_regionOg = $_rc['before_image']; break; }
+        }
+    }
+    if (!$_regionOg && !empty($client['hero_image_path'])) $_regionOg = $client['hero_image_path'];
+    if ($_regionOg && !str_starts_with($_regionOg, 'http')) $_regionOg = BASE_URL . '/' . $_regionOg;
+
     $site['seo']['cases'] = [
         'meta_title' => $seoTitle,
         'meta_desc'  => $seoDesc,
         'og_title'   => $seoTitle,
-        'og_image'   => $site['seo']['cases']['og_image'] ?? '',
+        'og_image'   => $_regionOg,
     ];
 
     // canonical 指向地區頁本身

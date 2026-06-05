@@ -2,6 +2,17 @@ Options -Indexes
 
 ErrorDocument 404 /404.php
 
+# ── 安全加固 2026-05-22：封鎖危險副檔名 + 隱藏 PHP 版本 ──
+<FilesMatch "\.(sql|log|bak|old|swp|inc|env|dist|ini|sh|tar|gz|tgz|zip)$">
+  Require all denied
+</FilesMatch>
+<IfModule mod_headers.c>
+  Header always unset X-Powered-By
+  Header unset X-Powered-By
+  # HSTS：強制 HTTPS（站內 http→https 已強制 301，加 HSTS 讓瀏覽器記住）
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+</IfModule>
+
 <IfModule mod_rewrite.c>
 RewriteEngine On
 
@@ -9,6 +20,13 @@ RewriteEngine On
 <FilesMatch "^(install\.php|setup_db\.php|migrate_.*\.php|seed_.*\.php|debug_.*\.php|reset_.*\.php|deploy_.*\.php|check_.*\.php)$">
   Require all denied
 </FilesMatch>
+
+# === Admin URL 隱藏 2026-05-27（防 bot 掃 /admin/）===
+# 訪問秘密 URL → 走 admin-unlock.php 設通行 cookie，再導向 login
+RewriteRule ^gomag-key-j250267986q2/?$ /admin-unlock.php [L]
+# 沒帶正確 cookie 的 /admin/* 一律 404（隱形）
+RewriteCond %{HTTP_COOKIE} !gomag_admin_unlock=j250267986q2 [NC]
+RewriteRule ^admin(/.*)?$ - [R=404,L]
 
 # ── Force www（non-www → www）── SEO canonical 集中
 # 必須放在所有其他 rewrite 之前
@@ -21,6 +39,13 @@ RewriteRule ^(.*)$ https://www.gomag.com.tw/$1 [R=301,L]
 # 必須放在 mini-site rewrite 之前，否則會先 match 進 site/index.php
 RewriteCond %{HTTP_HOST} ^xusen\.gomag\.com\.tw$ [NC]
 RewriteRule ^(.*)$ https://062051129.gomag.com.tw/$1 [R=301,L]
+
+# ── Trailing slash 收斂 301（除根）──
+# 避免 /services 跟 /services/ 兩個 URL 都 200 → 互相蠶食 SEO
+# !-d 排除實體資料夾（/admin/ /uploads/ 等不受影響）
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} ^(.+)/$
+RewriteRule ^(.+)/$ /$1 [R=301,L]
 
 # ── Mini-site 子網域路由：{sub}.gomag.com.tw → site/ ──
 # 主站 gomag.com.tw（無子網域）不會 match；www / 062051129 / xusen 排除
@@ -46,6 +71,22 @@ RewriteCond %{HTTP_HOST} !^062051129\.gomag\.com\.tw$ [NC]
 RewriteCond %{HTTP_HOST} !^xusen\.gomag\.com\.tw$ [NC]
 RewriteRule ^services/([^/?]+)/?$ site/service_detail.php?sub=%1&svc_slug=$1 [L,QSA,B]
 
+# ── Mini-site 案例地區頁：/cases/taichung|changhua → site/cases.php?sub=%1&region=$1 ──
+# 必須放在下方 /cases/{slug} 規則之前，否則 taichung/changhua 會被當成 case slug 進 case_detail
+RewriteCond %{HTTP_HOST} ^([a-z0-9-]+)\.gomag\.com\.tw$ [NC]
+RewriteCond %{HTTP_HOST} !^www\.gomag\.com\.tw$ [NC]
+RewriteCond %{HTTP_HOST} !^062051129\.gomag\.com\.tw$ [NC]
+RewriteCond %{HTTP_HOST} !^xusen\.gomag\.com\.tw$ [NC]
+RewriteRule ^cases/(taichung|changhua)/?$ site/cases.php?sub=%1&region=$1 [L,QSA]
+
+# ── Mini-site 城市頁：{sub}.gomag.com.tw/{city-slug} → site/index.php?sub=%1&city=$1 ──
+# 多縣市方案：白名單 12 縣市，避免跟 /services /cases /column /contact 等路徑衝突
+RewriteCond %{HTTP_HOST} ^([a-z0-9-]+)\.gomag\.com\.tw$ [NC]
+RewriteCond %{HTTP_HOST} !^www\.gomag\.com\.tw$ [NC]
+RewriteCond %{HTTP_HOST} !^062051129\.gomag\.com\.tw$ [NC]
+RewriteCond %{HTTP_HOST} !^xusen\.gomag\.com\.tw$ [NC]
+RewriteRule ^(tainan|kaohsiung|chiayi|taichung|taipei|newtaipei|taoyuan|taitung|pingtung|hsinchu|yilan|hualien|changhua)/?$ site/index.php?sub=%1&city=$1 [L,QSA]
+
 # ── Mini-site 案例詳細頁：/cases/{slug} → site/case_detail.php?sub=%1&case_slug=$1 ──
 RewriteCond %{HTTP_HOST} ^([a-z0-9-]+)\.gomag\.com\.tw$ [NC]
 RewriteCond %{HTTP_HOST} !^www\.gomag\.com\.tw$ [NC]
@@ -68,6 +109,14 @@ RewriteCond %{HTTP_HOST} !^xusen\.gomag\.com\.tw$ [NC]
 RewriteRule ^column/([^/?]+)/?$ site/article_detail.php?sub=%1&slug=$1 [L,QSA,B]
 
 # Pretty URL
+# 舊 /store/clean1 → 新 /store/rre/changhua 301（219 退場合併進 215 的城市變體）
+RewriteRule ^store/clean1/?$ /store/rre/changhua [R=301,L]
+# 舊 /store/catering/pingtung → /store/catering 301（聞香閣拆 client，屏東成為主檔）
+RewriteRule ^store/catering/pingtung/?$ /store/catering [R=301,L]
+# 舊 /store/catering/kaohsiung → /store/cateringkh 301（聞香閣高雄成為獨立 client）
+RewriteRule ^store/catering/kaohsiung/?$ /store/cateringkh [R=301,L]
+# 城市行銷頁變體 /store/{slug}/{city} → store.php?sub=&city=
+RewriteRule ^store/([A-Za-z0-9_-]+)/([a-z][a-z0-9-]+)/?$ store.php?sub=$1&city=$2 [L,QSA]
 RewriteRule ^store/([A-Za-z0-9_-]+)/?$ store.php?sub=$1 [L,QSA]
 RewriteRule ^category/([a-z0-9-]+)/?$ category.php?slug=$1 [L,QSA]
 RewriteRule ^city/?$ city.php [L,QSA]

@@ -106,27 +106,88 @@ require __DIR__ . '/layout_head.php';
   </div>
 </section>
 
-<!-- Before / After 對比 -->
-<?php if ($beforeImg || $afterImg): ?>
+<!-- Before / After 相簿（掃 before/after 資料夾，各最多 15 張）+ 點圖放大 lightbox -->
+<?php
+$_docroot      = dirname(__DIR__);
+$_beforeFolder = !empty($case['before_image']) ? $_docroot . '/' . dirname($case['before_image']) : '';
+$_afterFolder  = !empty($case['after_image'])  ? $_docroot . '/' . dirname($case['after_image'])  : '';
+$_beforeImgs = ($_beforeFolder && is_dir($_beforeFolder)) ? (glob($_beforeFolder . '/*.{jpg,jpeg,JPG,JPEG,png,PNG,webp,WEBP}', GLOB_BRACE) ?: []) : [];
+$_afterImgs  = ($_afterFolder  && is_dir($_afterFolder))  ? (glob($_afterFolder  . '/*.{jpg,jpeg,JPG,JPEG,png,PNG,webp,WEBP}', GLOB_BRACE) ?: []) : [];
+sort($_beforeImgs); sort($_afterImgs);
+$_beforeImgs = array_slice($_beforeImgs, 0, 15);
+$_afterImgs  = array_slice($_afterImgs,  0, 15);
+$_relBefore = array_map(fn($f) => ltrim(substr($f, strlen($_docroot)), '/'), $_beforeImgs);
+$_relAfter  = array_map(fn($f) => ltrim(substr($f, strlen($_docroot)), '/'), $_afterImgs);
+?>
+<?php if ($_relBefore || $_relAfter): ?>
 <section class="section">
   <div class="container">
-    <h2 style="font-size:1.4rem;font-weight:900;margin-bottom:24px;color:var(--g-ink);text-align:center">Before / After 對比</h2>
-    <div class="grid-2" style="gap:24px">
-      <?php if ($beforeImg): ?>
-      <figure style="margin:0;border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,.1)">
-        <img src="<?= BASE_URL . '/' . h($beforeImg) ?>" alt="<?= h($case['title']) ?>・施作前" style="width:100%;height:auto;display:block">
-        <figcaption style="padding:12px 16px;background:#fff;font-weight:700;color:var(--g-ink);text-align:center">📷 施作前</figcaption>
-      </figure>
-      <?php endif; ?>
-      <?php if ($afterImg): ?>
-      <figure style="margin:0;border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(var(--g-accent-rgb),.2)">
-        <img src="<?= BASE_URL . '/' . h($afterImg) ?>" alt="<?= h($case['title']) ?>・施作後" style="width:100%;height:auto;display:block">
-        <figcaption style="padding:12px 16px;background:var(--g-accent);color:#fff;font-weight:700;text-align:center">✨ 施作後</figcaption>
-      </figure>
-      <?php endif; ?>
+    <h2 style="font-size:1.4rem;font-weight:900;margin-bottom:24px;color:var(--g-ink);text-align:center">Before / After 對比相簿</h2>
+
+    <?php if ($_relBefore): ?>
+    <h3 style="font-size:1rem;font-weight:700;color:var(--g-ink);margin:8px 0 12px;display:flex;align-items:center;gap:8px">📷 施作前 <span style="font-size:.78rem;color:#888;font-weight:500">(<?= count($_relBefore) ?> 張)</span></h3>
+    <div class="case-album" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:32px">
+      <?php foreach ($_relBefore as $_p): ?>
+      <a class="case-album-item" href="<?= BASE_URL . '/' . h($_p) ?>" data-lb style="display:block;aspect-ratio:4/3;overflow:hidden;border-radius:10px;background:#f5f5f5">
+        <img src="<?= BASE_URL . '/' . h($_p) ?>" loading="lazy" alt="<?= h($case['title']) ?>・施作前" style="width:100%;height:100%;object-fit:cover;transition:transform .3s">
+      </a>
+      <?php endforeach; ?>
     </div>
+    <?php endif; ?>
+
+    <?php if ($_relAfter): ?>
+    <h3 style="font-size:1rem;font-weight:700;color:var(--g-accent);margin:8px 0 12px;display:flex;align-items:center;gap:8px">✨ 施作後 <span style="font-size:.78rem;color:#888;font-weight:500">(<?= count($_relAfter) ?> 張)</span></h3>
+    <div class="case-album" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:8px">
+      <?php foreach ($_relAfter as $_p): ?>
+      <a class="case-album-item" href="<?= BASE_URL . '/' . h($_p) ?>" data-lb style="display:block;aspect-ratio:4/3;overflow:hidden;border-radius:10px;background:#f5f5f5">
+        <img src="<?= BASE_URL . '/' . h($_p) ?>" loading="lazy" alt="<?= h($case['title']) ?>・施作後" style="width:100%;height:100%;object-fit:cover;transition:transform .3s">
+      </a>
+      <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
   </div>
 </section>
+
+<style>
+.case-album-item:hover img{transform:scale(1.05)}
+@media (max-width:780px){.case-album{grid-template-columns:repeat(2,1fr)!important}}
+@media (max-width:480px){.case-album{grid-template-columns:1fr!important}}
+.lb-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:none;align-items:center;justify-content:center}
+.lb-overlay.open{display:flex}
+.lb-overlay img{max-width:95vw;max-height:90vh;object-fit:contain}
+.lb-overlay button{position:absolute;background:rgba(255,255,255,.15);color:#fff;border:none;width:48px;height:48px;border-radius:50%;cursor:pointer;font-size:1.6rem;line-height:1;display:flex;align-items:center;justify-content:center}
+.lb-overlay button:hover{background:rgba(255,255,255,.28)}
+.lb-close{top:18px;right:18px}.lb-prev{left:18px;top:50%;transform:translateY(-50%)}.lb-next{right:18px;top:50%;transform:translateY(-50%)}
+.lb-counter{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.5);color:#fff;padding:4px 14px;border-radius:100px;font-size:.85rem}
+</style>
+<div class="lb-overlay" id="caseLightbox" role="dialog" aria-modal="true">
+  <button class="lb-close" aria-label="關閉">✕</button>
+  <button class="lb-prev" aria-label="上一張">‹</button>
+  <img id="lbImg" alt="">
+  <button class="lb-next" aria-label="下一張">›</button>
+  <div class="lb-counter" id="lbCounter"></div>
+</div>
+<script>
+(function(){
+  var items=document.querySelectorAll('.case-album-item[data-lb]');
+  if(!items.length) return;
+  var overlay=document.getElementById('caseLightbox'),img=document.getElementById('lbImg'),counter=document.getElementById('lbCounter');
+  var urls=Array.prototype.map.call(items,function(a){return a.href;});
+  var alts=Array.prototype.map.call(items,function(a){var m=a.querySelector('img');return m?m.alt:'';});
+  var idx=0;
+  function show(i){idx=(i+urls.length)%urls.length;img.src=urls[idx];img.alt=alts[idx]||'';counter.textContent=(idx+1)+' / '+urls.length;overlay.classList.add('open');document.body.style.overflow='hidden';}
+  function close(){overlay.classList.remove('open');document.body.style.overflow='';}
+  items.forEach(function(a,i){a.addEventListener('click',function(e){e.preventDefault();show(i);});});
+  overlay.querySelector('.lb-close').addEventListener('click',close);
+  overlay.querySelector('.lb-prev').addEventListener('click',function(e){e.stopPropagation();show(idx-1);});
+  overlay.querySelector('.lb-next').addEventListener('click',function(e){e.stopPropagation();show(idx+1);});
+  overlay.addEventListener('click',function(e){if(e.target===overlay)close();});
+  document.addEventListener('keydown',function(e){if(!overlay.classList.contains('open'))return;if(e.key==='Escape')close();else if(e.key==='ArrowLeft')show(idx-1);else if(e.key==='ArrowRight')show(idx+1);});
+  var sx=0;
+  overlay.addEventListener('touchstart',function(e){sx=e.changedTouches[0].screenX;});
+  overlay.addEventListener('touchend',function(e){var dx=e.changedTouches[0].screenX-sx;if(Math.abs(dx)>40)show(idx+(dx<0?1:-1));});
+})();
+</script>
 <?php endif; ?>
 
 <!-- 案例描述 -->
