@@ -125,11 +125,11 @@ require_once __DIR__ . '/../includes/layout_head.php';
       <input type="hidden" name="category_id" value="<?= $activeCat ?>">
       <div class="form-group" style="margin:0;">
         <label>名稱</label>
-        <input type="text" name="name" class="form-control" placeholder="例 清潔" required style="width:130px;">
+        <input type="text" name="name" id="kw-name" class="form-control" placeholder="例 清潔" required style="width:130px;">
       </div>
       <div class="form-group" style="margin:0;">
         <label>slug</label>
-        <input type="text" name="slug" class="form-control" placeholder="例 cleaning" required style="width:150px;">
+        <input type="text" name="slug" id="kw-slug" class="form-control" placeholder="自動帶拼音（可改）" required style="width:150px;">
       </div>
       <div class="form-group" style="margin:0;">
         <label>page_slug（同義折入用，可空）</label>
@@ -143,6 +143,31 @@ require_once __DIR__ . '/../includes/layout_head.php';
     </form>
   </div>
 </div>
+
+<!-- 名稱 → slug 自動帶拼音（純前端，pinyin-pro CDN）-->
+<script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3/dist/index.js"></script>
+<script>
+(function(){
+  var nameEl = document.getElementById('kw-name');
+  var slugEl = document.getElementById('kw-slug');
+  if (!nameEl || !slugEl) return;
+  var slugEdited = false;
+  slugEl.addEventListener('input', function(){ slugEdited = true; });
+  function toSlug(zh){
+    if (!zh) return '';
+    if (!window.pinyinPro) return '';
+    try {
+      var arr = window.pinyinPro.pinyin(zh, { toneType:'none', type:'array', nonZh:'consecutive' });
+      return arr.join('').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+    } catch(e){ return ''; }
+  }
+  nameEl.addEventListener('input', function(){
+    if (slugEdited && slugEl.value) return;   // 使用者手動改過就不蓋掉
+    var s = toSlug(nameEl.value.trim());
+    if (s) slugEl.value = s;
+  });
+})();
+</script>
 
 <!-- 列表（每列兩個並排表單：存 / 刪，避免 form 巢在 table 內的無效 HTML）-->
 <div class="card">
