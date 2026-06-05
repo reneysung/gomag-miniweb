@@ -158,6 +158,9 @@ if ($citySlug !== '') {
     }
 }
 
+// Hero 圖顯示方式（cover=照片填滿 / contain=Logo 完整顯示）— 新舊 hero 共用
+$_heroFit = (($client['hero_image_fit'] ?? 'cover') === 'contain') ? 'contain' : 'cover';
+
 // SEO：客戶自定 > 自動產生
 // 行銷頁 SEO 預設：有小官網的客戶 → 行銷頁走「口碑/評價」角度，與小官網(品牌/服務)錯開，避免兩頁互搶排名(cannibalization)
 // 城市名稱（依 client.city_slug 從 cities 表抓；無 → fallback 台南）
@@ -434,7 +437,7 @@ if ($showTopBanner):
   <div style="max-width:1100px; margin:0 auto; padding:0 20px;">
     <div style="aspect-ratio:16/6; overflow:hidden; border-radius:0 0 16px 16px; background:#efeae6;">
       <img src="<?= BASE_URL ?>/<?= h($client['hero_image_path']) ?>" alt="<?= h($client['brand_name']) ?>" loading="lazy"
-           style="width:100%; height:100%; object-fit:cover; display:block;">
+           style="width:100%; height:100%; object-fit:<?= $_heroFit ?>; display:block;<?= $_heroFit==='contain' ? ' padding:14px; background:#fff;' : '' ?>">
     </div>
   </div>
 </section>
@@ -561,7 +564,7 @@ if ($showTopBanner):
         <?php if ($client['hero_image_path']): ?>
         <img src="<?= BASE_URL ?>/<?= h($client['hero_image_path']) ?>"
              alt="<?= h($client['brand_name']) ?>"
-             style="width:100%; aspect-ratio:4/3; object-fit:cover; border-radius:var(--m-radius); box-shadow:var(--m-shadow);">
+             style="width:100%; aspect-ratio:4/3; object-fit:<?= $_heroFit ?>; border-radius:var(--m-radius); box-shadow:var(--m-shadow);<?= $_heroFit==='contain' ? ' padding:14px; background:#fff;' : '' ?>">
         <?php else: ?>
         <div style="aspect-ratio:4/3; background:linear-gradient(135deg, var(--m-bg), var(--m-border)); border-radius:var(--m-radius); display:flex; align-items:center; justify-content:center; font-size:5rem; opacity:.4;">
           <?= h($client['cat_icon'] ?? '🏪') ?>
