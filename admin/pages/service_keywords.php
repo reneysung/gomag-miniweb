@@ -83,7 +83,9 @@ foreach ($db->query("SELECT category_id, COUNT(*) n FROM service_keywords GROUP 
 $rows = [];
 if ($activeCat) {
     $st = $db->prepare("SELECT sk.*,
-        (SELECT COUNT(*) FROM client_service_keywords csk WHERE csk.service_keyword_id = sk.id) AS store_count
+        (SELECT COUNT(*) FROM client_service_keywords csk WHERE csk.service_keyword_id = sk.id) AS store_count,
+        (SELECT COUNT(*) FROM geo_category_pages g WHERE g.category_id = sk.category_id
+             AND g.service_slug = COALESCE(NULLIF(sk.page_slug,''), sk.slug) AND g.is_active = 1) AS content_count
         FROM service_keywords sk WHERE sk.category_id = ? ORDER BY sk.sort_order, sk.id");
     $st->execute([$activeCat]);
     $rows = $st->fetchAll();
@@ -194,6 +196,14 @@ require_once __DIR__ . '/../includes/layout_head.php';
           <input type="text" name="page_slug" value="" class="form-control" style="width:110px;" placeholder="(空=獨立頁)" title="填 slug 則變同義詞">
           <?php endif; ?>
           <span style="font-size:.78rem; color:var(--muted);">店數 <?= (int)$r['store_count'] ?></span>
+          <?php $_cc = (int)$r['content_count']; $_sc = (int)$r['store_count']; ?>
+          <?php if ($_cc > 0): ?>
+          <span style="font-size:.72rem; background:#E6F7EC; color:#137a3a; padding:3px 8px; border-radius:100px; font-weight:700;" title="已有 <?= $_cc ?> 個城市內容頁">📄 內容頁 <?= $_cc ?></span>
+          <?php elseif ($_sc > 0): ?>
+          <a href="<?= BASE_URL ?>/admin/pages/geo_category.php" style="text-decoration:none; font-size:.72rem; background:#FDECEC; color:#c0392b; padding:3px 8px; border-radius:100px; font-weight:700;" title="標了店家卻沒內容頁 → 城市頁不會出現此標籤、子服務頁會 404。點此到「交叉頁內容」建內容。">⚠️ 缺內容頁</a>
+          <?php else: ?>
+          <span style="font-size:.72rem; color:var(--muted);">內容頁 0</span>
+          <?php endif; ?>
           <label style="font-size:.78rem;">排序 <input type="number" name="sort_order" value="<?= (int)$r['sort_order'] ?>" class="form-control" style="width:60px; display:inline-block;"></label>
           <label style="font-size:.78rem;"><input type="checkbox" name="is_active" value="1" <?= $r['is_active'] ? 'checked' : '' ?>> 啟用</label>
           <button type="submit" class="btn btn-sm btn-primary">💾 存</button>
