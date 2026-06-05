@@ -160,6 +160,12 @@ if ($citySlug !== '') {
 
 // Hero 圖顯示方式（cover=照片填滿 / contain=Logo 完整顯示）— 新舊 hero 共用
 $_heroFit = (($client['hero_image_fit'] ?? 'cover') === 'contain') ? 'contain' : 'cover';
+// 舊版 hero 圖片配置：右圖卡優先用 Logo（沒 Logo 才用主圖）；上方主圖橫幅只在「Logo 與主圖是兩張不同圖」時才出現（避免同圖重複）
+$_logo = $client['logo_path'] ?? '';
+$_hero = $client['hero_image_path'] ?? '';
+$_cardImg    = $_logo ?: $_hero;                                  // 右卡圖
+$_cardFit    = $_logo ? 'contain' : $_heroFit;                   // 用 Logo 時一律完整顯示
+$_showBanner = ($_logo !== '' && $_hero !== '' && $_logo !== $_hero);  // 兩張不同才開橫幅
 
 // SEO：客戶自定 > 自動產生
 // 行銷頁 SEO 預設：有小官網的客戶 → 行銷頁走「口碑/評價」角度，與小官網(品牌/服務)錯開，避免兩頁互搶排名(cannibalization)
@@ -431,7 +437,17 @@ if ($showTopBanner):
 
 <?php else: ?>
 <!-- ═══════ Store Hero（舊樣式 — 未啟用 blocks 的客戶）═══════ -->
-<!-- 舊版 hero：移除上方整排大橫幅（與右側圖卡同一張，避免同圖重複）；只保留下方「左文字＋右圖卡」 -->
+<?php if ($_showBanner): ?>
+<!-- 上方主圖橫幅（僅當 Logo 與主圖是兩張不同圖時才顯示，避免同圖重複） -->
+<section style="background:var(--m-bg-alt); padding:0;">
+  <div style="max-width:1100px; margin:0 auto; padding:0 20px;">
+    <div style="aspect-ratio:16/6; overflow:hidden; border-radius:0 0 16px 16px; background:#efeae6;">
+      <img src="<?= BASE_URL ?>/<?= h($_hero) ?>" alt="<?= h($client['brand_name']) ?>" loading="lazy"
+           style="width:100%; height:100%; object-fit:<?= $_heroFit ?>; display:block;<?= $_heroFit==='contain' ? ' padding:14px; background:#fff;' : '' ?>">
+    </div>
+  </div>
+</section>
+<?php endif; ?>
 <section style="background:var(--m-bg-alt); border-top:1px solid var(--m-border); padding:40px 0;">
   <div class="m-container">
     <div style="display:grid; grid-template-columns: 1.4fr 1fr; gap:40px; align-items:start;">
@@ -549,12 +565,12 @@ if ($showTopBanner):
         </div>
       </div>
 
-      <!-- 右：Hero 圖 -->
+      <!-- 右：圖卡（優先 Logo，沒 Logo 才用主圖） -->
       <div>
-        <?php if ($client['hero_image_path']): ?>
-        <img src="<?= BASE_URL ?>/<?= h($client['hero_image_path']) ?>"
+        <?php if ($_cardImg): ?>
+        <img src="<?= BASE_URL ?>/<?= h($_cardImg) ?>"
              alt="<?= h($client['brand_name']) ?>"
-             style="width:100%; aspect-ratio:4/3; object-fit:<?= $_heroFit ?>; border-radius:var(--m-radius); box-shadow:var(--m-shadow);<?= $_heroFit==='contain' ? ' padding:14px; background:#fff;' : '' ?>">
+             style="width:100%; aspect-ratio:4/3; object-fit:<?= $_cardFit ?>; border-radius:var(--m-radius); box-shadow:var(--m-shadow);<?= $_cardFit==='contain' ? ' padding:14px; background:#fff;' : '' ?>">
         <?php else: ?>
         <div style="aspect-ratio:4/3; background:linear-gradient(135deg, var(--m-bg), var(--m-border)); border-radius:var(--m-radius); display:flex; align-items:center; justify-content:center; font-size:5rem; opacity:.4;">
           <?= h($client['cat_icon'] ?? '🏪') ?>
