@@ -106,6 +106,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_uploadErrors[] = "老闆頭像：{$_r}";
         }
     }
+
+    // Favicon 上傳：強制縮成 192×192 PNG 方形 → uploads/brand/favicon-{slug}.png
+    // 用於 SERP / 瀏覽器分頁顯示「客戶自己 logo」（取代主域 gomag favicon）
+    if (!empty($_FILES['favicon']['name']) && $_FILES['favicon']['error'] === UPLOAD_ERR_OK) {
+        $_favSlugSave = $client['subdomain'] ?: $client['slug'];
+        $_favSrc = $_FILES['favicon']['tmp_name'];
+        $_favInfo = @getimagesize($_favSrc);
+        if (!$_favInfo) {
+            $_uploadErrors[] = "Favicon：無法辨識的圖檔";
+        } else {
+            [$_fw, $_fh, $_ftype] = $_favInfo;
+            $_favSrcImg = match($_ftype) {
+                IMAGETYPE_JPEG => @imagecreatefromjpeg($_favSrc),
+                IMAGETYPE_PNG  => @imagecreatefrompng($_favSrc),
+                IMAGETYPE_GIF  => @imagecreatefromgif($_favSrc),
+                IMAGETYPE_WEBP => function_exists('imagecreatefromwebp') ? @imagecreatefromwebp($_favSrc) : false,
+                default => false,
+            };
+            if (!$_favSrcImg) {
+                $_uploadErrors[] = "Favicon：不支援的圖檔類型（請用 JPG/PNG/GIF/WEBP）";
+            } else {
+                $_favTarget = 192;
+                $_favSide = min($_fw, $_fh);
+                $_favSx = (int)(($_fw - $_favSide) / 2);
+                $_favSy = (int)(($_fh - $_favSide) / 2);
+                $_favDstImg = imagecreatetruecolor($_favTarget, $_favTarget);
+                imagealphablending($_favDstImg, false);
+                imagesavealpha($_favDstImg, true);
+                $_favTransparent = imagecolorallocatealpha($_favDstImg, 255, 255, 255, 127);
+                imagefilledrectangle($_favDstImg, 0, 0, $_favTarget, $_favTarget, $_favTransparent);
+                imagecopyresampled($_favDstImg, $_favSrcImg, 0, 0, $_favSx, $_favSy, $_favTarget, $_favTarget, $_favSide, $_favSide);
+                $_favDstPath = dirname(__DIR__, 2) . "/uploads/brand/favicon-{$_favSlugSave}.png";
+                if (!is_dir(dirname($_favDstPath))) @mkdir(dirname($_favDstPath), 0755, true);
+                if (imagepng($_favDstImg, $_favDstPath, 6)) {
+                    @chmod($_favDstPath, 0644);
+                } else {
+                    $_uploadErrors[] = "Favicon：寫檔失敗";
+                }
+                imagedestroy($_favSrcImg);
+                imagedestroy($_favDstImg);
+            }
+        }
+    }
     // Phase C: Photo gallery 多檔上傳
     $existingPhotos = !empty($_POST['existing_photos']) ? json_decode($_POST['existing_photos'], true) : [];
     if (!is_array($existingPhotos)) $existingPhotos = [];
@@ -636,6 +679,31 @@ body[data-current-tab="minisite"] .tab-section[data-tab="store"] { display:none;
         <input type="file" name="logo" class="form-control" accept="image/*"
                onchange="previewImage(this,'logo_preview')">
         <div class="hint">建議尺寸：300×100px，PNG 透明背景</div>
+      </div>
+
+      <?php
+        // Favicon 路徑（讀檔不靠 DB）
+        $_favSlugView = $client['subdomain'] ?? $client['slug'] ?? '';
+        $_favFile = "uploads/brand/favicon-{$_favSlugView}.png";
+        $_favExists = $_favSlugView && is_file(dirname(__DIR__, 2) . '/' . $_favFile);
+      ?>
+      <div class="form-group-admin">
+        <label>Favicon（小官網／Google SERP 顯示的小圖示）</label>
+        <?php if ($_favExists): ?>
+          <div style="margin-bottom:8px; display:flex; align-items:center; gap:14px;">
+            <img src="<?= BASE_URL . '/' . h($_favFile) ?>?v=<?= @filemtime(dirname(__DIR__, 2) . '/' . $_favFile) ?>"
+                 class="img-preview" style="width:64px;height:64px;object-fit:cover;border:1px solid #ddd;border-radius:8px;">
+            <div style="font-size:.78rem;color:var(--muted)">目前 favicon：<code><?= h($_favFile) ?></code> · 192×192</div>
+          </div>
+        <?php else: ?>
+          <div style="margin-bottom:8px; padding:10px 12px; background:#fff8e1; border-left:3px solid #ff9800; border-radius:4px; font-size:.82rem;">
+            ⚠️ 尚未設定專屬 favicon。會 fallback 用「品牌 Logo」縮圖；若 Logo 非方形，Google SERP 可能改用主域 gomag favicon。建議上傳專屬方形圖示。
+          </div>
+        <?php endif; ?>
+        <img id="favicon_preview" style="display:none;width:64px;height:64px;object-fit:cover;margin-bottom:8px;border:1px solid #ddd;border-radius:8px;" alt="預覽">
+        <input type="file" name="favicon" class="form-control" accept="image/png,image/jpeg,image/webp"
+               onchange="previewImage(this,'favicon_preview')">
+        <div class="hint">建議 192×192px 以上方形 PNG（透明 OK）。上傳後系統會自動 center-crop + 縮成 192×192。Google 1-4 週內會重抓 SERP favicon。</div>
       </div>
 
       <div class="form-group-admin">
