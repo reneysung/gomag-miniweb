@@ -23,6 +23,7 @@ $slug_redirects = [
     'gourmetrestaurant1' => 'gourmetrestaurant2',   // 來道好食雞（id=76 → 145）
     '065957487'          => '062263168',            // 二鍋壽喜燒（id=90 → 13）
     'cleaningcompany5'   => 'sanfengclean',         // 三峰清潔公司（id=197 → 218）
+    'weddingbanquet8'    => 'hongchu',              // 洪廚囍宴舊網址（排「台南辦桌推薦」#3，救回 SEO）
 ];
 if (isset($slug_redirects[$sub])) {
     $newSub = $slug_redirects[$sub];
