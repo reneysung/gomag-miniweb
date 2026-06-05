@@ -12,13 +12,76 @@ $social   = $site['social'];
 $services = $site['services'];
 $seo      = getSeo($site, $pageKey);
 
+// ─── 多縣市覆寫 ─────────────────────────────────────────────
+// 若 $_GET['city'] 是該客戶有設 minisite_* 覆寫的城市，把 client_city_pages 對應
+// row 覆寫上 $client（不破壞既有「沒覆寫就 fallback 主檔」的邏輯）。
+$cityVariants = [];          // [city_slug => row] 該客戶所有啟用城市
+$currentCity  = '';          // 目前頁面對應城市 slug（空字串=不是城市變體頁）
+try {
+    $cvStmt = getDB()->prepare("SELECT city_slug, city_label, brand_name, hero_image_path,
+        minisite_meta_title, minisite_meta_desc, minisite_keywords, minisite_og_image, minisite_intro_html
+        FROM client_city_pages
+        WHERE client_id=? AND is_active=1
+          AND (COALESCE(minisite_meta_title,'')<>''
+            OR COALESCE(minisite_meta_desc,'') <>''
+            OR COALESCE(minisite_intro_html,'')<>''
+            OR COALESCE(minisite_keywords,'')  <>'')
+        ORDER BY sort_order, id");
+    $cvStmt->execute([(int)$client['id']]);
+    foreach ($cvStmt->fetchAll() as $cv) $cityVariants[$cv['city_slug']] = $cv;
+} catch (\Throwable $e) { /* client_city_pages 表未建或欄位未 migrate */ }
+
+$reqCity = strtolower(preg_replace('/[^a-z]/', '', $_GET['city'] ?? ''));
+if ($reqCity !== '' && isset($cityVariants[$reqCity])) {
+    $currentCity = $reqCity;
+    $cv = $cityVariants[$reqCity];
+    // 覆寫到 $client，沒填的欄位保留原值（COALESCE 行為）
+    foreach (['minisite_meta_title','minisite_meta_desc','minisite_keywords','minisite_og_image'] as $k) {
+        if (!empty($cv[$k])) $client[$k] = $cv[$k];
+    }
+    if (!empty($cv['brand_name']))          $client['brand_name']       = $cv['brand_name'];
+    if (!empty($cv['hero_image_path']))     $client['hero_image_path']  = $cv['hero_image_path'];
+    if (!empty($cv['minisite_intro_html'])) $client['about_text']       = $cv['minisite_intro_html'];
+}
+
 // Mini-site SEO 優先級：頁面 SEO（service_detail 等預設）> client 自訂 minisite_meta_* > 自動組
+// fallback 依 pageKey 自動差異化，避免 home/services/cases/testimonials 撞同一組 meta（SEO 互蠶食）
+$_brand    = $client['brand_name'] ?? '';
+$_tagline  = $client['tagline'] ?? '';
+$_about    = $client['about_text'] ?? '';
+$_svcNames = array_slice(array_filter(array_map(fn($s) => $s['name'] ?? '', $services ?? [])), 0, 4);
+$_svcList  = implode('、', $_svcNames);
+
+$_autoTitle = match ($pageKey) {
+    'services'     => "服務項目｜{$_brand}" . ($_svcList ? "（{$_svcList}）" : ''),
+    'cases'        => "施工案例 Before / After｜{$_brand}",
+    'testimonials' => "{$_brand}評價・客戶分享｜真實口碑推薦",
+    'articles'     => "專欄文章｜{$_brand}",
+    'contact'      => "聯絡我們｜{$_brand}",
+    default        => $_brand . ($_tagline ? "｜{$_tagline}" : ''),  // home + fallback
+};
+$_autoDesc = match ($pageKey) {
+    'services'     => "{$_brand}專業服務項目" . ($_svcList ? "：{$_svcList}。" : '。') . "詳細服務內容、流程說明，免費場勘估價。",
+    'cases'        => "{$_brand}真實施工案例 Before / After 對比照片與成果說明，看實際施作品質再決定。",
+    'testimonials' => "{$_brand}真實客戶評價與口碑分享，看完整服務心得與推薦再決定。",
+    'articles'     => "{$_brand}專業知識文章、案例分享、選購指南。",
+    'contact'      => "{$_brand}聯絡資訊：電話、LINE、地址。免費場勘估價，加 LINE 或來電諮詢。",
+    default        => $_about ? mb_strimwidth(strip_tags($_about), 0, 150, '…') : '',  // home
+};
+
 $metaTitle = $seo['meta_title']
-    ?? (!empty($client['minisite_meta_title']) ? $client['minisite_meta_title'] : ($client['brand_name'] . '｜' . ($client['tagline'] ?? '')));
+    ?? (!empty($client['minisite_meta_title']) ? $client['minisite_meta_title'] : $_autoTitle);
 $metaDesc  = $seo['meta_desc']
-    ?? (!empty($client['minisite_meta_desc']) ? $client['minisite_meta_desc'] : ($client['about_text'] ? mb_strimwidth(strip_tags($client['about_text']), 0, 120, '…') : ''));
+    ?? (!empty($client['minisite_meta_desc']) ? $client['minisite_meta_desc'] : $_autoDesc);
 // canonical：呼叫者可預先設定（如 service_detail.php），否則由 pageKey 自動算
 $canonicalUrl = $canonicalUrl ?? getCanonicalUrl($slug, $pageKey);
+// 城市變體 canonical 覆寫：{sub}.gomag.com.tw/{city}（prod）或 ?city= 形式（local/staging）
+if ($currentCity !== '' && $pageKey === 'home') {
+    $_mb = (IS_LOCAL || IS_STAGING) ? BASE_URL . '/site' : 'https://' . $slug . '.' . MINISITE_DOMAIN;
+    $canonicalUrl = (IS_LOCAL || IS_STAGING)
+        ? $_mb . '/index.php?sub=' . urlencode($slug) . '&city=' . urlencode($currentCity)
+        : $_mb . '/' . rawurlencode($currentCity);
+}
 $ogImage   = $seo['og_image']
     ?? (!empty($client['minisite_og_image']) ? (str_starts_with($client['minisite_og_image'], 'http') ? $client['minisite_og_image'] : BASE_URL . '/' . $client['minisite_og_image']) : ($client['hero_image_path'] ? BASE_URL . '/' . $client['hero_image_path'] : ''));
 // LINE URL：line_url 直填 > line_id 自動組 > 沒設則 ''（templates 用 if 判斷）
@@ -39,6 +102,20 @@ $_isFood = (bool)preg_match('/(餐|食|料理|咖啡|甜點|甜品|烘焙|燒肉
 $_casesLabel = $_isFood ? '料理作品' : '施工案例';
 $_casesIcon  = $_isFood ? '🍽️' : '📸';
 $_logoIcon   = $_isFood ? '🍝' : '🌊';
+
+// ─── Mini-site template nav override（Phase 4 脫鉤系統）──
+// 若客戶模板 meta.json 有 pages 對應表，用模板的 nav 文字（且模板沒列的 sub-page 就隱藏）
+require_once __DIR__ . '/../includes/minisite_template_loader.php';
+$_mtpl_nav = $client['minisite_template'] ?? '_default';
+$_navPages = ($_mtpl_nav !== '_default') ? minisiteTemplatePages($_mtpl_nav) : [];
+$_hideEmoji = ($_mtpl_nav !== '_default') && minisiteTemplateHidesEmoji($_mtpl_nav);
+$_servicesLabel = $_navPages['services'] ?? '服務項目';
+$_casesLabelOverride = $_navPages['cases'] ?? $_casesLabel;
+$_testimonialsLabel  = $_navPages['testimonials'] ?? '客戶好評';
+$_showServices       = empty($_navPages) || isset($_navPages['services']);
+$_showCases          = empty($_navPages) || isset($_navPages['cases']);
+$_showTestimonials   = empty($_navPages) || isset($_navPages['testimonials']);
+$_showArticlesNav    = empty($_navPages) || isset($_navPages['articles']);
 
 // 該客戶是否有發過專欄文章（決定是否顯示「專欄」nav）
 $_hasArticles = false;
@@ -66,7 +143,7 @@ $_favHost = (IS_LOCAL || IS_STAGING) ? BASE_URL : 'https://' . $_favSlug . '.' .
 $_favFile = 'uploads/brand/favicon-' . $_favSlug . '.png';
 if ($_favSlug && is_file(dirname(__DIR__) . '/' . $_favFile)) {
     $_favUrl = $_favHost . '/' . $_favFile;
-} elseif (!empty($client['logo_path'])) {
+} elseif (!empty($client['logo_path']) && is_file(dirname(__DIR__) . '/' . $client['logo_path'])) {
     $_favUrl = $_favHost . '/' . $client['logo_path'];
 } else {
     $_favUrl = $_favHost . '/favicon.svg';
@@ -76,6 +153,7 @@ if ($_favSlug && is_file(dirname(__DIR__) . '/' . $_favFile)) {
 <link rel="apple-touch-icon" href="<?= h($_favUrl) ?>">
 <title><?= h($metaTitle) ?></title>
 <meta name="description" content="<?= h($metaDesc) ?>">
+<meta name="application-name" content="<?= h($_brand) ?>">
 <link rel="canonical" href="<?= h($canonicalUrl) ?>">
 <link rel="alternate" hreflang="zh-Hant" href="<?= h($canonicalUrl) ?>">
 <link rel="alternate" hreflang="x-default" href="<?= h($canonicalUrl) ?>">
@@ -84,6 +162,7 @@ if ($_favSlug && is_file(dirname(__DIR__) . '/' . $_favFile)) {
 $_siteSitemapHost = (IS_LOCAL || IS_STAGING) ? rtrim(BASE_URL, '/') : 'https://' . $slug . '.' . MINISITE_DOMAIN;
 ?>
 <link rel="sitemap" type="application/xml" href="<?= h($_siteSitemapHost) ?>/sitemap.xml" title="Sitemap">
+<meta property="og:site_name"   content="<?= h($_brand) ?>">
 <meta property="og:title"       content="<?= h($seo['og_title'] ?? $metaTitle) ?>">
 <meta property="og:description" content="<?= h($metaDesc) ?>">
 <meta property="og:type"        content="website">
@@ -100,6 +179,17 @@ $_siteSitemapHost = (IS_LOCAL || IS_STAGING) ? rtrim(BASE_URL, '/') : 'https://'
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/gomag.css?v=<?= filemtime(__DIR__ . '/../assets/css/gomag.css') ?>">
 <?php outputThemeCss($theme); /* 必須在 gomag.css 之後，讓客戶 theme 色 override 預設 */ ?>
+<?php
+// ── Mini-site template theme.css（Phase 4 脫鉤系統，必須在 outputThemeCss 之後才能覆寫）──
+$_mtpl_cs = $client['minisite_template'] ?? '_default';
+if ($_mtpl_cs !== '_default') {
+    $_mtplCssPath = __DIR__ . "/../templates/minisite/{$_mtpl_cs}/theme.css";
+    if (is_file($_mtplCssPath)) {
+        $_mtplCssUrl = BASE_URL . "/templates/minisite/{$_mtpl_cs}/theme.css?v=" . filemtime($_mtplCssPath);
+        echo '<link rel="stylesheet" href="' . htmlspecialchars($_mtplCssUrl, ENT_QUOTES) . "\">\n";
+    }
+}
+?>
 <style>
 /* ══ RESET & BASE ══════════════════════════════════════════ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -239,9 +329,9 @@ img{max-width:100%;display:block}
 <!-- Top Info Bar -->
 <div class="topbar-strip">
   <div class="container inner">
-    <div>📞 <?= h($phone) ?>&nbsp;&nbsp;📍 <?= h($client['address'] ?? '') ?></div>
+    <div><?= $_hideEmoji ? '' : '📞 ' ?><?= h($phone) ?>&nbsp;&nbsp;<?= $_hideEmoji ? '' : '📍 ' ?><?= h($client['address'] ?? '') ?></div>
     <div class="links">
-      <?php if ($lineUrl): ?><a href="<?= h($lineUrl) ?>" target="_blank">💬 LINE 聯絡</a><?php endif; ?>
+      <?php if ($lineUrl): ?><a href="<?= h($lineUrl) ?>" target="_blank"><?= $_hideEmoji ? 'LINE 聯絡' : '💬 LINE 聯絡' ?></a><?php endif; ?>
       <?php if ($fbUrl   !== '#'): ?><a href="<?= h($fbUrl)   ?>" target="_blank">📘 Facebook</a><?php endif; ?>
     </div>
   </div>
@@ -264,14 +354,20 @@ img{max-width:100%;display:block}
 
     <nav class="site-nav">
       <a href="<?= siteUrl($slug) ?>"             class="<?= $pageKey==='home'?'active':'' ?>">首頁</a>
-      <a href="<?= siteUrl($slug,'services') ?>"  class="<?= $pageKey==='services'?'active':'' ?>">服務項目</a>
-      <a href="<?= siteUrl($slug,'cases') ?>"     class="<?= $pageKey==='cases'?'active':'' ?>"><?= $_casesLabel ?></a>
-      <?php if ($_hasArticles): ?>
+      <?php if ($_showServices): ?>
+      <a href="<?= siteUrl($slug,'services') ?>"  class="<?= $pageKey==='services'?'active':'' ?>"><?= h($_servicesLabel) ?></a>
+      <?php endif; ?>
+      <?php if ($_showCases): ?>
+      <a href="<?= siteUrl($slug,'cases') ?>"     class="<?= $pageKey==='cases'?'active':'' ?>"><?= h($_casesLabelOverride) ?></a>
+      <?php endif; ?>
+      <?php if ($_hasArticles && $_showArticlesNav): ?>
         <a href="<?= h($_columnUrl) ?>" class="<?= in_array($pageKey,['articles','article_detail'])?'active':'' ?>">專欄</a>
       <?php endif; ?>
-      <a href="<?= siteUrl($slug,'testimonials') ?>" class="<?= $pageKey==='testimonials'?'active':'' ?>">網友分享</a>
+      <?php if ($_showTestimonials): ?>
+      <a href="<?= siteUrl($slug,'testimonials') ?>" class="<?= $pageKey==='testimonials'?'active':'' ?>"><?= h($_testimonialsLabel) ?></a>
+      <?php endif; ?>
       <?php if ($phone): ?>
-        <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$phone)) ?>" class="btn-contact">📞 <?= h($phone) ?></a>
+        <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$phone)) ?>" class="btn-contact"><?= $_hideEmoji ? '' : '📞 ' ?><?= h($phone) ?></a>
       <?php endif; ?>
     </nav>
 
@@ -279,18 +375,24 @@ img{max-width:100%;display:block}
   </div>
 
   <nav class="mobile-menu" id="mobileMenu">
-    <a href="<?= siteUrl($slug) ?>"            onclick="closeMobileMenu()">🏠 首頁</a>
-    <a href="<?= siteUrl($slug,'services') ?>" onclick="closeMobileMenu()">🛠️ 服務項目</a>
-    <a href="<?= siteUrl($slug,'cases') ?>"    onclick="closeMobileMenu()"><?= $_casesIcon ?> <?= $_casesLabel ?></a>
-    <?php if ($_hasArticles): ?>
-      <a href="<?= h($_columnUrl) ?>" onclick="closeMobileMenu()">📝 專欄</a>
+    <a href="<?= siteUrl($slug) ?>"            onclick="closeMobileMenu()"><?= $_hideEmoji ? '' : '🏠 ' ?>首頁</a>
+    <?php if ($_showServices): ?>
+    <a href="<?= siteUrl($slug,'services') ?>" onclick="closeMobileMenu()"><?= $_hideEmoji ? '' : '🛠️ ' ?><?= h($_servicesLabel) ?></a>
     <?php endif; ?>
-    <a href="<?= siteUrl($slug,'testimonials') ?>" onclick="closeMobileMenu()">⭐ 網友分享</a>
+    <?php if ($_showCases): ?>
+    <a href="<?= siteUrl($slug,'cases') ?>"    onclick="closeMobileMenu()"><?= $_hideEmoji ? '' : ($_casesIcon . ' ') ?><?= h($_casesLabelOverride) ?></a>
+    <?php endif; ?>
+    <?php if ($_hasArticles && $_showArticlesNav): ?>
+      <a href="<?= h($_columnUrl) ?>" onclick="closeMobileMenu()"><?= $_hideEmoji ? '' : '📝 ' ?>專欄</a>
+    <?php endif; ?>
+    <?php if ($_showTestimonials): ?>
+    <a href="<?= siteUrl($slug,'testimonials') ?>" onclick="closeMobileMenu()"><?= $_hideEmoji ? '' : '⭐ ' ?><?= h($_testimonialsLabel) ?></a>
+    <?php endif; ?>
     <?php if ($phone): ?>
-      <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$phone)) ?>" class="highlight">📞 <?= h($phone) ?></a>
+      <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$phone)) ?>" class="highlight"><?= $_hideEmoji ? '' : '📞 ' ?><?= h($phone) ?></a>
     <?php endif; ?>
     <?php if ($lineUrl): ?>
-      <a href="<?= h($lineUrl) ?>" class="highlight" target="_blank">💬 LINE 諮詢</a>
+      <a href="<?= h($lineUrl) ?>" class="highlight" target="_blank"><?= $_hideEmoji ? 'LINE 諮詢' : '💬 LINE 諮詢' ?></a>
     <?php endif; ?>
   </nav>
 </header>
