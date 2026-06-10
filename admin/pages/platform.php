@@ -19,7 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'platform_name', 'platform_tagline', 'main_meta_title', 'main_meta_desc',
         'main_og_image', 'ga_tracking_id', 'gtm_id', 'search_console_verification',
         'contact_email', 'contact_phone', 'footer_text',
-        'google_maps_api_key',
+        'google_maps_api_key', 'home_featured_order',
     ];
     foreach ($keys as $k) {
         setPlatformSetting($k, trim($_POST[$k] ?? ''));
@@ -60,6 +60,25 @@ require_once __DIR__ . '/../includes/layout_head.php';
     <div class="form-group-admin">
       <label>Footer 文字（可選）</label>
       <textarea name="footer_text" class="form-control" rows="2"><?= h($s('footer_text')) ?></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- 首頁店家顯示 -->
+<?php $hfo = $s('home_featured_order', 'fixed'); ?>
+<div class="card" style="margin-bottom:20px; border-left:4px solid #f59e0b;">
+  <div class="card-header"><h2>🏠 首頁精選店家排序</h2></div>
+  <div class="card-body">
+    <div class="form-group-admin">
+      <label>精選店家顯示順序</label>
+      <select name="home_featured_order" class="form-control" style="max-width:320px;">
+        <option value="fixed"  <?= $hfo === 'fixed'  ? 'selected' : '' ?>>固定（新到舊，每次一樣）</option>
+        <option value="random" <?= $hfo === 'random' ? 'selected' : '' ?>>隨機輪播（每次載入換一批）</option>
+      </select>
+      <div class="hint">
+        選「隨機輪播」後，首頁每次重新整理會從各分類的精選店家中隨機挑選展示，<strong>讓更多精選店家輪流曝光</strong>（仍會把有圖的排前面）。<br>
+        想露出更多店家：記得到各店家後台勾選「在首頁精選展示」。
+      </div>
     </div>
   </div>
 </div>

@@ -30,6 +30,10 @@ $brandKeyFn = function(array $r): string {
     $n = preg_replace('/[\s\x{3000}【】（）()\[\]・·\-—｜|、。市縣店館所]/u', '', $n);
     return $n !== '' ? $n : (string)($r['brand_name'] ?? '');
 };
+// 首頁店家排序：後台「平台設定」可切「固定」或「隨機輪播」（每次載入換一批，讓更多精選店家有曝光）
+// 兩種都先把「有圖的」排前面，差別只在同層內是固定(id DESC)還是隨機(RAND())
+$homeOrder = getPlatformSetting('home_featured_order', 'fixed'); // fixed | random
+$featuredTie = ($homeOrder === 'random') ? 'RAND()' : 'cl.id DESC';
 $pickStmt = $db->prepare("
     SELECT cl.id, cl.subdomain, cl.slug, cl.brand_name, cl.tagline, cl.industry,
            cl.has_minisite, cl.external_website_url, cl.hero_image_path, cl.hero_image_fit,
@@ -38,7 +42,7 @@ $pickStmt = $db->prepare("
     FROM clients cl
     LEFT JOIN categories c ON cl.category_id = c.id
     WHERE cl.is_active = 1 AND cl.is_featured = 1 AND cl.category_id = ?
-    ORDER BY (cl.hero_image_path IS NULL OR cl.hero_image_path = '') ASC, cl.id DESC
+    ORDER BY (cl.hero_image_path IS NULL OR cl.hero_image_path = '') ASC, {$featuredTie}
     LIMIT 4
 ");
 foreach ($categories as $cat) {
@@ -146,7 +150,8 @@ try {
 }
 
 $pageTitle = getPlatformSetting('main_meta_title', '店家好口碑｜全台在地店家平台');
-$metaDesc  = "匯集 {$totalClients}+ 家全台優質店家：餐飲美食、居家服務、美容美髮、專業服務 — 一站式店家平台。";
+// 首頁描述：後台「平台設定 → 首頁 Meta Description」填了就用，沒填則用動態 fallback
+$metaDesc  = getPlatformSetting('main_meta_desc', "匯集 {$totalClients}+ 家全台優質店家：餐飲美食、居家服務、美容美髮、專業服務 — 一站式店家平台。");
 $isHomepage = true;  // 觸發 main/layout_head.php 的 WebSite + SearchAction schema
 
 require_once __DIR__ . '/main/layout_head.php';

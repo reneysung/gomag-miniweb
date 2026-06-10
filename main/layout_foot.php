@@ -54,5 +54,25 @@ $contactPhone = getPlatformSetting('contact_phone', '');
   </div>
 </footer>
 
+<!-- GA4 轉換事件：電話 / LINE / 地圖 點擊（委派監聽，只在 gtag 存在時送出；未裝 GA 不影響） -->
+<script>
+(function () {
+  if (typeof window.gtag !== 'function') return;
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest ? e.target.closest('a') : null;
+    if (!a) return;
+    var href = (a.getAttribute('href') || '').trim();
+    if (!href) return;
+    if (/^tel:/i.test(href)) {
+      gtag('event', 'phone_click', { phone_number: href.replace(/^tel:/i, ''), page_path: location.pathname });
+    } else if (/(?:line\.me|lin\.ee)/i.test(href)) {
+      gtag('event', 'line_click', { page_path: location.pathname });
+    } else if (/google\.[^\/]*\/maps|maps\.app\.goo|goo\.gl\/maps/i.test(href)) {
+      gtag('event', 'map_click', { page_path: location.pathname });
+    }
+  }, true);
+})();
+</script>
+
 </body>
 </html>

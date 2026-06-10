@@ -40,6 +40,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'opening_hours_json'     => trim($_POST['opening_hours_json'] ?? '') ?: null,
         'external_website_url'   => trim($_POST['external_website_url'] ?? ''),
         'order_url'              => trim($_POST['order_url'] ?? '') ?: null,
+        'foodpanda_url'          => trim($_POST['foodpanda_url'] ?? '') ?: null,
+        'ubereats_url'           => trim($_POST['ubereats_url'] ?? '') ?: null,
         'top_banner_html'        => trim($_POST['top_banner_html'] ?? '') ?: null,
         'top_banner_until'       => trim($_POST['top_banner_until'] ?? '') ?: null,
         'about_text'             => trim($_POST['about_text'] ?? ''),
@@ -535,7 +537,25 @@ body[data-current-tab="minisite"] .tab-section[data-tab="store"] { display:none;
       <input type="url" name="order_url" class="form-control"
              placeholder="https://shop.ichefpos.com/store/xxx/ordering"
              value="<?= h($client['order_url'] ?? '') ?>">
-      <div class="hint">iCHEF、foodpanda、Uber Eats、Inline 訂位、官方訂購頁等。行銷頁會顯示「🍱 線上訂購」按鈕。</div>
+      <div class="hint">iCHEF、Inline 訂位、官方訂購頁等（foodpanda／Uber Eats 請填下方專屬欄位）。行銷頁顯示「🍱 線上訂購」按鈕。</div>
+    </div>
+
+    <!-- foodpanda 外送 -->
+    <div class="form-group-admin" style="margin-top:10px;">
+      <label>🐼 foodpanda 外送連結（可選）</label>
+      <input type="url" name="foodpanda_url" class="form-control"
+             placeholder="https://www.foodpanda.com.tw/restaurant/xxxx/..."
+             value="<?= h($client['foodpanda_url'] ?? '') ?>">
+      <div class="hint">填入後行銷頁會顯示桃紅色「foodpanda」按鈕。</div>
+    </div>
+
+    <!-- Uber Eats 外送 -->
+    <div class="form-group-admin" style="margin-top:10px;">
+      <label>🛵 Uber Eats 外送連結（可選）</label>
+      <input type="url" name="ubereats_url" class="form-control"
+             placeholder="https://www.ubereats.com/tw/store/xxxx/..."
+             value="<?= h($client['ubereats_url'] ?? '') ?>">
+      <div class="hint">填入後行銷頁會顯示綠色「Uber Eats」按鈕。</div>
     </div>
 
     <!-- 頁面頂部 banner -->

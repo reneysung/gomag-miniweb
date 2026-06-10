@@ -403,6 +403,12 @@ if ($showTopBanner):
         <?php if (!empty($client['order_url'])): ?>
         <a href="<?= h($client['order_url']) ?>" class="g-store-btn g-store-btn-outline" target="_blank" rel="noopener">🍱 線上訂購</a>
         <?php endif; ?>
+        <?php if (!empty($client['foodpanda_url'])): ?>
+        <a href="<?= h($client['foodpanda_url']) ?>" class="g-store-btn" style="background:#E2136E;border-color:#E2136E;color:#fff;" target="_blank" rel="noopener">🐼 foodpanda</a>
+        <?php endif; ?>
+        <?php if (!empty($client['ubereats_url'])): ?>
+        <a href="<?= h($client['ubereats_url']) ?>" class="g-store-btn" style="background:#06C167;border-color:#06C167;color:#05231a;" target="_blank" rel="noopener">🛵 Uber Eats</a>
+        <?php endif; ?>
       </div>
 
       <?php if ($heroStats && is_array($heroStats)): ?>
@@ -523,6 +529,12 @@ if ($showTopBanner):
           <a href="<?= h($client['order_url']) ?>" class="m-btn m-btn-accent" target="_blank" rel="noopener">
             🍱 線上訂購
           </a>
+          <?php endif; ?>
+          <?php if (!empty($client['foodpanda_url'])): ?>
+          <a href="<?= h($client['foodpanda_url']) ?>" class="m-btn" style="background:#E2136E;color:#fff;" target="_blank" rel="noopener">🐼 foodpanda</a>
+          <?php endif; ?>
+          <?php if (!empty($client['ubereats_url'])): ?>
+          <a href="<?= h($client['ubereats_url']) ?>" class="m-btn" style="background:#06C167;color:#05231a;" target="_blank" rel="noopener">🛵 Uber Eats</a>
           <?php endif; ?>
           <?php if ($client['phone']): ?>
           <a href="tel:<?= h($client['phone']) ?>" class="m-btn m-btn-outline">
@@ -789,6 +801,12 @@ if ($client['about_text'] || ($aboutTags && is_array($aboutTags))):
         <?php endif; ?>
         <?php if (!empty($client['order_url'])): ?>
         <a href="<?= h($client['order_url']) ?>" target="_blank" rel="noopener" class="g-aside-btn g-aside-btn-outline">🍱 線上訂購</a>
+        <?php endif; ?>
+        <?php if (!empty($client['foodpanda_url'])): ?>
+        <a href="<?= h($client['foodpanda_url']) ?>" target="_blank" rel="noopener" class="g-aside-btn" style="background:#E2136E;border-color:#E2136E;color:#fff;">🐼 foodpanda</a>
+        <?php endif; ?>
+        <?php if (!empty($client['ubereats_url'])): ?>
+        <a href="<?= h($client['ubereats_url']) ?>" target="_blank" rel="noopener" class="g-aside-btn" style="background:#06C167;border-color:#06C167;color:#05231a;">🛵 Uber Eats</a>
         <?php endif; ?>
       </div>
 
