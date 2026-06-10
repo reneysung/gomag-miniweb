@@ -42,6 +42,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'order_url'              => trim($_POST['order_url'] ?? '') ?: null,
         'foodpanda_url'          => trim($_POST['foodpanda_url'] ?? '') ?: null,
         'ubereats_url'           => trim($_POST['ubereats_url'] ?? '') ?: null,
+        'coupon_enabled'         => isset($_POST['coupon_enabled']) ? 1 : 0,
+        'coupon_title'           => trim($_POST['coupon_title'] ?? '') ?: null,
+        'coupon_code'            => trim($_POST['coupon_code'] ?? '') ?: null,
+        'coupon_expiry'          => trim($_POST['coupon_expiry'] ?? '') ?: null,
+        'coupon_desc'            => trim($_POST['coupon_desc'] ?? '') ?: null,
         'top_banner_html'        => trim($_POST['top_banner_html'] ?? '') ?: null,
         'top_banner_until'       => trim($_POST['top_banner_until'] ?? '') ?: null,
         'about_text'             => trim($_POST['about_text'] ?? ''),
@@ -556,6 +561,46 @@ body[data-current-tab="minisite"] .tab-section[data-tab="store"] { display:none;
              placeholder="https://www.ubereats.com/tw/store/xxxx/..."
              value="<?= h($client['ubereats_url'] ?? '') ?>">
       <div class="hint">填入後行銷頁會顯示綠色「Uber Eats」按鈕。</div>
+    </div>
+
+    <!-- 優惠券（加 LINE 領取 → 出示畫面）-->
+    <div class="form-group-admin" style="margin-top:18px; padding-top:18px; border-top:1px dashed #ccc;">
+      <label style="display:flex; align-items:center; gap:8px; font-weight:700;">
+        <input type="checkbox" name="coupon_enabled" value="1" style="transform:scale(1.2);"
+               <?= !empty($client['coupon_enabled']) ? 'checked' : '' ?>>
+        🎟️ 在行銷頁顯示優惠券（一閃一閃，需加 LINE 才解鎖）
+      </label>
+      <div class="hint" style="margin-top:4px;">
+        客人點「加 LINE 領取優惠券」→ 開啟你的 LINE 加好友頁 + 跳出優惠券給店家出示。
+        ⚠️ 需先在「📱 社群連結」填好 LINE 網址才會引導加好友。
+      </div>
+      <div style="margin-top:12px; display:grid; gap:10px;">
+        <div>
+          <label>優惠券標題</label>
+          <input type="text" name="coupon_title" class="form-control" maxlength="120"
+                 placeholder="例：新客首訪 9 折 / 出示折 50 元 / 加 LINE 送小菜一份"
+                 value="<?= h($client['coupon_title'] ?? '') ?>">
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div>
+            <label>優惠碼（可選）</label>
+            <input type="text" name="coupon_code" class="form-control" maxlength="60"
+                   placeholder="例：VIP100（無則留空）"
+                   value="<?= h($client['coupon_code'] ?? '') ?>">
+          </div>
+          <div>
+            <label>有效期限（可選）</label>
+            <input type="date" name="coupon_expiry" class="form-control"
+                   value="<?= h($client['coupon_expiry'] ?? '') ?>">
+            <div class="hint">過期自動隱藏。</div>
+          </div>
+        </div>
+        <div>
+          <label>使用說明／條款（可選）</label>
+          <textarea name="coupon_desc" class="form-control" rows="2" maxlength="500"
+                    placeholder="例：每人限用一次、不可與其他優惠併用、內用外帶皆可。"><?= h($client['coupon_desc'] ?? '') ?></textarea>
+        </div>
+      </div>
     </div>
 
     <!-- 頁面頂部 banner -->

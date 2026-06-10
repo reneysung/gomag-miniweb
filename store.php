@@ -57,6 +57,130 @@ $_sStmt = $db->prepare("SELECT * FROM client_social WHERE client_id=? LIMIT 1");
 $_sStmt->execute([$cid]);
 $clientSocial = $_sStmt->fetch(PDO::FETCH_ASSOC) ?: [];
 
+// ─── 優惠券（一律需加 LINE 解鎖 → 出示畫面；一閃一閃吸睛）─────────
+if (!function_exists('renderStoreCoupon')) {
+    function renderStoreCoupon(array $client, array $social): void {
+        if (empty($client['coupon_enabled']) || empty($client['coupon_title'])) return;
+        $expiry = trim((string)($client['coupon_expiry'] ?? ''));
+        // 過期不顯示
+        if ($expiry !== '' && ($ts = strtotime($expiry)) !== false && $ts < strtotime(date('Y-m-d'))) return;
+        $lineUrl = trim((string)($social['line_url'] ?? ''));
+        $brand   = (string)($client['brand_name'] ?? '本店');
+        $title   = (string)$client['coupon_title'];
+        $code    = trim((string)($client['coupon_code'] ?? ''));
+        $desc    = trim((string)($client['coupon_desc'] ?? ''));
+        $lineJs  = json_encode($lineUrl, JSON_UNESCAPED_SLASHES);
+        ?>
+<!-- ═══════ 優惠券 ═══════ -->
+<section class="g-coupon-sec">
+  <div class="g-coupon-card" role="button" tabindex="0" onclick="gCouponUnlock()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();gCouponUnlock();}">
+    <svg class="g-coupon-ants" aria-hidden="true"><rect></rect></svg>
+    <span class="g-coupon-spark">✨ 獨家優惠</span>
+    <div class="g-coupon-card-body">
+      <div class="g-coupon-ticket-icon">🎁</div>
+      <div class="g-coupon-card-text">
+        <div class="g-coupon-card-title"><?= h($title) ?></div>
+        <div class="g-coupon-card-sub">加 LINE 好友即可領取・點我開券</div>
+      </div>
+    </div>
+    <span class="g-coupon-cta">🔒 加 LINE 領取優惠券</span>
+  </div>
+</section>
+
+<!-- 出示畫面 modal -->
+<div class="g-coupon-modal" id="g-coupon-modal" aria-hidden="true">
+  <div class="g-coupon-modal-backdrop" onclick="gCouponClose()"></div>
+  <div class="g-coupon-modal-card" role="dialog" aria-modal="true" aria-label="優惠券">
+    <button type="button" class="g-coupon-close" onclick="gCouponClose()" aria-label="關閉">×</button>
+    <div class="g-coupon-voucher">
+      <div class="g-coupon-voucher-brand"><?= h($brand) ?></div>
+      <div class="g-coupon-voucher-title"><?= h($title) ?></div>
+      <?php if ($code !== ''): ?>
+      <div class="g-coupon-voucher-code">
+        <span class="g-coupon-voucher-code-label">優惠碼</span>
+        <span class="g-coupon-voucher-code-val"><?= h($code) ?></span>
+      </div>
+      <?php endif; ?>
+      <?php if ($expiry !== ''): ?>
+      <div class="g-coupon-voucher-expiry">有效期限至 <?= h($expiry) ?></div>
+      <?php endif; ?>
+      <?php if ($desc !== ''): ?>
+      <div class="g-coupon-voucher-desc"><?= nl2br(h($desc)) ?></div>
+      <?php endif; ?>
+      <div class="g-coupon-voucher-show">📲 結帳前出示此畫面給店家</div>
+    </div>
+  </div>
+</div>
+
+<style>
+.g-coupon-sec{max-width:760px;margin:22px auto;padding:0 16px;}
+.g-coupon-card{position:relative;display:flex;flex-direction:column;gap:12px;cursor:pointer;
+  background:linear-gradient(135deg,#fff 0%,#fff6f3 100%);border:2px solid rgba(255,90,54,.15);border-radius:16px;
+  padding:18px 18px 16px;box-shadow:0 4px 18px rgba(255,90,54,.15);animation:gCouponGlow 1.8s ease-in-out infinite;transition:transform .15s;}
+.g-coupon-card:hover{transform:translateY(-2px);}
+.g-coupon-ants{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;overflow:visible;}
+.g-coupon-ants rect{fill:none;stroke:#FF5A36;stroke-width:2.5;stroke-dasharray:9 7;animation:gCouponMarch 1s linear infinite;}
+.g-coupon-spark{position:absolute;top:-12px;left:18px;z-index:3;background:#FF5A36;color:#fff;font-size:.78rem;font-weight:800;
+  padding:4px 12px;border-radius:999px;letter-spacing:.5px;animation:gCouponBlink 1s steps(1) infinite;box-shadow:0 2px 8px rgba(255,90,54,.4);}
+.g-coupon-card-body{display:flex;align-items:center;gap:14px;position:relative;z-index:2;}
+.g-coupon-ticket-icon{font-size:2.2rem;line-height:1;}
+.g-coupon-card-title{font-size:1.18rem;font-weight:900;color:#1a1a1a;line-height:1.3;}
+.g-coupon-card-sub{font-size:.86rem;color:#8a6d63;margin-top:2px;}
+.g-coupon-cta{display:block;text-align:center;background:#06C755;color:#fff;font-weight:800;font-size:1rem;position:relative;z-index:2;
+  padding:12px;border-radius:10px;box-shadow:0 2px 10px rgba(6,199,85,.35);}
+@keyframes gCouponGlow{0%,100%{box-shadow:0 4px 18px rgba(255,90,54,.15);}50%{box-shadow:0 6px 26px rgba(255,90,54,.4);}}
+@keyframes gCouponBlink{0%,49%{opacity:1;}50%,100%{opacity:.35;}}
+@keyframes gCouponMarch{to{stroke-dashoffset:-16;}}
+@media (prefers-reduced-motion:reduce){.g-coupon-card,.g-coupon-spark,.g-coupon-ants rect{animation:none;}}
+.g-coupon-modal{display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;padding:20px;}
+.g-coupon-modal.open{display:flex;}
+.g-coupon-modal-backdrop{position:absolute;inset:0;background:rgba(20,12,10,.72);backdrop-filter:blur(2px);}
+.g-coupon-modal-card{position:relative;width:100%;max-width:400px;}
+.g-coupon-close{position:absolute;top:-14px;right:-6px;z-index:2;width:38px;height:38px;border-radius:50%;border:none;
+  background:#fff;color:#333;font-size:1.5rem;line-height:1;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.3);}
+.g-coupon-voucher{background:linear-gradient(160deg,#FF5A36 0%,#ff7a52 100%);color:#fff;border-radius:20px;
+  padding:30px 24px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.4);animation:gCouponGlow 1.8s ease-in-out infinite;}
+.g-coupon-voucher-brand{font-size:.95rem;font-weight:700;opacity:.92;}
+.g-coupon-voucher-title{font-size:1.7rem;font-weight:900;margin:8px 0 14px;line-height:1.25;}
+.g-coupon-voucher-code{background:rgba(255,255,255,.95);color:#FF5A36;border-radius:12px;padding:12px;margin:0 0 12px;
+  border:2px dashed #FF5A36;}
+.g-coupon-voucher-code-label{display:block;font-size:.72rem;font-weight:700;color:#a33;letter-spacing:1px;}
+.g-coupon-voucher-code-val{display:block;font-size:1.55rem;font-weight:900;letter-spacing:2px;}
+.g-coupon-voucher-expiry{font-size:.86rem;opacity:.92;margin-bottom:10px;}
+.g-coupon-voucher-desc{font-size:.85rem;line-height:1.6;opacity:.95;text-align:left;background:rgba(255,255,255,.12);
+  border-radius:10px;padding:10px 12px;margin-bottom:14px;}
+.g-coupon-voucher-show{font-size:.92rem;font-weight:800;background:rgba(0,0,0,.18);border-radius:999px;padding:9px;}
+</style>
+<script>
+function gCouponUnlock(){
+  var u=<?= $lineJs ?>;
+  if(u){ window.open(u,'_blank','noopener'); }
+  var m=document.getElementById('g-coupon-modal');
+  if(m){ m.classList.add('open'); m.setAttribute('aria-hidden','false'); }
+  if(typeof window.gtag==='function'){ gtag('event','coupon_get',{page_path:location.pathname}); }
+}
+function gCouponClose(){
+  var m=document.getElementById('g-coupon-modal');
+  if(m){ m.classList.remove('open'); m.setAttribute('aria-hidden','true'); }
+}
+document.addEventListener('keydown',function(e){ if(e.key==='Escape') gCouponClose(); });
+function gCouponSizeAnts(){
+  document.querySelectorAll('.g-coupon-ants').forEach(function(svg){
+    var card=svg.parentNode; if(!card) return;
+    var w=card.clientWidth, h=card.clientHeight, r=svg.querySelector('rect');
+    svg.setAttribute('viewBox','0 0 '+w+' '+h);
+    if(r){ r.setAttribute('x',1.5); r.setAttribute('y',1.5); r.setAttribute('width',Math.max(0,w-3)); r.setAttribute('height',Math.max(0,h-3)); r.setAttribute('rx',15); r.setAttribute('ry',15); }
+  });
+}
+gCouponSizeAnts();
+window.addEventListener('load',gCouponSizeAnts);
+window.addEventListener('resize',gCouponSizeAnts);
+if(window.ResizeObserver){ document.querySelectorAll('.g-coupon-card').forEach(function(c){ new ResizeObserver(gCouponSizeAnts).observe(c); }); }
+</script>
+<?php
+    }
+}
+
 // ─── Modular Blocks 雙寫期判斷 ─────────────────────────
 //  - 該 client 已有 store_blocks → 用新系統 render，舊 services/cases 變數清空
 //  - 沒有 store_blocks → 走舊邏輯（向後相容）
@@ -629,6 +753,8 @@ if ($useBlocks && !empty($client['photos'])) {
   </div>
 </section>
 <?php endif; ?>
+
+<?php renderStoreCoupon($client, $clientSocial); ?>
 
 <?php if ($useBlocks): ?>
 <!-- ═══════ Body 開始：左 main / 右 sticky sidebar ═══════ -->
