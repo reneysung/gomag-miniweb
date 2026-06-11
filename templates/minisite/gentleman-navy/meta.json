@@ -1,0 +1,14 @@
+{
+  "name": "紳藍質感・深海軍藍",
+  "description": "深海軍藍 × 象牙白 × 紳士金，明朝體標題、方角、滿版照片 hero ＋ 半透明卡。參考台中紳士藍清潔的優雅企業質感。適合冷氣清洗、清潔、居家服務等到府服務品牌。",
+  "industries": ["冷氣清洗", "清潔", "居家服務"],
+  "thumbnail": "thumbnail.png",
+  "status": "active",
+  "pages": {
+    "home": "首頁",
+    "services": "服務項目",
+    "cases": "施工案例",
+    "testimonials": "客戶好評"
+  },
+  "hide_emoji": true
+}
