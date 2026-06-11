@@ -571,9 +571,14 @@ body[data-current-tab="minisite"] .tab-section[data-tab="store"] { display:none;
         🎟️ 在行銷頁顯示優惠券（一閃一閃，需加 LINE 才解鎖）
       </label>
       <div class="hint" style="margin-top:4px;">
-        客人點「加 LINE 領取優惠券」→ 開啟你的 LINE 加好友頁 + 跳出優惠券給店家出示。
-        ⚠️ 需先在「📱 社群連結」填好 LINE 網址才會引導加好友。
+        客人點「加 LINE 領取優惠券」→ 加入<strong>這家店自己的 LINE</strong> + 跳出含「唯一核銷碼 + QR」的優惠券給店家出示。每次領取都會記錄。
       </div>
+      <?php try { $couponLine = (string)$db->query("SELECT line_url FROM client_social WHERE client_id=".(int)$clientId." LIMIT 1")->fetchColumn(); } catch (Throwable $e) { $couponLine = ''; } ?>
+      <?php if (!empty($client['coupon_enabled']) && trim($couponLine) === ''): ?>
+      <div class="hint" style="margin-top:6px; color:#b91c1c; font-weight:700;">⚠️ 已勾優惠券，但「📱 社群連結」還沒填 LINE 網址 → 行銷頁<strong>不會顯示</strong>這張券。請先去填 LINE。</div>
+      <?php endif; ?>
+      <?php try { $couponClaims = (int)$db->query("SELECT COUNT(*) FROM coupon_claims WHERE client_id=".(int)$clientId)->fetchColumn(); } catch (Throwable $e) { $couponClaims = 0; } ?>
+      <div class="hint" style="margin-top:6px; color:#16a34a; font-weight:700;">📊 目前累積領取：<?= $couponClaims ?> 次（到店核銷統計＝第二批上線）</div>
       <div style="margin-top:12px; display:grid; gap:10px;">
         <div>
           <label>優惠券標題</label>

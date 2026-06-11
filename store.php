@@ -64,12 +64,15 @@ if (!function_exists('renderStoreCoupon')) {
         $expiry = trim((string)($client['coupon_expiry'] ?? ''));
         // 過期不顯示
         if ($expiry !== '' && ($ts = strtotime($expiry)) !== false && $ts < strtotime(date('Y-m-d'))) return;
+        // 領券加「店家自己的 LINE」；沒填 LINE → 整張券不顯示（避免按了沒反應）
         $lineUrl = trim((string)($social['line_url'] ?? ''));
+        if ($lineUrl === '') return;
         $brand   = (string)($client['brand_name'] ?? '本店');
         $title   = (string)$client['coupon_title'];
-        $code    = trim((string)($client['coupon_code'] ?? ''));
         $desc    = trim((string)($client['coupon_desc'] ?? ''));
         $lineJs  = json_encode($lineUrl, JSON_UNESCAPED_SLASHES);
+        $slugJs  = json_encode((string)($client['slug'] ?? ''), JSON_UNESCAPED_SLASHES);
+        $baseJs  = json_encode(rtrim(BASE_URL, '/'), JSON_UNESCAPED_SLASHES);
         ?>
 <!-- ═══════ 優惠券 ═══════ -->
 <section class="g-coupon-sec">
@@ -95,19 +98,18 @@ if (!function_exists('renderStoreCoupon')) {
     <div class="g-coupon-voucher">
       <div class="g-coupon-voucher-brand"><?= h($brand) ?></div>
       <div class="g-coupon-voucher-title"><?= h($title) ?></div>
-      <?php if ($code !== ''): ?>
-      <div class="g-coupon-voucher-code">
-        <span class="g-coupon-voucher-code-label">優惠碼</span>
-        <span class="g-coupon-voucher-code-val"><?= h($code) ?></span>
+      <div class="g-coupon-voucher-code" id="g-coupon-code-box">
+        <span class="g-coupon-voucher-code-label">核銷碼（出示給店家）</span>
+        <span class="g-coupon-voucher-code-val" id="g-coupon-code-val">領取中…</span>
+        <img id="g-coupon-qr" class="g-coupon-qr" alt="優惠券 QR" hidden>
       </div>
-      <?php endif; ?>
       <?php if ($expiry !== ''): ?>
       <div class="g-coupon-voucher-expiry">有效期限至 <?= h($expiry) ?></div>
       <?php endif; ?>
       <?php if ($desc !== ''): ?>
       <div class="g-coupon-voucher-desc"><?= nl2br(h($desc)) ?></div>
       <?php endif; ?>
-      <div class="g-coupon-voucher-show">📲 結帳前出示此畫面給店家</div>
+      <div class="g-coupon-voucher-show">📲 結帳前出示此 QR／核銷碼給店家</div>
     </div>
   </div>
 </div>
@@ -146,6 +148,7 @@ if (!function_exists('renderStoreCoupon')) {
   border:2px dashed #FF5A36;}
 .g-coupon-voucher-code-label{display:block;font-size:.72rem;font-weight:700;color:#a33;letter-spacing:1px;}
 .g-coupon-voucher-code-val{display:block;font-size:1.55rem;font-weight:900;letter-spacing:2px;}
+.g-coupon-qr{display:block;margin:10px auto 0;width:150px;height:150px;background:#fff;border-radius:10px;padding:8px;box-sizing:border-box;}
 .g-coupon-voucher-expiry{font-size:.86rem;opacity:.92;margin-bottom:10px;}
 .g-coupon-voucher-desc{font-size:.85rem;line-height:1.6;opacity:.95;text-align:left;background:rgba(255,255,255,.12);
   border-radius:10px;padding:10px 12px;margin-bottom:14px;}
@@ -153,11 +156,25 @@ if (!function_exists('renderStoreCoupon')) {
 </style>
 <script>
 function gCouponUnlock(){
-  var u=<?= $lineJs ?>;
-  if(u){ window.open(u,'_blank','noopener'); }
+  var line=<?= $lineJs ?>, slug=<?= $slugJs ?>, base=<?= $baseJs ?>;
+  if(line){ window.open(line,'_blank','noopener'); }
   var m=document.getElementById('g-coupon-modal');
   if(m){ m.classList.add('open'); m.setAttribute('aria-hidden','false'); }
   if(typeof window.gtag==='function'){ gtag('event','coupon_get',{page_path:location.pathname}); }
+  var box=document.getElementById('g-coupon-code-val'), qr=document.getElementById('g-coupon-qr');
+  if(!box || box.dataset.done==='1') return;   // 同頁已領過就不重發
+  box.textContent='領取中…';
+  fetch(base+'/coupon_claim.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'slug='+encodeURIComponent(slug)})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d&&d.ok&&d.code){
+        box.textContent=d.display||d.code; box.dataset.done='1';
+        if(qr){ var ru=base+'/coupon_redeem.php?c='+encodeURIComponent(d.code);
+          qr.src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=8&data='+encodeURIComponent(ru);
+          qr.hidden=false; }
+      } else { box.textContent='請稍後再試'; }
+    })
+    .catch(function(){ box.textContent='請稍後再試'; });
 }
 function gCouponClose(){
   var m=document.getElementById('g-coupon-modal');
