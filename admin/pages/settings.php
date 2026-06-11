@@ -577,8 +577,14 @@ body[data-current-tab="minisite"] .tab-section[data-tab="store"] { display:none;
       <?php if (!empty($client['coupon_enabled']) && trim($couponLine) === ''): ?>
       <div class="hint" style="margin-top:6px; color:#b91c1c; font-weight:700;">⚠️ 已勾優惠券，但「📱 社群連結」還沒填 LINE 網址 → 行銷頁<strong>不會顯示</strong>這張券。請先去填 LINE。</div>
       <?php endif; ?>
-      <?php try { $couponClaims = (int)$db->query("SELECT COUNT(*) FROM coupon_claims WHERE client_id=".(int)$clientId)->fetchColumn(); } catch (Throwable $e) { $couponClaims = 0; } ?>
-      <div class="hint" style="margin-top:6px; color:#16a34a; font-weight:700;">📊 目前累積領取：<?= $couponClaims ?> 次（到店核銷統計＝第二批上線）</div>
+      <?php try {
+        $cs = $db->query("SELECT COUNT(*) claims, COALESCE(SUM(redeemed_at IS NOT NULL),0) redeemed FROM coupon_claims WHERE client_id=".(int)$clientId)->fetch(PDO::FETCH_ASSOC);
+        $couponClaims = (int)$cs['claims']; $couponRedeemed = (int)$cs['redeemed'];
+      } catch (Throwable $e) { $couponClaims = 0; $couponRedeemed = 0; } ?>
+      <div class="hint" style="margin-top:6px; color:#16a34a; font-weight:700;">
+        📊 領取 <?= $couponClaims ?> 次・核銷 <?= $couponRedeemed ?> 次<?= $couponClaims > 0 ? '・轉換率 '.round($couponRedeemed/$couponClaims*100).'%' : '' ?>
+        　<a href="<?= BASE_URL ?>/admin/pages/coupon_stats.php" style="font-weight:500;">看統計 →</a>
+      </div>
       <div style="margin-top:12px; display:grid; gap:10px;">
         <div>
           <label>優惠券標題</label>

@@ -493,6 +493,17 @@ textarea.form-control { resize: vertical; min-height: 90px; }
       ?>
     </a>
 
+    <!-- ═══════ 🎟️ 優惠券 ═══════ -->
+    <div class="nav-section">🎟️ 優惠券</div>
+    <a class="nav-item <?= $currentPage === 'coupon_redeem' ? 'active' : '' ?>"
+       href="<?= BASE_URL ?>/coupon_redeem.php">
+      <span class="icon">🎟️</span> 優惠券核銷
+    </a>
+    <a class="nav-item <?= $currentPage === 'coupon_stats' ? 'active' : '' ?>"
+       href="<?= BASE_URL ?>/admin/pages/coupon_stats.php">
+      <span class="icon">📊</span> 優惠券統計
+    </a>
+
     <?php if (currentAdmin()['role'] === 'super'): ?>
     <!-- ═══════ 🔧 系統管理（super only）═══════ -->
     <div class="nav-section">🔧 系統管理</div>
