@@ -67,6 +67,11 @@ if ($isFood) {
     $caseLabel = 'CASE STUDIES'; $caseTitle = '精選施工案例'; $caseSub = '真實 Before / After 對比，讓成果說話';
     $fbDesc = '看最新優惠、案例分享、清潔小知識，第一手掌握優惠資訊';
     $contactSub = '免費到府估價，專人為您說明';
+    // 冷氣清洗業：通用文案與實際流程不符（拍照估價、非到府估價；無毒藥水、非環保清潔劑）
+    if (preg_match('/冷氣|空調/u', $ind)) {
+        $svcSubtitle = '到府施工、標準作業流程，清洗前後數據看得見';
+        $contactSub  = '來電或私訊我們，拍照即可快速估價';
+    }
 }
 
 // DB 優先，否則用業種預設
@@ -422,10 +427,17 @@ $ratingNum = preg_replace('/[★\s]/u', '', $rating) ?: '4.9';
     </div>
 
     <div class="hero-pro-trust animate-in delay-4">
+      <?php // hero_stats[3] 含★才視為真實評分；客戶沒有 Google 評分時（hero_stats 填真實數據）不顯示假評分，改秀第 3 格 ?>
+      <?php if (mb_strpos((string)$rating, '★') !== false): ?>
       <div class="trust-item">
         <span class="trust-stars">★★★★★</span>
         <span class="trust-text"><strong><?= h($ratingNum) ?></strong> Google 評分</span>
       </div>
+      <?php else: ?>
+      <div class="trust-item">
+        <span class="trust-text"><strong><?= h($heroStats[2][0] ?? '') ?></strong> <?= h($heroStats[2][1] ?? '') ?></span>
+      </div>
+      <?php endif; ?>
       <span class="trust-divider"></span>
       <div class="trust-item">
         <span class="trust-text"><strong><?= h($heroStats[0][0] ?? '500+') ?></strong> <?= h($heroStats[0][1] ?? '服務客戶') ?></span>

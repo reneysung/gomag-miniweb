@@ -179,7 +179,7 @@ require __DIR__ . '/layout_head.php';
   <div class="prosvc-cta-overlay"></div>
   <div class="prosvc-cta-inner">
     <h2 class="prosvc-cta-title">想讓您的空間也煥然一新嗎？</h2>
-    <p class="prosvc-cta-sub">免費到府估價，專人為您說明</p>
+    <p class="prosvc-cta-sub"><?= preg_match('/冷氣|空調/u', $client['industry'] ?? '') ? '來電或私訊我們，拍照即可快速估價' : '免費到府估價，專人為您說明' ?></p>
     <div class="prosvc-cta-actions">
       <?php if($lineUrl): ?>
       <a href="<?= h($lineUrl) ?>" class="prosvc-btn prosvc-btn-primary" target="_blank">免費估價諮詢 →</a>

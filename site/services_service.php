@@ -30,7 +30,7 @@ require __DIR__ . '/layout_head.php';
       <?= h($client['industry'] ?? '專業服務') ?>
     </div>
     <h1 class="prosvc-hero-title">服務項目</h1>
-    <p class="prosvc-hero-sub">每項服務由專業技師執行，使用環保清潔劑，安全無毒</p>
+    <p class="prosvc-hero-sub"><?= preg_match('/冷氣|空調/u', $client['industry'] ?? '') ? '到府施工、標準作業流程，清洗前後數據看得見' : '每項服務由專業技師執行，使用環保清潔劑，安全無毒' ?></p>
   </div>
 </section>
 
@@ -97,27 +97,32 @@ require __DIR__ . '/layout_head.php';
     <div class="prosvc-eyebrow">WHY CHOOSE US</div>
     <h2 class="prosvc-section-title">為什麼選擇我們</h2>
   </div>
+  <?php
+  // 4 信任 pillars — 通用預設；冷氣清洗業改用冷淨億點(#251)行銷頁核可的「4 個理由」
+  // ⚠️ 之後若有新的冷氣/空調客戶上線，請確認此文案是否符合該店實際服務
+  $_pillars = [
+      ['🏆', '專業認證技師', '每位技師都通過專業培訓與背景檢核，確保服務品質一致'],
+      ['🌱', '環保清潔用品', '使用通過認證的環保清潔劑，對家人、寵物與環境都安心'],
+      ['📋', '免費到府估價', '先看現場、再報價，依實際狀況提供最合適的服務方案'],
+      ['⏱️', '準時守信到場', '約定時間絕不遲到，服務完成後再次確認，讓您安心交付'],
+  ];
+  if (preg_match('/冷氣|空調/u', $client['industry'] ?? '')) {
+      $_pillars = [
+          ['🌿', '專用無毒藥水', '施工噴上專用無毒藥水，再用高壓水槍清洗，家有小孩、長輩或寵物也較安心'],
+          ['📊', '完工附數據報告', '完工後 2–3 個工作天，提供清洗前後對比照與出風口風量、溫度數據報告'],
+          ['🛡️', '30 日完工保固', '完工 30 日內施工機型故障、異音、滲水，到場檢測，可歸咎清洗者無條件維修'],
+          ['👥', '技師團隊到府', '當日 2–3 位技師依標準作業流程施工，完工測試當面核對無誤後才付清款項'],
+      ];
+  }
+  ?>
   <div class="prosvc-pillars-grid">
-    <div class="prosvc-pillar animate-in delay-1">
-      <div class="prosvc-pillar-icon">🏆</div>
-      <h3 class="prosvc-pillar-title">專業認證技師</h3>
-      <p class="prosvc-pillar-desc">每位技師都通過專業培訓與背景檢核，確保服務品質一致</p>
+    <?php foreach ($_pillars as $_pi => [$_pIcon, $_pTitle, $_pDesc]): ?>
+    <div class="prosvc-pillar animate-in delay-<?= $_pi + 1 ?>">
+      <div class="prosvc-pillar-icon"><?= $_pIcon ?></div>
+      <h3 class="prosvc-pillar-title"><?= h($_pTitle) ?></h3>
+      <p class="prosvc-pillar-desc"><?= h($_pDesc) ?></p>
     </div>
-    <div class="prosvc-pillar animate-in delay-2">
-      <div class="prosvc-pillar-icon">🌱</div>
-      <h3 class="prosvc-pillar-title">環保清潔用品</h3>
-      <p class="prosvc-pillar-desc">使用通過認證的環保清潔劑，對家人、寵物與環境都安心</p>
-    </div>
-    <div class="prosvc-pillar animate-in delay-3">
-      <div class="prosvc-pillar-icon">📋</div>
-      <h3 class="prosvc-pillar-title">免費到府估價</h3>
-      <p class="prosvc-pillar-desc">先看現場、再報價，依實際狀況提供最合適的服務方案</p>
-    </div>
-    <div class="prosvc-pillar animate-in delay-4">
-      <div class="prosvc-pillar-icon">⏱️</div>
-      <h3 class="prosvc-pillar-title">準時守信到場</h3>
-      <p class="prosvc-pillar-desc">約定時間絕不遲到，服務完成後再次確認，讓您安心交付</p>
-    </div>
+    <?php endforeach; ?>
   </div>
 </section>
 
@@ -127,7 +132,7 @@ require __DIR__ . '/layout_head.php';
   <div class="prosvc-cta-overlay"></div>
   <div class="prosvc-cta-inner">
     <h2 class="prosvc-cta-title">準備好讓家煥然一新了嗎？</h2>
-    <p class="prosvc-cta-sub">免費到府估價，專人為您說明服務內容</p>
+    <p class="prosvc-cta-sub"><?= preg_match('/冷氣|空調/u', $client['industry'] ?? '') ? '來電或私訊我們，拍照即可快速估價' : '免費到府估價，專人為您說明服務內容' ?></p>
     <div class="prosvc-cta-actions">
       <?php if($lineUrl): ?>
       <a href="<?= h($lineUrl) ?>" class="prosvc-btn prosvc-btn-primary" target="_blank">免費估價諮詢 →</a>

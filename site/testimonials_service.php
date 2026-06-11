@@ -25,13 +25,14 @@ require __DIR__ . '/layout_head.php';
   <div class="prosvc-hero-bg" style="background-image:url('<?= h($photos['happy']) ?>');"></div>
   <div class="prosvc-hero-overlay"></div>
   <div class="prosvc-hero-content">
-    <div class="prosvc-tag"><span class="prosvc-tag-dot"></span>客戶好評</div>
+    <div class="prosvc-tag"><span class="prosvc-tag-dot"></span>網友分享</div>
     <h1 class="prosvc-hero-title">真實口碑推薦</h1>
     <p class="prosvc-hero-sub">每一則都是客戶的親身體驗</p>
   </div>
 </section>
 
 <!-- ══ 2. 評分統計 stats ═══════════════════════════════════════════ -->
+<?php if ($ts): // 0 筆評價 → 不顯示統計帶（避免出現假 4.9／0+ 真實評價），只留下方「整理中」空狀態 ?>
 <section class="proRev-stats">
   <div class="proRev-stats-grid">
     <div class="proRev-stat animate-in">
@@ -53,13 +54,14 @@ require __DIR__ . '/layout_head.php';
     </div>
   </div>
 </section>
+<?php endif; ?>
 
 <!-- ══ 3. Featured Review ════════════════════════════════════════════ -->
 <?php if (empty($ts)): ?>
 <section style="padding:80px 20px">
   <div style="max-width:600px;margin:0 auto;padding:48px 24px;text-align:center;background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,.06)">
     <div style="font-size:3rem;margin-bottom:14px">⭐</div>
-    <h3 style="font-size:1.2rem;font-weight:800;color:var(--g-ink);margin-bottom:8px">客戶評價整理中</h3>
+    <h3 style="font-size:1.2rem;font-weight:800;color:var(--g-ink);margin-bottom:8px">網友分享整理中</h3>
     <p style="color:#888;font-size:.95rem;margin-bottom:24px">最新好評正在收集中，歡迎成為下一個滿意客戶。</p>
     <?php if (!empty($client['phone'])): ?>
       <a href="tel:<?= h(preg_replace('/[^0-9+]/','',$client['phone'])) ?>" class="btn btn-primary" style="margin:4px">📞 <?= h($client['phone']) ?></a>
@@ -86,6 +88,9 @@ require __DIR__ . '/layout_head.php';
         <?php endif; ?>
       </div>
     </div>
+    <?php if (!empty($featured['source_url'])): ?>
+    <div style="margin-top:24px"><a href="<?= h($featured['source_url']) ?>" target="_blank" rel="noopener" style="display:inline-block;font-size:.9rem;font-weight:700;color:var(--g-accent);text-decoration:none;border:1.6px solid var(--g-accent);padding:9px 22px;border-radius:100px">📖 閱讀完整口碑文 →</a></div>
+    <?php endif; ?>
   </div>
 </section>
 <?php endif; ?>
@@ -95,7 +100,7 @@ require __DIR__ . '/layout_head.php';
 <section class="proRev-grid-section">
   <div class="proRev-grid-head">
     <div class="prosvc-eyebrow">MORE REVIEWS</div>
-    <h2 class="prosvc-section-title">更多客戶分享</h2>
+    <h2 class="prosvc-section-title">更多網友分享</h2>
   </div>
   <div class="proRev-grid">
     <?php foreach ($rest as $i => $t): ?>
@@ -116,6 +121,9 @@ require __DIR__ . '/layout_head.php';
           <?php endif; ?>
         </div>
       </div>
+      <?php if (!empty($t['source_url'])): ?>
+      <div style="margin-top:16px"><a href="<?= h($t['source_url']) ?>" target="_blank" rel="noopener" style="font-size:.82rem;font-weight:700;color:var(--g-accent);text-decoration:none">📖 閱讀全文 →</a></div>
+      <?php endif; ?>
     </article>
     <?php endforeach; ?>
   </div>
@@ -128,7 +136,7 @@ require __DIR__ . '/layout_head.php';
   <div class="prosvc-cta-overlay"></div>
   <div class="prosvc-cta-inner">
     <h2 class="prosvc-cta-title">下一個滿意的客戶<br>就是您</h2>
-    <p class="prosvc-cta-sub">免費到府估價，專人為您服務</p>
+    <p class="prosvc-cta-sub"><?= preg_match('/冷氣|空調/u', $client['industry'] ?? '') ? '來電或私訊我們，拍照即可快速估價' : '免費到府估價，專人為您服務' ?></p>
     <div class="prosvc-cta-actions">
       <?php if($lineUrl): ?>
       <a href="<?= h($lineUrl) ?>" class="prosvc-btn prosvc-btn-primary" target="_blank">免費估價諮詢 →</a>
