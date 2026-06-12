@@ -51,8 +51,9 @@ if (IS_LOCAL || IS_STAGING) {
     $canonicalUrl = 'https://' . $sub . '.' . MINISITE_DOMAIN . '/column';
 }
 
-$seo = ['meta_title' => $metaTitle, 'meta_desc' => $metaDesc];
-$site['seo']['articles'] = $seo;
+// seo_settings 表有設就用 DB 值，否則 fallback 用上方寫死的預設
+if (empty($site['seo']['articles']['meta_title'])) $site['seo']['articles']['meta_title'] = $metaTitle;
+if (empty($site['seo']['articles']['meta_desc']))  $site['seo']['articles']['meta_desc']  = $metaDesc;
 
 require __DIR__ . '/layout_head.php';
 ?>

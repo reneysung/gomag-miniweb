@@ -51,8 +51,10 @@ if (!$city && !empty($client['address'])) {
 // ── SEO meta ──
 //   title 模板：{服務名}-{城市}｜{品牌名}
 //   meta desc：服務短描述（fallback：service name + city + tagline）
+// 去掉「市/縣」尾綴：「台中市」→「台中」，貼合搜尋意圖（grep「台中裝潢細清」精準命中）
+$city = preg_replace('/(市|縣)$/u', '', (string)$city);
 $pageSuffix = $city ? "-{$city}" : '';
-// city 放前面：「台中市裝潢細清」比「裝潢細清-台中市」更貼搜尋意圖（避免「裝潢細清」單詞優先匹配）
+// city 放前面：「台中裝潢細清」比「裝潢細清-台中市」更貼搜尋意圖（避免「裝潢細清」單詞優先匹配）
 $metaTitle  = "{$city}{$service['name']}｜{$client['brand_name']}";
 $metaDesc   = !empty($service['short_desc'])
     ? mb_strimwidth(strip_tags($service['short_desc']), 0, 150, '…')
