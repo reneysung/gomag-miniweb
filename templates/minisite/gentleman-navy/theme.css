@@ -266,7 +266,7 @@ a.gn-hero-check:hover { background: var(--gn-steel); }
 .gn-owner-name strong { color: var(--gn-navy); }
 
 /* ─── 聯絡區 ───────────────────────────── */
-.gn-contact-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; margin-top: 52px; }
+.gn-contact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 26px; margin-top: 52px; }
 .gn-contact-item { border: 1px solid rgba(255,255,255,.18); padding: 34px 28px; text-align: center; }
 .gn-contact-label { font-family: "Noto Serif TC", serif; font-size: .78rem; letter-spacing: .32em; color: var(--gn-gold-soft); margin-bottom: 12px; }
 .gn-contact-value { font-family: "Noto Serif TC", serif; font-size: 1.2rem; font-weight: 600; letter-spacing: .08em; }

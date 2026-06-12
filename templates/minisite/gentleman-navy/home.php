@@ -15,6 +15,7 @@ $testimonials = $site['testimonials'] ?? [];
 $phone        = $phone ?? ($client['phone'] ?? '');
 $telHref      = 'tel:' . preg_replace('/[^0-9+]/', '', $phone);
 $fbUrl        = $social['fb_page_url'] ?? '';
+$igUrl        = $social['instagram_url'] ?? '';
 $heroImg      = !empty($client['hero_image_path']) ? BASE_URL . '/' . h($client['hero_image_path']) : '';
 
 // hero 服務 checklist（最多 5 個）
@@ -251,6 +252,13 @@ $gnIsAircon = (bool)preg_match('/冷氣|空調/u', $client['industry'] ?? '');
         <div class="gn-contact-label">Facebook</div>
         <div class="gn-contact-value" style="font-size:1rem"><a href="<?= h($fbUrl) ?>" target="_blank" rel="noopener"><?= h($client['brand_name']) ?></a></div>
         <div class="gn-contact-note">私訊預約・看最新案例</div>
+      </div>
+      <?php endif; ?>
+      <?php if ($igUrl): ?>
+      <div class="gn-contact-item">
+        <div class="gn-contact-label">Instagram</div>
+        <div class="gn-contact-value" style="font-size:1rem"><a href="<?= h($igUrl) ?>" target="_blank" rel="noopener">@<?= h(trim(parse_url($igUrl, PHP_URL_PATH) ?: '', '/')) ?></a></div>
+        <div class="gn-contact-note">追蹤最新動態</div>
       </div>
       <?php endif; ?>
     </div>

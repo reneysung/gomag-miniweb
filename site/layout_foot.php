@@ -32,6 +32,7 @@ $client  = $site['client'];
         <?php endif; ?>
         <div class="footer-social">
           <?php if ($fbUrl !== '#'): ?><a href="<?= h($fbUrl) ?>" target="_blank"><?= ($_hideEmoji ?? false) ? 'Facebook' : '📘' ?></a><?php endif; ?>
+          <?php if (!empty($social['instagram_url'])): ?><a href="<?= h($social['instagram_url']) ?>" target="_blank" rel="noopener"><?= ($_hideEmoji ?? false) ? 'Instagram' : '📷' ?></a><?php endif; ?>
           <?php if ($lineUrl): ?><a href="<?= h($lineUrl) ?>" target="_blank"><?= ($_hideEmoji ?? false) ? 'LINE' : '💬' ?></a><?php endif; ?>
         </div>
       </div>
