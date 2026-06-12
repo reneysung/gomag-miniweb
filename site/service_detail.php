@@ -52,7 +52,8 @@ if (!$city && !empty($client['address'])) {
 //   title 模板：{服務名}-{城市}｜{品牌名}
 //   meta desc：服務短描述（fallback：service name + city + tagline）
 $pageSuffix = $city ? "-{$city}" : '';
-$metaTitle  = "{$service['name']}{$pageSuffix}｜{$client['brand_name']}";
+// city 放前面：「台中市裝潢細清」比「裝潢細清-台中市」更貼搜尋意圖（避免「裝潢細清」單詞優先匹配）
+$metaTitle  = "{$city}{$service['name']}｜{$client['brand_name']}";
 $metaDesc   = !empty($service['short_desc'])
     ? mb_strimwidth(strip_tags($service['short_desc']), 0, 150, '…')
     : ((!empty($service['full_desc'])

@@ -406,11 +406,17 @@ $ratingNum = preg_replace('/[★\s]/u', '', $rating) ?: '4.9';
     </div>
 
     <h1 class="hero-pro-title animate-in delay-1">
-      <?= h($client['brand_name']) ?>
+      <?= h($client['brand_name']) ?><?php if (!empty($client['tagline'])): ?><span class="hero-pro-title-sub">｜<?= h($client['tagline']) ?></span><?php endif; ?>
     </h1>
 
     <p class="hero-pro-sub animate-in delay-2">
-      <?= h($client['tagline'] ?? '用心服務，品質保證') ?>
+      <?php
+        // H1 已帶 tagline → sub 顯示 about 摘要；否則維持 tagline / 預設
+        $_heroSub = !empty($client['tagline']) && !empty($client['about_text'])
+            ? mb_strimwidth(strip_tags($client['about_text']), 0, 70, '…')
+            : ($client['tagline'] ?? '用心服務，品質保證');
+      ?>
+      <?= h($_heroSub) ?>
     </p>
 
     <div class="hero-pro-actions animate-in delay-3">
@@ -523,10 +529,22 @@ $ratingNum = preg_replace('/[★\s]/u', '', $rating) ?: '4.9';
   font-size: clamp(3rem, 8vw, 6rem);
   font-weight: 900;
   letter-spacing: -0.04em;
-  line-height: 1;
+  line-height: 1.05;
   color: #fff;
   margin: 0 0 22px;
   text-shadow: 0 4px 30px rgba(0,0,0,0.4);
+}
+.hero-pro-title-sub {
+  display: inline-block;
+  font-size: 0.45em;
+  font-weight: 700;
+  letter-spacing: 0;
+  opacity: 0.92;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+@media (max-width: 640px) {
+  .hero-pro-title-sub { display: block; margin-top: 6px; font-size: 0.55em; }
 }
 
 .hero-pro-sub {
