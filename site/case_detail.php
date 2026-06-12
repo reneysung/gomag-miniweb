@@ -122,7 +122,8 @@ $_relAfter  = array_map(fn($f) => ltrim(substr($f, strlen($_docroot)), '/'), $_a
 <?php if ($_relBefore || $_relAfter): ?>
 <section class="section">
   <div class="container">
-    <h2 style="font-size:1.4rem;font-weight:900;margin-bottom:24px;color:var(--g-ink);text-align:center">Before / After 對比相簿</h2>
+    <?php // 只有單一相簿（無前後分類，例如完工照或客戶自製對比拼圖）→ 標題不寫 Before/After ?>
+    <h2 style="font-size:1.4rem;font-weight:900;margin-bottom:24px;color:var(--g-ink);text-align:center"><?= $_relBefore ? 'Before / After 對比相簿' : '施工相簿' ?></h2>
 
     <?php if ($_relBefore): ?>
     <h3 style="font-size:1rem;font-weight:700;color:var(--g-ink);margin:8px 0 12px;display:flex;align-items:center;gap:8px">📷 施作前 <span style="font-size:.78rem;color:#888;font-weight:500">(<?= count($_relBefore) ?> 張)</span></h3>
@@ -136,7 +137,7 @@ $_relAfter  = array_map(fn($f) => ltrim(substr($f, strlen($_docroot)), '/'), $_a
     <?php endif; ?>
 
     <?php if ($_relAfter): ?>
-    <h3 style="font-size:1rem;font-weight:700;color:var(--g-accent);margin:8px 0 12px;display:flex;align-items:center;gap:8px">✨ 施作後 <span style="font-size:.78rem;color:#888;font-weight:500">(<?= count($_relAfter) ?> 張)</span></h3>
+    <h3 style="font-size:1rem;font-weight:700;color:var(--g-accent);margin:8px 0 12px;display:flex;align-items:center;gap:8px"><?= $_relBefore ? '✨ 施作後' : '📷 施工紀錄' ?> <span style="font-size:.78rem;color:#888;font-weight:500">(<?= count($_relAfter) ?> 張)</span></h3>
     <div class="case-album" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:8px">
       <?php foreach ($_relAfter as $_p): ?>
       <a class="case-album-item" href="<?= BASE_URL . '/' . h($_p) ?>" data-lb style="display:block;aspect-ratio:4/3;overflow:hidden;border-radius:10px;background:#f5f5f5">
