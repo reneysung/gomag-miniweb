@@ -24,6 +24,15 @@ if (!empty($_mr['redirect'])) {
     exit;
 }
 if (!empty($_mr['render'])) {
+    // 地區案例頁 SEO 覆寫（data-driven）：seo_settings 有 page_key=cases_{region} 列才生效
+    // 解決 /cases/{region} 與 /cases 同 title + canonical 全指 /cases 的重複問題
+    $_rg = strtolower(preg_replace('/[^a-z]/', '', $_GET['region'] ?? ''));
+    if ($_rg !== '' && !empty($site['seo']['cases_' . $_rg])) {
+        $site['seo']['cases'] = array_merge($site['seo']['cases'] ?? [], array_filter($site['seo']['cases_' . $_rg]));
+        $canonicalUrl = (IS_LOCAL || IS_STAGING)
+            ? BASE_URL . '/site/cases.php?sub=' . urlencode($sub) . '&region=' . $_rg
+            : 'https://' . $sub . '.' . MINISITE_DOMAIN . '/cases/' . $_rg;
+    }
     require __DIR__ . '/layout_head.php';
     require $_mr['render'];
     require __DIR__ . '/layout_foot.php';
