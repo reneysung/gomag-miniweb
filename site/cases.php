@@ -60,8 +60,16 @@ if ($caseRegion !== '') {
         fn($c) => caseRegionSlug($c['location'] ?? '') === $caseRegion
     ));
 
-    // 業務名詞：清潔公司 → 清潔（去掉法人/組織尾綴）
-    $bizNoun = preg_replace('/(股份有限公司|有限公司|公司|工作室|事務所|工坊|團隊|商行|企業社)$/u', '', (string)($client['industry'] ?? ''));
+    // 業務名詞：先從 tagline 抽主關鍵字（更貼搜尋意圖），fallback 從 industry 推
+    // 例：亞雷 tagline=「台中裝潢細清專科」→ 抽出「裝潢細清」
+    $bizNoun = '';
+    $_taglineKw = ['裝潢細清', '石材晶化', '地毯清洗', '地板打蠟', '裝潢清潔', '居家清潔'];
+    foreach ($_taglineKw as $_kw) {
+        if (mb_strpos($client['tagline'] ?? '', $_kw) !== false) { $bizNoun = $_kw; break; }
+    }
+    if ($bizNoun === '') {
+        $bizNoun = preg_replace('/(股份有限公司|有限公司|公司|工作室|事務所|工坊|團隊|商行|企業社)$/u', '', (string)($client['industry'] ?? ''));
+    }
     if ($bizNoun === '') $bizNoun = '清潔';
     $brand = $client['brand_name'] ?? '';
 
