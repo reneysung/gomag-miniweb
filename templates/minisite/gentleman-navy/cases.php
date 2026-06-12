@@ -37,7 +37,8 @@ $fbUrl   = $social['fb_page_url'] ?? '';
           <span class="gn-case-tag gn-tb">BEFORE</span><span class="gn-case-tag gn-ta">AFTER</span>
         </div>
         <?php elseif ($a ?: $b): ?>
-        <img class="gn-case-single" src="<?= $a ?: $b ?>" alt="<?= h($c['title']) ?>" loading="lazy">
+        <?php // 客戶自製 Before/After 直式拼圖 → 完整顯示不裁切 ?>
+        <img class="gn-case-single" src="<?= $a ?: $b ?>" alt="<?= h($c['title']) ?>" loading="lazy" style="height:auto">
         <?php endif; ?>
         <div class="gn-case-body">
           <h3 class="gn-case-title"><?= h($c['title']) ?></h3>

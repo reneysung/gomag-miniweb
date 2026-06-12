@@ -273,6 +273,21 @@ a.gn-hero-check:hover { background: var(--gn-steel); }
 .gn-contact-value a { color: #fff; text-decoration: none; }
 .gn-contact-value a:hover { color: var(--gn-gold-soft); }
 .gn-contact-note { font-size: .82rem; color: rgba(255,255,255,.55); margin-top: 8px; letter-spacing: .06em; }
+.gn-social-logo {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 52px; height: 52px;
+  border: 1px solid rgba(255,255,255,.35); border-radius: 50%;
+  color: #fff; transition: all .25s;
+}
+.gn-social-logo:hover { background: var(--gn-gold); border-color: var(--gn-gold); color: var(--gn-navy); }
+/* 品牌標準色（Reney 指定：FB 藍、IG 漸層） */
+.gn-social-logo--fb { background: #1877F2; border-color: #1877F2; color: #fff; }
+.gn-social-logo--fb:hover { background: #0f65d8; border-color: #0f65d8; color: #fff; }
+.gn-social-logo--ig {
+  background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
+  border: none; color: #fff;
+}
+.gn-social-logo--ig:hover { filter: brightness(1.12); color: #fff; }
 
 /* ─── 子頁 hero 條 ─────────────────────── */
 .gn-pagehero { background: var(--gn-navy); padding: 88px 0 64px; position: relative; overflow: hidden; }

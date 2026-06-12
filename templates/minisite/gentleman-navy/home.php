@@ -236,28 +236,38 @@ $gnIsAircon = (bool)preg_match('/冷氣|空調/u', $client['industry'] ?? '');
       <?php if ($phone): ?>
       <div class="gn-contact-item">
         <div class="gn-contact-label">Phone</div>
-        <div class="gn-contact-value"><a href="<?= h($telHref) ?>"><?= h($phone) ?></a></div>
+        <div class="gn-contact-value"><a class="gn-social-logo" href="<?= h($telHref) ?>" aria-label="電話">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+        </a></div>
+        <div class="gn-contact-value" style="font-size:1.05rem;margin-top:12px"><a href="<?= h($telHref) ?>"><?= h($phone) ?></a></div>
         <div class="gn-contact-note">電話預約</div>
       </div>
       <?php endif; ?>
       <?php if (!empty($client['email'])): ?>
       <div class="gn-contact-item">
         <div class="gn-contact-label">Email</div>
-        <div class="gn-contact-value" style="font-size:1rem"><a href="mailto:<?= h($client['email']) ?>"><?= h($client['email']) ?></a></div>
+        <div class="gn-contact-value"><a class="gn-social-logo" href="mailto:<?= h($client['email']) ?>" aria-label="Email">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+        </a></div>
+        <div class="gn-contact-value" style="font-size:.92rem;margin-top:12px"><a href="mailto:<?= h($client['email']) ?>"><?= h($client['email']) ?></a></div>
         <div class="gn-contact-note">信件聯繫</div>
       </div>
       <?php endif; ?>
       <?php if ($fbUrl): ?>
       <div class="gn-contact-item">
         <div class="gn-contact-label">Facebook</div>
-        <div class="gn-contact-value" style="font-size:1rem"><a href="<?= h($fbUrl) ?>" target="_blank" rel="noopener"><?= h($client['brand_name']) ?></a></div>
+        <div class="gn-contact-value"><a class="gn-social-logo gn-social-logo--fb" href="<?= h($fbUrl) ?>" target="_blank" rel="noopener" aria-label="Facebook">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047v-2.66c0-3.025 1.792-4.697 4.533-4.697 1.313 0 2.686.236 2.686.236v2.971H15.83c-1.491 0-1.956.93-1.956 1.886v2.264h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
+        </a></div>
         <div class="gn-contact-note">私訊預約・看最新案例</div>
       </div>
       <?php endif; ?>
       <?php if ($igUrl): ?>
       <div class="gn-contact-item">
         <div class="gn-contact-label">Instagram</div>
-        <div class="gn-contact-value" style="font-size:1rem"><a href="<?= h($igUrl) ?>" target="_blank" rel="noopener">@<?= h(trim(parse_url($igUrl, PHP_URL_PATH) ?: '', '/')) ?></a></div>
+        <div class="gn-contact-value"><a class="gn-social-logo gn-social-logo--ig" href="<?= h($igUrl) ?>" target="_blank" rel="noopener" aria-label="Instagram">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.366.062 2.633.336 3.608 1.31.974.975 1.248 2.242 1.31 3.608.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.062 1.366-.336 2.633-1.31 3.608-.975.974-2.242 1.248-3.608 1.31-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.366-.062-2.633-.336-3.608-1.31-.974-.975-1.248-2.242-1.31-3.608C2.175 15.584 2.163 15.204 2.163 12s.012-3.584.07-4.85c.062-1.366.336-2.633 1.31-3.608.975-.974 2.242-1.248 3.608-1.31 1.266-.058 1.646-.07 4.85-.07zM12 0C8.741 0 8.332.014 7.052.072 5.197.157 3.355.673 2.014 2.014.673 3.355.157 5.197.072 7.052.014 8.332 0 8.741 0 12s.014 3.668.072 4.948c.085 1.855.601 3.697 1.942 5.038 1.341 1.341 3.183 1.857 5.038 1.942C8.332 23.986 8.741 24 12 24s3.668-.014 4.948-.072c1.855-.085 3.697-.601 5.038-1.942 1.341-1.341 1.857-3.183 1.942-5.038.058-1.28.072-1.689.072-4.948s-.014-3.668-.072-4.948c-.085-1.855-.601-3.697-1.942-5.038C20.645.673 18.803.157 16.948.072 15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+        </a></div>
         <div class="gn-contact-note">追蹤最新動態</div>
       </div>
       <?php endif; ?>
