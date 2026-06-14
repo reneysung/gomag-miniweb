@@ -106,7 +106,7 @@ $gnIsAircon = (bool)preg_match('/冷氣|空調/u', $client['industry'] ?? '');
   <div class="gn-wrap">
     <div class="gn-eyebrow gn-center" style="justify-content:center">Our Services</div>
     <h2 class="gn-h2" style="text-align:center">服務項目</h2>
-    <p class="gn-sub" style="text-align:center"><?= $gnIsAircon ? '到府施工、標準作業流程，清洗前後數據看得見' : '每一項服務，都以同樣的標準完成' ?></p>
+    <p class="gn-sub" style="text-align:center"><?= $gnIsAircon ? '到府施工、洗前洗後測溫對比，照片當日上傳 LINE 相簿' : '每一項服務，都以同樣的標準完成' ?></p>
     <div class="gn-svc-grid">
       <?php foreach ($services as $i => $svc): ?>
       <a class="gn-svc-card" href="<?= siteUrl($sub, 'services') ?>#svc-<?= (int)$svc['id'] ?>">
@@ -146,8 +146,8 @@ $gnIsAircon = (bool)preg_match('/冷氣|空調/u', $client['industry'] ?? '');
       </div>
       <div class="gn-step">
         <div class="gn-step-num">STEP 04</div>
-        <h3 class="gn-step-name">服務報告</h3>
-        <ul><li>2–3 工作天內</li><li>清洗前後照片</li><li>溫度、風速整理成報告</li></ul>
+        <h3 class="gn-step-name">當日交付</h3>
+        <ul><li>洗前洗後出風口溫度</li><li>清洗前後對比照</li><li>當天上傳 LINE 相簿</li></ul>
       </div>
     </div>
   </div>
