@@ -36,6 +36,34 @@ if (mb_strlen($q) >= 1) {
     $stmt = $db->prepare($sql);
     $stmt->execute(array_fill(0, 8, $like));
     $results = $stmt->fetchAll();
+
+    // 多城市變體：有啟用變體的客戶 → 依城市展開成獨立結果（各連自己的城市頁、用該縣市地址電話）
+    if ($results) {
+        $ids = array_column($results, 'id');
+        $inPh = implode(',', array_fill(0, count($ids), '?'));
+        $vstmt = $db->prepare("SELECT client_id, city_slug, city_label, brand_name, address, phone
+                               FROM client_city_pages WHERE is_active = 1 AND client_id IN ($inPh)
+                               ORDER BY sort_order, id");
+        $vstmt->execute($ids);
+        $variantsByClient = [];
+        foreach ($vstmt->fetchAll() as $v) { $variantsByClient[$v['client_id']][] = $v; }
+        if ($variantsByClient) {
+            $expanded = [];
+            foreach ($results as $cl) {
+                $expanded[] = $cl; // 主檔
+                foreach ($variantsByClient[$cl['id']] ?? [] as $v) {
+                    $row = $cl;
+                    $row['_city_slug']  = $v['city_slug'];
+                    $row['_city_label'] = $v['city_label'] ?: $v['city_slug'];
+                    if (!empty($v['brand_name'])) $row['brand_name'] = $v['brand_name'];
+                    if (!empty($v['address']))    $row['address']    = $v['address'];
+                    if (!empty($v['phone']))      $row['phone']      = $v['phone'];
+                    $expanded[] = $row;
+                }
+            }
+            $results = $expanded;
+        }
+    }
 }
 
 // 全站搜尋 log（給週分析 routine 用，格式對齊 city.php）
@@ -125,9 +153,10 @@ require_once __DIR__ . '/main/layout_head.php';
         $heroImg = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
         // Pretty URL：/store/{sub}（本機/staging fallback 到 store.php?sub=...）
         $subKey = $cl['subdomain'] ?? $cl['slug'];
+        $cityV  = $cl['_city_slug'] ?? '';
         $linkUrl = (IS_LOCAL || IS_STAGING)
-            ? BASE_URL . '/store.php?sub=' . urlencode($subKey)
-            : 'https://www.gomag.com.tw/store/' . urlencode($subKey);
+            ? BASE_URL . '/store.php?sub=' . urlencode($subKey) . ($cityV ? '&city=' . urlencode($cityV) : '')
+            : 'https://www.gomag.com.tw/store/' . urlencode($subKey) . ($cityV ? '/' . urlencode($cityV) : '');
       ?>
       <a class="m-store-card" href="<?= $linkUrl ?>">
         <div class="cover" <?= $heroImg ? 'style="background-image:url(\''.$heroImg.'\')"' : '' ?>>
@@ -141,6 +170,9 @@ require_once __DIR__ . '/main/layout_head.php';
           <div class="tagline"><?= h($cl['tagline']) ?></div>
           <?php endif; ?>
           <div class="badges">
+            <?php if (!empty($cl['_city_label'])): ?>
+            <span class="badge" style="background:#FF5A36; color:#fff;">📍 <?= h($cl['_city_label']) ?>服務</span>
+            <?php endif; ?>
             <?php if ($cl['has_minisite']): ?>
             <span class="badge badge-mini">🌐 有官網</span>
             <?php endif; ?>
