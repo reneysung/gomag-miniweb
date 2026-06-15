@@ -2,6 +2,7 @@
 // search.php  ─  主站搜尋 /search?q=xxx
 require_once __DIR__ . '/includes/config.php';
 require_once __DIR__ . '/includes/helpers.php';
+require_once __DIR__ . '/includes/front_functions.php';
 
 $db = getDB();
 $q = trim($_GET['q'] ?? '');
@@ -12,7 +13,7 @@ if (mb_strlen($q) >= 1) {
     $sql = "
         SELECT DISTINCT cl.id, cl.subdomain, cl.slug, cl.brand_name, cl.tagline, cl.industry,
                cl.has_minisite, cl.external_website_url, cl.hero_image_path,
-               cl.address, cl.phone,
+               cl.address, cl.phone, cl.city_slug,
                c.name AS cat_name, c.icon AS cat_icon, c.slug AS cat_slug
         FROM clients cl
         LEFT JOIN categories c ON cl.category_id = c.id
@@ -48,10 +49,17 @@ if (mb_strlen($q) >= 1) {
         $variantsByClient = [];
         foreach ($vstmt->fetchAll() as $v) { $variantsByClient[$v['client_id']][] = $v; }
         if ($variantsByClient) {
+            $cityMap = getCityMap();
             $expanded = [];
             foreach ($results as $cl) {
+                $cv = $variantsByClient[$cl['id']] ?? [];
+                if ($cv) {
+                    // 主檔卡片也標自己的城市（與變體一致）；不設 _city_slug → 仍連主檔頁
+                    $mainLbl = preg_replace('/[市縣]$/u', '', (string)($cityMap[$cl['city_slug']] ?? ''));
+                    if ($mainLbl !== '') $cl['_city_label'] = $mainLbl;
+                }
                 $expanded[] = $cl; // 主檔
-                foreach ($variantsByClient[$cl['id']] ?? [] as $v) {
+                foreach ($cv as $v) {
                     $row = $cl;
                     $row['_city_slug']  = $v['city_slug'];
                     $row['_city_label'] = $v['city_label'] ?: $v['city_slug'];
