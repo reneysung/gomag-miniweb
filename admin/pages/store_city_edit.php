@@ -74,6 +74,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'city_slug'              => $citySlug,
         'city_label'             => $cityLabel ?: $citySlug,
         'brand_name'             => trim($_POST['brand_name'] ?? '') ?: null,
+        // 📍 本縣市聯絡資訊（空=用主檔）
+        'address'                => trim($_POST['address'] ?? '') ?: null,
+        'phone'                  => trim($_POST['phone'] ?? '') ?: null,
+        'mobile_phone'           => trim($_POST['mobile_phone'] ?? '') ?: null,
+        'business_hours'         => trim($_POST['business_hours'] ?? '') ?: null,
+        'google_maps_embed'      => trim($_POST['google_maps_embed'] ?? '') ?: null,
         // 📢 行銷頁覆寫
         'store_meta_title'       => trim($_POST['store_meta_title'] ?? '') ?: null,
         'store_meta_desc'        => trim($_POST['store_meta_desc'] ?? '') ?: null,
@@ -202,6 +208,40 @@ require_once __DIR__ . '/../includes/layout_head.php';
                placeholder="留空 = 用主檔「<?= h($client['brand_name']) ?>」"
                value="<?= h($row['brand_name'] ?? '') ?>">
         <div class="hint">想讓城市頁標示「奧喜長崎蛋糕 台中店」之類更貼近在地的品牌名時填這裡。行銷頁與小官網都會用此名稱。</div>
+      </div>
+
+      <div class="form-group" style="margin-top:16px; padding-top:16px; border-top:1px dashed #ccc;">
+        <label style="font-weight:800;">📍 本縣市聯絡資訊（多縣市分點專用：留空＝用主檔的）</label>
+        <div class="hint" style="margin-bottom:10px;">這家有多個縣市分點時，在這裡填「本縣市」的地址電話，<?= h($cityLabelDisplay ?? '') ?>行銷頁就顯示對應的，不再跟主檔共用。</div>
+        <div style="display:grid; gap:10px;">
+          <div>
+            <label>地址</label>
+            <input type="text" name="address" class="form-control" value="<?= h($row['address'] ?? '') ?>"
+                   placeholder="留空 = 用主檔「<?= h($client['address'] ?? '') ?>」">
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div>
+              <label>電話</label>
+              <input type="text" name="phone" class="form-control" value="<?= h($row['phone'] ?? '') ?>"
+                     placeholder="留空 = 用主檔「<?= h($client['phone'] ?? '') ?>」">
+            </div>
+            <div>
+              <label>手機（可選）</label>
+              <input type="text" name="mobile_phone" class="form-control" value="<?= h($row['mobile_phone'] ?? '') ?>"
+                     placeholder="留空 = 用主檔">
+            </div>
+          </div>
+          <div>
+            <label>營業時間（可選）</label>
+            <input type="text" name="business_hours" class="form-control" value="<?= h($row['business_hours'] ?? '') ?>"
+                   placeholder="留空 = 用主檔">
+          </div>
+          <div>
+            <label>Google 地圖嵌入碼／網址（可選）</label>
+            <textarea name="google_maps_embed" class="form-control" rows="2"
+                      placeholder="留空 = 用主檔"><?= h($row['google_maps_embed'] ?? '') ?></textarea>
+          </div>
+        </div>
       </div>
     </div>
   </div>
