@@ -286,7 +286,7 @@ if ($citySlug !== '') {
         die('找不到該城市的行銷頁');
     }
     foreach (['brand_name','store_meta_title','store_meta_desc','store_keywords','store_og_image','hero_image_path','landing_extra_content',
-              'address','phone','mobile_phone','business_hours','google_maps_embed'] as $_f) {
+              'address','phone','mobile_phone','business_hours','google_maps_embed','external_website_url'] as $_f) {
         if (!empty($cityVariant[$_f])) $client[$_f] = $cityVariant[$_f];
     }
     $hideShared = !empty($cityVariant['hide_shared_sections']);

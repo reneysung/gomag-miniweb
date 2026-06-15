@@ -80,6 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'mobile_phone'           => trim($_POST['mobile_phone'] ?? '') ?: null,
         'business_hours'         => trim($_POST['business_hours'] ?? '') ?: null,
         'google_maps_embed'      => trim($_POST['google_maps_embed'] ?? '') ?: null,
+        'external_website_url'   => trim($_POST['external_website_url'] ?? '') ?: null,
         // 📢 行銷頁覆寫
         'store_meta_title'       => trim($_POST['store_meta_title'] ?? '') ?: null,
         'store_meta_desc'        => trim($_POST['store_meta_desc'] ?? '') ?: null,
@@ -240,6 +241,12 @@ require_once __DIR__ . '/../includes/layout_head.php';
             <label>Google 地圖嵌入碼／網址（可選）</label>
             <textarea name="google_maps_embed" class="form-control" rows="2"
                       placeholder="留空 = 用主檔"><?= h($row['google_maps_embed'] ?? '') ?></textarea>
+          </div>
+          <div>
+            <label>本縣市官網網址（可選）</label>
+            <input type="url" name="external_website_url" class="form-control" value="<?= h($row['external_website_url'] ?? '') ?>"
+                   placeholder="留空 = 用主檔「<?= h($client['external_website_url'] ?? '') ?>」">
+            <div class="hint">此地點有自己的官網時填這裡，行銷頁「🔗 官方網站」按鈕就連到本縣市的官網。</div>
           </div>
         </div>
       </div>
