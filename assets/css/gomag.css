@@ -1336,6 +1336,12 @@
   grid-column: 1;
   grid-row: 1 / 3;
 }
+/* 照片少於 5 張：改用整齊均分格，不留拼貼空位、不補 emoji 假照片 */
+.g-photo-gallery-grid--simple {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-rows: 260px;
+}
+.g-photo-gallery-grid--simple .g-gallery-tile-1 { grid-column: auto; grid-row: auto; }
 .g-gallery-fallback {
   width: 100%; height: 100%;
   display: grid; place-items: center;

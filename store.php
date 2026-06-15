@@ -336,9 +336,13 @@ $metaKeywords = !empty($client['store_keywords']) ? $client['store_keywords'] : 
 $ogImage = !empty($client['store_og_image'])
     ? (str_starts_with($client['store_og_image'], 'http') ? $client['store_og_image'] : BASE_URL . '/' . $client['store_og_image'])
     : ($client['hero_image_path'] ? BASE_URL . '/' . $client['hero_image_path'] : '');
+// 多縣服務型客戶（如亞雷 #215）：base 頁無單一主場、會與台中/彰化城市變體互搶「裝潢細清」(內部競食)
+// → base canonical 指向主要城市變體把權重集中；city 變體頁仍各自 self-canonical（2026-06-15）
+$baseCanonicalCity = ['rre' => 'taichung'];  // sub => 主要城市 slug（只影響 base 頁本身的 canonical）
+$_canCity = $cityVariant ? $citySlug : ($baseCanonicalCity[$sub] ?? '');
 $canonical = IS_LOCAL
-    ? BASE_URL . '/store.php?sub=' . urlencode($sub) . ($cityVariant ? '&city=' . urlencode($citySlug) : '')
-    : 'https://www.gomag.com.tw/store/' . urlencode($sub) . ($cityVariant ? '/' . urlencode($citySlug) : '');
+    ? BASE_URL . '/store.php?sub=' . urlencode($sub) . ($_canCity ? '&city=' . urlencode($_canCity) : '')
+    : 'https://www.gomag.com.tw/store/' . urlencode($sub) . ($_canCity ? '/' . urlencode($_canCity) : '');
 
 // Placeholder（資料整理中）為薄頁 → noindex，但保留 follow 讓內連權重續流
 if ($isPlaceholder) {
@@ -741,14 +745,17 @@ if ($showTopBanner):
 $photos = [];
 if ($useBlocks && !empty($client['photos'])) {
     $decoded = json_decode($client['photos'], true);
-    if (is_array($decoded)) $photos = array_values(array_filter($decoded));
+    if (is_array($decoded)) $photos = array_values(array_filter($decoded, function ($p) {
+        $p = ltrim((string)$p, '/');
+        return $p !== '' && is_file(__DIR__ . '/' . $p);  // 只留真實存在的檔案（過濾破圖／已刪檔）
+    }));
 }
 ?>
 
 <?php if ($useBlocks && count($photos) >= 1): ?>
 <!-- ═══════ Photo Gallery（5 格 Airbnb 樣式）═══════ -->
 <section class="g-photo-gallery">
-  <div class="g-photo-gallery-grid">
+  <div class="g-photo-gallery-grid<?= count($photos) < 5 ? ' g-photo-gallery-grid--simple' : '' ?>">
     <?php $idx = 0; foreach (array_slice($photos, 0, 5) as $photo):
       $idx++;
       $url = BASE_URL . '/' . ltrim($photo, '/');
@@ -757,13 +764,6 @@ if ($useBlocks && !empty($client['photos'])) {
       <img src="<?= h($url) ?>" alt="<?= h($client['brand_name']) ?> 照片 <?= $idx ?>" loading="lazy">
     </div>
     <?php endforeach; ?>
-    <?php
-    // 補空格（少於 5 張時用 fallback 填滿）
-    for ($i = $idx + 1; $i <= 5; $i++): ?>
-    <div class="g-gallery-tile g-gallery-tile-<?= $i ?>">
-      <div class="g-gallery-fallback"><?= h($client['cat_icon'] ?? '🏪') ?></div>
-    </div>
-    <?php endfor; ?>
     <?php if (count($photos) > 5): ?>
     <a href="#" class="g-gallery-show-all">📷 查看全部 <?= count($photos) ?> 張</a>
     <?php endif; ?>
@@ -880,7 +880,7 @@ if ($client['about_text'] || ($aboutTags && is_array($aboutTags))):
 
 <!-- ═══════ Modular Blocks（新系統 — 優先渲染）═══════ -->
 <?php if ($useBlocks): ?>
-<?php if (!$hideShared) renderStoreBlocks($cid); ?>
+<?php if (!$hideShared && empty($client['hide_blocks'])) renderStoreBlocks($cid); ?>
 
   </div><!-- /.g-store-main -->
 

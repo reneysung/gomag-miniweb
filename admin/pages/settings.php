@@ -51,6 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'top_banner_until'       => trim($_POST['top_banner_until'] ?? '') ?: null,
         'about_text'             => trim($_POST['about_text'] ?? ''),
         'landing_extra_content'  => trim($_POST['landing_extra_content'] ?? ''),
+        'hide_blocks'            => isset($_POST['hide_blocks']) ? 1 : 0,
         'has_minisite'           => isset($_POST['has_minisite']) ? 1 : 0,
         'store_template'         => preg_replace('/[^a-z0-9_-]/i', '', $_POST['store_template'] ?? '_default') ?: '_default',
         'is_featured'            => isset($_POST['is_featured']) ? 1 : 0,
@@ -959,6 +960,17 @@ while (count($currentTags) < 4) $currentTags[] = '';
     </div>
   </div>
   <div class="card-body">
+    <div class="form-group-admin" style="margin-bottom:14px; padding:12px 14px; background:#fff7ed; border:1px solid #fed7aa; border-radius:8px;">
+      <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer; margin:0; font-weight:700;">
+        <input type="checkbox" name="hide_blocks" value="1" style="margin-top:3px; transform:scale(1.2);"
+               <?= !empty($client['hide_blocks']) ? 'checked' : '' ?>>
+        <span>🚫 隱藏「核心服務／價目表／常見問題」區塊
+          <div style="font-weight:400; color:#475569; font-size:.85rem; margin-top:4px; line-height:1.5;">
+            勾起來後，行銷頁<strong>不顯示這 3 個區塊</strong>，但 hero、店主介紹、關於、聯絡卡、評價等其它都正常顯示（區塊資料還在「📦 區塊管理」、只是不顯示，取消勾選即恢復）。適合「用自訂 HTML 取代區塊」的頁面。
+          </div>
+        </span>
+      </label>
+    </div>
     <div class="form-group-admin">
       <div class="landing-split">
       <textarea name="landing_extra_content" id="landingTextarea" rows="18"
