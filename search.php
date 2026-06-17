@@ -12,7 +12,7 @@ if (mb_strlen($q) >= 1) {
     // 跨欄位 LIKE 搜尋（PDO 非 emulate 模式，每個 placeholder 要獨立 param）
     $sql = "
         SELECT DISTINCT cl.id, cl.subdomain, cl.slug, cl.brand_name, cl.tagline, cl.industry,
-               cl.has_minisite, cl.external_website_url, cl.hero_image_path,
+               cl.has_minisite, cl.external_website_url, cl.hero_image_path, cl.hero_image_fit, cl.logo_path,
                cl.address, cl.phone, cl.city_slug,
                c.name AS cat_name, c.icon AS cat_icon, c.slug AS cat_slug
         FROM clients cl
@@ -158,7 +158,6 @@ require_once __DIR__ . '/main/layout_head.php';
     <div class="m-store-grid">
       <?php foreach ($results as $cl): ?>
       <?php
-        $heroImg = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
         // Pretty URL：/store/{sub}（本機/staging fallback 到 store.php?sub=...）
         $subKey = $cl['subdomain'] ?? $cl['slug'];
         $cityV  = $cl['_city_slug'] ?? '';
@@ -167,7 +166,7 @@ require_once __DIR__ . '/main/layout_head.php';
             : 'https://www.gomag.com.tw/store/' . urlencode($subKey) . ($cityV ? '/' . urlencode($cityV) : '');
       ?>
       <a class="m-store-card" href="<?= $linkUrl ?>">
-        <div class="cover" <?= $heroImg ? 'style="background-image:url(\''.$heroImg.'\')"' : '' ?>>
+        <div class="cover"<?= gStoreCardImg($cl) ?>>
           <?php if ($cl['cat_name']): ?>
           <span class="cat-tag"><?= h($cl['cat_icon']) ?> <?= h($cl['cat_name']) ?></span>
           <?php endif; ?>

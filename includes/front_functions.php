@@ -171,6 +171,19 @@ function gStoreImgStyle(string $imgUrl, ?string $fit = 'cover'): string {
 }
 
 /**
+ * 店家卡片縮圖樣式：logo 優先（用 contain 完整顯示、不裁切），沒 logo 才用 hero（依 hero_image_fit）。
+ * 回傳可直接放進 tag 的 ' style="..."'；logo/hero 都沒有 → 回 ''（呼叫端據此顯示 emoji fallback）。
+ * 需要 $cl 含 logo_path / hero_image_path / hero_image_fit 欄位。
+ */
+function gStoreCardImg(array $cl): string {
+    $logo = trim((string)($cl['logo_path'] ?? ''));
+    if ($logo !== '') return gStoreImgStyle(mediaUrl($logo), 'contain');
+    $hero = trim((string)($cl['hero_image_path'] ?? ''));
+    if ($hero === '') return '';
+    return gStoreImgStyle(mediaUrl($hero), $cl['hero_image_fit'] ?? 'cover');
+}
+
+/**
  * 圖片網址容錯：值若已是絕對網址(http/https)直接回傳，否則接 BASE_URL。
  * 根治「hero_image_path 存成絕對網址 → 又接 BASE_URL → 雙網址壞圖」。
  */

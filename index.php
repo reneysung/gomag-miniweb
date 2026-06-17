@@ -36,7 +36,7 @@ $homeOrder = getPlatformSetting('home_featured_order', 'fixed'); // fixed | rand
 $featuredTie = ($homeOrder === 'random') ? 'RAND()' : 'cl.id DESC';
 $pickStmt = $db->prepare("
     SELECT cl.id, cl.subdomain, cl.slug, cl.brand_name, cl.tagline, cl.industry,
-           cl.has_minisite, cl.external_website_url, cl.hero_image_path, cl.hero_image_fit,
+           cl.has_minisite, cl.external_website_url, cl.hero_image_path, cl.hero_image_fit, cl.logo_path,
            cl.address, cl.phone,
            c.name AS cat_name, c.icon AS cat_icon, c.slug AS cat_slug
     FROM clients cl
@@ -74,7 +74,7 @@ foreach ($categories as $cat) {
 // ─── 本月新加入店家（依 created_at）─────────────────
 $newThisMonth = $db->query("
     SELECT cl.id, cl.subdomain, cl.slug, cl.brand_name, cl.tagline,
-           cl.has_minisite, cl.external_website_url, cl.hero_image_path, cl.hero_image_fit,
+           cl.has_minisite, cl.external_website_url, cl.hero_image_path, cl.hero_image_fit, cl.logo_path,
            cl.address, cl.phone, cl.created_at,
            c.name AS cat_name, c.icon AS cat_icon, c.slug AS cat_slug
     FROM clients cl
@@ -315,11 +315,11 @@ require_once __DIR__ . '/main/layout_head.php';
 
   <div class="g-store-grid">
     <?php foreach ($catGroup['clients'] as $cl):
-      $heroImg = h(mediaUrl($cl['hero_image_path']));
+      $cardStyle = gStoreCardImg($cl);
     ?>
     <a class="g-store-card" href="<?= clientStoreUrl($cl) ?>">
-      <div class="g-store-img"<?php if ($heroImg): $_cf = (($cl['hero_image_fit'] ?? 'cover')==='contain'); ?> style="background-image:url('<?= $heroImg ?>')<?= $_cf ? ';background-size:contain;background-color:#fff' : '' ?>"<?php endif; ?>>
-        <?php if (!$heroImg): ?>
+      <div class="g-store-img"<?= $cardStyle ?>>
+        <?php if ($cardStyle === ''): ?>
         <div class="g-store-img-fallback">
           <span class="icon"><?= h($catGroup['cat_icon']) ?></span>
           <span class="label"><?= h($catGroup['cat_name']) ?></span>
@@ -349,14 +349,14 @@ require_once __DIR__ . '/main/layout_head.php';
   </div>
   <div class="g-store-grid">
     <?php foreach ($newThisMonth as $cl):
-      $heroImg = h(mediaUrl($cl['hero_image_path']));
+      $cardStyle = gStoreCardImg($cl);
       $linkUrl = clientStoreUrl($cl);
       $daysAgo = (int)((time() - strtotime($cl['created_at'])) / 86400);
       $timeLabel = $daysAgo == 0 ? '今天' : ($daysAgo == 1 ? '昨天' : "{$daysAgo} 天前");
     ?>
     <a class="g-store-card" href="<?= $linkUrl ?>">
-      <div class="g-store-img"<?php if ($heroImg): $_cf = (($cl['hero_image_fit'] ?? 'cover')==='contain'); ?> style="background-image:url('<?= $heroImg ?>')<?= $_cf ? ';background-size:contain;background-color:#fff' : '' ?>"<?php endif; ?>>
-        <?php if (!$heroImg): ?>
+      <div class="g-store-img"<?= $cardStyle ?>>
+        <?php if ($cardStyle === ''): ?>
         <div class="g-store-img-fallback">
           <span class="icon"><?= h($cl['cat_icon'] ?? '🏪') ?></span>
           <span class="label"><?= h($cl['cat_name'] ?? '') ?></span>

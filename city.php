@@ -139,7 +139,7 @@ $q    = mb_substr($qRaw, 0, 50);   // cap 長度防 abuse
 // → 多縣市方案客戶（如奧喜：1 個本店在台中 + 5 城市行銷頁變體）在 5 個城市頁都看得到
 $sql = "
     SELECT cl.id, cl.subdomain, cl.slug, cl.brand_name, cl.tagline,
-           cl.has_minisite, cl.external_website_url, cl.hero_image_path, cl.hero_image_fit,
+           cl.has_minisite, cl.external_website_url, cl.hero_image_path, cl.hero_image_fit, cl.logo_path,
            cl.address, cl.phone, cl.is_placeholder,
            c.id AS cat_id, c.name AS cat_name, c.icon AS cat_icon, c.slug AS cat_slug,
            EXISTS (SELECT 1 FROM client_city_pages ccp2
@@ -463,7 +463,7 @@ $breadcrumbLd = [
 // ═══ Phase D: 該縣市本週熱門 / 最新加入 / 口碑 ═══
 // 本週熱門 / 最新加入也加多城市條件（讓多縣市方案客戶可在 5 個城市頁出現）
 $hotStmt = $db->prepare("
-  SELECT cl.id, cl.subdomain, cl.slug, cl.brand_name, cl.tagline, cl.hero_image_path, cl.hero_image_fit,
+  SELECT cl.id, cl.subdomain, cl.slug, cl.brand_name, cl.tagline, cl.hero_image_path, cl.hero_image_fit, cl.logo_path,
          cl.has_minisite, cl.external_website_url,
          cl.address, c.name AS cat_name, c.icon AS cat_icon, c.slug AS cat_slug,
          EXISTS (SELECT 1 FROM client_city_pages ccp2
@@ -480,7 +480,7 @@ $hotStmt->execute(array_merge([$slug, $slug, $slug], $dupSkip));
 $hotStores = $hotStmt->fetchAll();
 
 $latestStmt = $db->prepare("
-  SELECT cl.id, cl.subdomain, cl.slug, cl.brand_name, cl.tagline, cl.hero_image_path, cl.hero_image_fit,
+  SELECT cl.id, cl.subdomain, cl.slug, cl.brand_name, cl.tagline, cl.hero_image_path, cl.hero_image_fit, cl.logo_path,
          cl.has_minisite, cl.external_website_url,
          cl.address, c.name AS cat_name, c.icon AS cat_icon, c.slug AS cat_slug,
          EXISTS (SELECT 1 FROM client_city_pages ccp2
@@ -517,14 +517,14 @@ $cityReviews = $cityReviewsStmt->fetchAll();
 // $currentCity = 當前城市頁的 slug；若該店在此城市有 client_city_pages 變體，連結改用變體 URL
 function renderCityStoreCard(array $cl, string $currentCity = ''): void {
   $sub = $cl['subdomain'] ?? $cl['slug'];
-  $heroImg = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
+  $cardStyle = gStoreCardImg($cl);
   $cardUrl = !empty($cl['has_city_variant']) && $currentCity !== ''
       ? rtrim(clientStoreUrl($cl), '/') . '/' . urlencode($currentCity)
       : clientStoreUrl($cl);
   ?>
   <a class="g-store-card" href="<?= h($cardUrl) ?>">
-    <div class="g-store-img"<?= gStoreImgStyle($heroImg, $cl['hero_image_fit'] ?? null) ?>>
-      <?php if (!$heroImg): ?><div class="g-store-img-fallback"><span class="icon"><?= h($cl['cat_icon']??'🏪') ?></span><span class="label"><?= h($cl['cat_name']??'') ?></span></div><?php endif; ?>
+    <div class="g-store-img"<?= $cardStyle ?>>
+      <?php if ($cardStyle === ''): ?><div class="g-store-img-fallback"><span class="icon"><?= h($cl['cat_icon']??'🏪') ?></span><span class="label"><?= h($cl['cat_name']??'') ?></span></div><?php endif; ?>
     </div>
     <div class="g-store-meta-top"><div class="g-store-name"><?= h($cl['brand_name']) ?></div></div>
     <div class="g-store-loc"><?= h($cl['cat_icon']??'') ?> <?= h($cl['cat_name']??'') ?></div>
@@ -568,7 +568,7 @@ function renderCityStoreCard(array $cl, string $currentCity = ''): void {
   <div class="g-store-grid">
     <?php foreach ($catClients as $cl):
         $sub = $cl['subdomain'] ?? $cl['slug'];
-        $heroImg = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
+        $cardStyle = gStoreCardImg($cl);
         // 該店在此城市有多城市變體 → 卡片連到變體 URL（強化 SEO 內鏈 + UX 對應）
         $linkUrl = !empty($cl['has_city_variant'])
             ? rtrim(clientStoreUrl($cl), '/') . '/' . urlencode($slug)
@@ -577,8 +577,8 @@ function renderCityStoreCard(array $cl, string $currentCity = ''): void {
         $cardClass = 'g-store-card' . ($isPH ? ' g-store-card-ph' : '');
     ?>
     <a class="<?= $cardClass ?>" href="<?= $linkUrl ?>">
-      <div class="g-store-img"<?= gStoreImgStyle($heroImg, $cl['hero_image_fit'] ?? null) ?>>
-        <?php if (!$heroImg): ?>
+      <div class="g-store-img"<?= $cardStyle ?>>
+        <?php if ($cardStyle === ''): ?>
         <div class="g-store-img-fallback">
           <span class="icon"><?= h($catIcon) ?></span>
           <span class="label"><?= h($catName) ?></span>
