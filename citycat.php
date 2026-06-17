@@ -351,17 +351,28 @@ if ($navServices):
 $relGuides = [];
 try {
     // 攻略需「分類相符（或通用）」且「城市相符（或通用）」，避免跨分類/跨城外溢；城市專屬優先
-    // 城市頁攻略只放「本城在地文」，不用全台通用 backfill（Reney 決策 2026-06-17：
-    // 全台通用文對在地排名無益、放城市頁又雜，拿掉；全台文仍是獨立 /guide/ 頁供資訊查詢+內鏈）。
-    // 子服務頁再加 service_slug 過濾（清潔頁只出清潔文）。無在地文則攻略區自動隱藏。
-    $svcFilter = $isSub ? " AND FIND_IN_SET(?, service_slug) > 0 " : "";
-    $rg = $db->prepare("SELECT slug, title, excerpt, cover_image FROM guides
-        WHERE status='published'
-          AND (category_id = ? OR category_id IS NULL)
-          AND city_slug = ?
-          {$svcFilter}
-        ORDER BY published_at DESC, id DESC LIMIT 4");
-    $rg->execute($isSub ? [$catId, $slug, $svcSlug] : [$catId, $slug]);
+    // 城市頁攻略只放「本城在地文」（不用全台通用 backfill；全台文仍是獨立 /guide/ 頁）。
+    // 子服務頁：該子服務攻略優先，不足 4 篇時撈「同家族」文補滿（如冷氣清洗/裝潢細清同屬
+    // 清潔家族 → 撈清潔文補）。$guideFamily: key=子服務 slug, value=補位來源池。樞紐頁不過濾。
+    $guideFamily = ['reno-detail' => 'cleaning', 'aircon-clean' => 'cleaning'];
+    $gSql = "SELECT slug, title, excerpt, cover_image FROM guides
+        WHERE status='published' AND (category_id = ? OR category_id IS NULL) AND city_slug = ?";
+    $gParams = [$catId, $slug];
+    if ($isSub) {
+        $famPool = $guideFamily[$svcSlug] ?? '';
+        if ($famPool !== '') {
+            $gSql .= " AND (FIND_IN_SET(?, service_slug) > 0 OR FIND_IN_SET(?, service_slug) > 0)
+                       ORDER BY (FIND_IN_SET(?, service_slug) > 0) DESC, published_at DESC, id DESC LIMIT 4";
+            $gParams[] = $svcSlug; $gParams[] = $famPool; $gParams[] = $svcSlug;
+        } else {
+            $gSql .= " AND FIND_IN_SET(?, service_slug) > 0 ORDER BY published_at DESC, id DESC LIMIT 4";
+            $gParams[] = $svcSlug;
+        }
+    } else {
+        $gSql .= " ORDER BY published_at DESC, id DESC LIMIT 4";
+    }
+    $rg = $db->prepare($gSql);
+    $rg->execute($gParams);
     $relGuides = $rg->fetchAll();
 } catch (\Throwable $e) { $relGuides = []; }
 if ($relGuides):
