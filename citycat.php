@@ -351,16 +351,17 @@ if ($navServices):
 $relGuides = [];
 try {
     // 攻略需「分類相符（或通用）」且「城市相符（或通用）」，避免跨分類/跨城外溢；城市專屬優先
-    // 子服務頁：只撈該子服務的攻略（FIND_IN_SET 比對 guides.service_slug 逗號清單），
-    // 避免清潔頁撈到室內設計/驗屋等跨子服務通用文；樞紐頁不加此過濾、維持大分類總覽。
+    // 城市頁攻略只放「本城在地文」，不用全台通用 backfill（Reney 決策 2026-06-17：
+    // 全台通用文對在地排名無益、放城市頁又雜，拿掉；全台文仍是獨立 /guide/ 頁供資訊查詢+內鏈）。
+    // 子服務頁再加 service_slug 過濾（清潔頁只出清潔文）。無在地文則攻略區自動隱藏。
     $svcFilter = $isSub ? " AND FIND_IN_SET(?, service_slug) > 0 " : "";
     $rg = $db->prepare("SELECT slug, title, excerpt, cover_image FROM guides
         WHERE status='published'
           AND (category_id = ? OR category_id IS NULL)
-          AND (city_slug = ? OR city_slug IS NULL OR city_slug = '')
+          AND city_slug = ?
           {$svcFilter}
-        ORDER BY (city_slug = ?) DESC, published_at DESC, id DESC LIMIT 4");
-    $rg->execute($isSub ? [$catId, $slug, $svcSlug, $slug] : [$catId, $slug, $slug]);
+        ORDER BY published_at DESC, id DESC LIMIT 4");
+    $rg->execute($isSub ? [$catId, $slug, $svcSlug] : [$catId, $slug]);
     $relGuides = $rg->fetchAll();
 } catch (\Throwable $e) { $relGuides = []; }
 if ($relGuides):
