@@ -18,6 +18,7 @@ function getDuplicateSkipSlugs(): array {
         'docaroating',        // 鍍卡：拼錯修正 → docar
         'cleaningcompany5',   // 三峰清潔 → sanfengclean  (id=197 → 218)
         'xusen',              // 旭浪清潔 demo → 外部 062051129 舊官網（不是站內合併）
+        'clean1',             // 彰化亞雷 → 併進 rre 的彰化變體 /store/rre/changhua (id=219→215)
     ];
 }
 

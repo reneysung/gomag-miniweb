@@ -111,6 +111,8 @@ RewriteRule ^column/([^/?]+)/?$ site/article_detail.php?sub=%1&slug=$1 [L,QSA,B]
 # Pretty URL
 # 舊 /store/clean1 → 新 /store/rre/changhua 301（219 退場合併進 215 的城市變體）
 RewriteRule ^store/clean1/?$ /store/rre/changhua [R=301,L]
+# 舊 /store/rre/taichung → /store/rre 301（主檔本身已是台中頁，台中變體退場）
+RewriteRule ^store/rre/taichung/?$ /store/rre [R=301,L]
 # 舊 /store/catering/pingtung → /store/catering 301（聞香閣拆 client，屏東成為主檔）
 RewriteRule ^store/catering/pingtung/?$ /store/catering [R=301,L]
 # 舊 /store/catering/kaohsiung → /store/cateringkh 301（聞香閣高雄成為獨立 client）
@@ -128,6 +130,12 @@ RewriteRule ^guide/([a-z0-9-]+)/?$ guide.php?slug=$1 [L,QSA]
 RewriteRule ^search/?$ search.php [L,QSA]
 RewriteRule ^sitemap\.xml$ sitemap.php [L]
 RewriteRule ^robots\.txt$ robots.php [L]
+
+# ── 舊「夠台南市集」數字裸網址 301：/{6+位數字} → /store/{數字}（消新舊對衝、接權重）──
+# !-d/!-f 保護：旭浪 062051129/ 資料夾與任何實體檔不受影響；只打到不存在的純數字裸網址
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^([0-9]{6,})$ https://%{HTTP_HOST}/store/$1 [R=301,L]
 
 # 舊 gomag.com.tw 店家頁 SEO 301：/{slug}.html → /store/{slug}
 # 只在實體 .html 檔不存在時才 redirect（避免誤傷未來新增的真實 .html 檔）
