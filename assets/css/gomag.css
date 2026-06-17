@@ -2163,3 +2163,38 @@
   padding: 0; margin: -1px; overflow: hidden;
   clip: rect(0,0,0,0); white-space: nowrap; border: 0;
 }
+
+/* ═══ 攻略文內文排版系統 .g-guide-body（2026-06-17 gg- 元件）═══ */
+.g-guide-body{font-size:1.06rem}
+.g-guide-body>p{margin:0 0 1.15em}
+.g-guide-body .gg-lead{font-size:1.16rem;line-height:1.85;color:var(--g-ink);font-weight:500;margin:0 0 1.6em}
+.g-guide-body h2{font-size:1.5rem;font-weight:800;color:var(--g-ink);line-height:1.4;margin:2.2em 0 .9em;padding-left:.7em;border-left:5px solid var(--g-accent)}
+.g-guide-body h3{font-size:1.16rem;font-weight:700;color:var(--g-ink);margin:1.6em 0 .55em}
+.g-guide-body h3::before{content:"\203A";color:var(--g-accent);font-weight:800;margin-right:.4em}
+.g-guide-body ul,.g-guide-body ol{margin:0 0 1.3em;padding-left:1.4em}
+.g-guide-body li{margin-bottom:.55em}
+.g-guide-body ul li::marker{color:var(--g-accent)}
+.g-guide-body strong{color:var(--g-ink);font-weight:700}
+.g-guide-body a{color:var(--g-accent);text-decoration:underline;text-underline-offset:2px}
+.g-guide-body a:hover{color:var(--g-accent-hover)}
+/* 行情表格 */
+.g-guide-body .gg-table{width:100%;border-collapse:collapse;margin:1.3em 0 1.6em;font-size:.98rem}
+.g-guide-body .gg-table th,.g-guide-body .gg-table td{border:1px solid var(--g-border);padding:.7em .9em;text-align:left;vertical-align:top}
+.g-guide-body .gg-table thead th{background:var(--g-ink);color:#fff;font-weight:700}
+.g-guide-body .gg-table tbody tr:nth-child(even){background:var(--g-bg-alt)}
+.g-guide-body .gg-table td:first-child{font-weight:600;color:var(--g-ink);white-space:nowrap}
+/* 提醒框 */
+.g-guide-body .gg-tip,.g-guide-body .gg-warn{border-radius:12px;padding:1em 1.2em;margin:1.4em 0;line-height:1.8;border-left:4px solid var(--g-accent);background:var(--g-bg-warm)}
+.g-guide-body .gg-tip b:first-child,.g-guide-body .gg-warn b:first-child{display:block;margin-bottom:.3em;color:var(--g-accent-hover)}
+.g-guide-body .gg-warn{border-left-color:#E0421F;background:#FFF3F0}
+.g-guide-body .gg-tip p:last-child,.g-guide-body .gg-warn p:last-child{margin-bottom:0}
+/* 服務類型卡片 */
+.g-guide-body .gg-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:.9em;margin:1.4em 0 1.7em}
+.g-guide-body .gg-card{border:1px solid var(--g-border);border-radius:12px;padding:1em 1.1em;background:#fff}
+.g-guide-body .gg-card b{display:block;font-size:1.04rem;color:var(--g-ink);margin-bottom:.35em}
+.g-guide-body .gg-card span{font-size:.94rem;color:var(--g-ink-soft);line-height:1.7}
+/* FAQ */
+.g-guide-body .gg-faq{margin-top:1.4em;border-top:1px solid var(--g-border)}
+.g-guide-body .gg-faq .gg-q{font-weight:700;color:var(--g-ink);padding:.95em 0 .3em}
+.g-guide-body .gg-faq .gg-q::before{content:"Q";display:inline-block;color:#fff;background:var(--g-accent);font-weight:800;font-size:.8rem;width:1.4em;height:1.4em;line-height:1.4em;text-align:center;border-radius:5px;margin-right:.5em}
+.g-guide-body .gg-faq .gg-a{color:var(--g-ink-soft);padding:0 0 .95em 0;border-bottom:1px solid var(--g-border);line-height:1.85}
