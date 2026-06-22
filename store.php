@@ -1367,7 +1367,7 @@ $otherCities = $cityVariant
         $simHero = $s['hero_image_path'] ? BASE_URL . '/' . h($s['hero_image_path']) : '';
         $simLoc  = $s['address'] ? mb_substr($s['address'], 0, 8, 'UTF-8') : '';
       ?>
-      <a class="g-similar-card" href="<?= BASE_URL ?>/store.php?sub=<?= urlencode($simSub) ?>">
+      <a class="g-similar-card" href="<?= h(clientStoreUrl($s)) ?>">
         <div class="g-similar-img" <?= $simHero ? 'style="background-image:url(\''.$simHero.'\')"' : '' ?>>
           <?php if (!$simHero): ?>
           <div class="g-similar-img-fallback"><?= h($s['cat_icon'] ?? '🏪') ?></div>
