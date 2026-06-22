@@ -79,7 +79,8 @@ if ($isSub) {
         // （公司地址只在一城，但跨縣行銷頁要在該城的關鍵字頁被列出）
         $sql = "
             SELECT DISTINCT $cols,
-                   (ccp.client_id IS NOT NULL) AS via_variant
+                   (ccp.client_id IS NOT NULL) AS via_variant,
+                   ccp.address AS variant_address, ccp.phone AS variant_phone
             FROM clients cl
             JOIN client_service_keywords csk ON csk.client_id = cl.id
             JOIN service_keywords sk ON sk.id = csk.service_keyword_id
@@ -178,7 +179,9 @@ foreach ($clients as $cl) {
     $itemList[] = [
         '@type' => 'ListItem',
         'position' => $idx++,
-        'item' => ['@type' => 'LocalBusiness', 'name' => $cl['brand_name'], 'address' => $cl['address'], 'url' => clientStoreUrl($cl)],
+        'item' => ['@type' => 'LocalBusiness', 'name' => $cl['brand_name'],
+                   'address' => (!empty($cl['via_variant']) && !empty($cl['variant_address'])) ? $cl['variant_address'] : $cl['address'],
+                   'url' => clientStoreUrl($cl, !empty($cl['via_variant']) ? $slug : '')],
     ];
 }
 $jsonLd = [
@@ -302,6 +305,9 @@ if ($navServices):
         $cHero = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
         $isPH = !empty($cl['is_placeholder']);
         $cardClass = 'g-store-card' . ($isPH ? ' g-store-card-ph' : '');
+        // 跨縣變體：卡片顯示變體地址/電話（有填才覆蓋），避免顯示主檔老家地址
+        $cAddr  = (!empty($cl['via_variant']) && !empty($cl['variant_address'])) ? $cl['variant_address'] : $cl['address'];
+        $cPhone = (!empty($cl['via_variant']) && !empty($cl['variant_phone']))   ? $cl['variant_phone']   : $cl['phone'];
     ?>
     <a class="<?= $cardClass ?>" href="<?= h(clientStoreUrl($cl, !empty($cl['via_variant']) ? $slug : '')) ?>">
       <div class="g-store-img"<?= gStoreImgStyle($cHero, $cl['hero_image_fit'] ?? null) ?>>
@@ -313,8 +319,8 @@ if ($navServices):
       <div class="g-store-meta-top"><div class="g-store-name"><?= h($cl['brand_name']) ?></div></div>
       <?php if ($cl['tagline']): ?><div class="g-store-loc"><?= h(mb_strimwidth($cl['tagline'], 0, 36, '…', 'UTF-8')) ?></div><?php endif; ?>
       <div class="g-store-cat-label">
-        <?php if ($cl['address']): ?>📍 <?= h(mb_strimwidth(str_replace($cityName, '', $cl['address']), 0, 24, '…', 'UTF-8')) ?><?php endif; ?>
-        <?php if ($cl['phone'] && !$isPH): ?> · 📞 <?= h($cl['phone']) ?><?php endif; ?>
+        <?php if ($cAddr): ?>📍 <?= h(mb_strimwidth(str_replace($cityName, '', $cAddr), 0, 24, '…', 'UTF-8')) ?><?php endif; ?>
+        <?php if ($cPhone && !$isPH): ?> · 📞 <?= h($cPhone) ?><?php endif; ?>
       </div>
     </a>
     <?php endforeach; ?>
