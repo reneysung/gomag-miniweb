@@ -128,6 +128,8 @@ RewriteRule ^store/([A-Za-z0-9_-]+)/([a-z][a-z0-9-]+)/?$ store.php?sub=$1&city=$
 RewriteRule ^store/([A-Za-z0-9_-]+)/?$ store.php?sub=$1 [L,QSA]
 RewriteRule ^category/([a-z0-9-]+)/?$ category.php?slug=$1 [L,QSA]
 RewriteRule ^city/?$ city.php [L,QSA]
+# 室內設計改隸專業服務（mig 142）：舊居家路徑 301 → 專業路徑
+RewriteRule ^city/([a-z0-9-]+)/home-service/interior-design/?$ /city/$1/professional/interior-design [R=301,L]
 RewriteRule ^city/([a-z0-9-]+)/([a-z0-9-]+)/([a-z0-9-]+)/?$ citycat.php?slug=$1&cat=$2&svc=$3 [L,QSA]
 RewriteRule ^city/([a-z0-9-]+)/([a-z0-9-]+)/?$ citycat.php?slug=$1&cat=$2 [L,QSA]
 RewriteRule ^city/([a-z0-9-]+)/?$ city.php?slug=$1 [L,QSA]
