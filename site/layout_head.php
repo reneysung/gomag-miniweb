@@ -45,10 +45,34 @@ if ($reqCity !== '' && isset($cityVariants[$reqCity])) {
 }
 
 // Mini-site SEO 優先級：頁面 SEO（service_detail 等預設）> client 自訂 minisite_meta_* > 自動組
+// fallback 依 pageKey 自動差異化，避免 home/services/cases/testimonials 撞同一組 meta（SEO 互蠶食）
+$_brand    = $client['brand_name'] ?? '';
+$_tagline  = $client['tagline'] ?? '';
+$_about    = $client['about_text'] ?? '';
+$_svcNames = array_slice(array_filter(array_map(fn($s) => $s['name'] ?? '', $services ?? [])), 0, 4);
+$_svcList  = implode('、', $_svcNames);
+
+$_autoTitle = match ($pageKey) {
+    'services'     => "服務項目｜{$_brand}" . ($_svcList ? "（{$_svcList}）" : ''),
+    'cases'        => "施工案例 Before / After｜{$_brand}",
+    'testimonials' => "{$_brand}評價・客戶分享｜真實口碑推薦",
+    'articles'     => "專欄文章｜{$_brand}",
+    'contact'      => "聯絡我們｜{$_brand}",
+    default        => $_brand . ($_tagline ? "｜{$_tagline}" : ''),  // home + fallback
+};
+$_autoDesc = match ($pageKey) {
+    'services'     => "{$_brand}專業服務項目" . ($_svcList ? "：{$_svcList}。" : '。') . "詳細服務內容、流程說明，免費場勘估價。",
+    'cases'        => "{$_brand}真實施工案例 Before / After 對比照片與成果說明，看實際施作品質再決定。",
+    'testimonials' => "{$_brand}真實客戶評價與口碑分享，看完整服務心得與推薦再決定。",
+    'articles'     => "{$_brand}專業知識文章、案例分享、選購指南。",
+    'contact'      => "{$_brand}聯絡資訊：電話、LINE、地址。免費場勘估價，加 LINE 或來電諮詢。",
+    default        => $_about ? mb_strimwidth(strip_tags($_about), 0, 150, '…') : '',  // home
+};
+
 $metaTitle = $seo['meta_title']
-    ?? (!empty($client['minisite_meta_title']) ? $client['minisite_meta_title'] : ($client['brand_name'] . '｜' . ($client['tagline'] ?? '')));
+    ?? (!empty($client['minisite_meta_title']) ? $client['minisite_meta_title'] : $_autoTitle);
 $metaDesc  = $seo['meta_desc']
-    ?? (!empty($client['minisite_meta_desc']) ? $client['minisite_meta_desc'] : ($client['about_text'] ? mb_strimwidth(strip_tags($client['about_text']), 0, 120, '…') : ''));
+    ?? (!empty($client['minisite_meta_desc']) ? $client['minisite_meta_desc'] : $_autoDesc);
 // canonical：呼叫者可預先設定（如 service_detail.php），否則由 pageKey 自動算
 $canonicalUrl = $canonicalUrl ?? getCanonicalUrl($slug, $pageKey);
 // 城市變體 canonical 覆寫：{sub}.gomag.com.tw/{city}（prod）或 ?city= 形式（local/staging）
@@ -111,8 +135,36 @@ $_columnUrl = (IS_LOCAL || IS_STAGING)
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<?php $gaTrackingId = getPlatformSetting('ga_tracking_id', ''); ?>
+<?php if ($gaTrackingId): ?>
+<!-- Google Analytics 4（小官網；與主站同一 property，GA 報表用 hostname 維度區分 rre.gomag.com.tw vs www）-->
+<script async src="https://www.googletagmanager.com/gtag/js?id=<?= h($gaTrackingId) ?>"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '<?= h($gaTrackingId) ?>');
+</script>
+<?php endif; ?>
+<?php
+// favicon：客戶專屬方形圖示 > 客戶 logo > gomag 預設（讓 Google/分頁顯示店家自己的 logo）
+// 用本子網域 host（非 www），Google favicon 需與頁面同 host 才會採用
+$_favSlug = $client['subdomain'] ?: ($client['slug'] ?? '');
+$_favHost = (IS_LOCAL || IS_STAGING) ? BASE_URL : 'https://' . $_favSlug . '.' . MINISITE_DOMAIN;
+$_favFile = 'uploads/brand/favicon-' . $_favSlug . '.png';
+if ($_favSlug && is_file(dirname(__DIR__) . '/' . $_favFile)) {
+    $_favUrl = $_favHost . '/' . $_favFile;
+} elseif (!empty($client['logo_path']) && is_file(dirname(__DIR__) . '/' . $client['logo_path'])) {
+    $_favUrl = $_favHost . '/' . $client['logo_path'];
+} else {
+    $_favUrl = $_favHost . '/favicon.svg';
+}
+?>
+<link rel="icon" href="<?= h($_favUrl) ?>">
+<link rel="apple-touch-icon" href="<?= h($_favUrl) ?>">
 <title><?= h($metaTitle) ?></title>
 <meta name="description" content="<?= h($metaDesc) ?>">
+<meta name="application-name" content="<?= h($_brand) ?>">
 <link rel="canonical" href="<?= h($canonicalUrl) ?>">
 <link rel="alternate" hreflang="zh-Hant" href="<?= h($canonicalUrl) ?>">
 <link rel="alternate" hreflang="x-default" href="<?= h($canonicalUrl) ?>">
@@ -121,6 +173,7 @@ $_columnUrl = (IS_LOCAL || IS_STAGING)
 $_siteSitemapHost = (IS_LOCAL || IS_STAGING) ? rtrim(BASE_URL, '/') : 'https://' . $slug . '.' . MINISITE_DOMAIN;
 ?>
 <link rel="sitemap" type="application/xml" href="<?= h($_siteSitemapHost) ?>/sitemap.xml" title="Sitemap">
+<meta property="og:site_name"   content="<?= h($_brand) ?>">
 <meta property="og:title"       content="<?= h($seo['og_title'] ?? $metaTitle) ?>">
 <meta property="og:description" content="<?= h($metaDesc) ?>">
 <meta property="og:type"        content="website">
