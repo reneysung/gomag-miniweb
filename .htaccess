@@ -47,6 +47,10 @@ RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_URI} ^(.+)/$
 RewriteRule ^(.+)/$ /$1 [R=301,L]
 
+# 退場測試 demo happysteakcyi：小官網 410 Gone（告訴 Google 永久移除）
+RewriteCond %{HTTP_HOST} ^(www\.)?happysteakcyi\.gomag\.com\.tw$ [NC]
+RewriteRule ^ - [G,L]
+
 # ── Mini-site 子網域路由：{sub}.gomag.com.tw → site/ ──
 # 主站 gomag.com.tw（無子網域）不會 match；www / 062051129 / xusen 排除
 # 062051129 另有獨立 docroot，本檔對它不生效，排除僅為保險
@@ -111,6 +115,8 @@ RewriteRule ^column/([^/?]+)/?$ site/article_detail.php?sub=%1&slug=$1 [L,QSA,B]
 # Pretty URL
 # 舊 /store/clean1 → 新 /store/rre/changhua 301（219 退場合併進 215 的城市變體）
 RewriteRule ^store/clean1/?$ /store/rre/changhua [R=301,L]
+# 退場測試 demo：/store/happysteakcyi 410 Gone
+RewriteRule ^store/happysteakcyi/?$ - [G,L]
 # 舊 /store/rre/taichung → /store/rre 301（主檔本身已是台中頁，台中變體退場）
 RewriteRule ^store/rre/taichung/?$ /store/rre [R=301,L]
 # 舊 /store/catering/pingtung → /store/catering 301（聞香閣拆 client，屏東成為主檔）
