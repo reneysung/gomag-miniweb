@@ -36,6 +36,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             setFlash('error', '分類 / slug / 名稱必填');
             redirect(BASE_URL . '/admin/pages/service_keywords.php');
         }
+        // 跨分類同名稱檢查：同一服務不應掛在兩個分類（避 IA 重複/SEO 競食）
+        $dupChk = $db->prepare("SELECT c.name FROM service_keywords sk JOIN categories c ON c.id=sk.category_id WHERE sk.name=? AND sk.category_id<>? LIMIT 1");
+        $dupChk->execute([$name, $cid]);
+        if ($dupCat = $dupChk->fetchColumn()) {
+            setFlash('error', "「{$name}」已存在於『{$dupCat}』分類，同一服務不應跨分類重複（會 SEO 競食）。請先到那邊停用/刪除，或改用不同名稱。");
+            redirect(BASE_URL . '/admin/pages/service_keywords.php?cat=' . $cid);
+        }
         try {
             $ins = $db->prepare("INSERT INTO service_keywords (category_id, slug, name, page_slug, sort_order) VALUES (?,?,?,?,?)");
             $ins->execute([$cid, $slug, $name, $page, $sort]);
@@ -52,6 +59,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $page = $normSlug($_POST['page_slug'] ?? '');
         $sort = (int)($_POST['sort_order'] ?? 0);
         $act  = isset($_POST['is_active']) ? 1 : 0;
+        // 跨分類同名稱檢查（改名也擋）：排除自己，比對其他分類
+        $myCid = (int)$db->query("SELECT category_id FROM service_keywords WHERE id=" . $id)->fetchColumn();
+        $dupChk = $db->prepare("SELECT c.name FROM service_keywords sk JOIN categories c ON c.id=sk.category_id WHERE sk.name=? AND sk.category_id<>? AND sk.id<>? LIMIT 1");
+        $dupChk->execute([$name, $myCid, $id]);
+        if ($dupCat = $dupChk->fetchColumn()) {
+            setFlash('error', "「{$name}」已存在於『{$dupCat}』分類，同一服務不應跨分類重複（會 SEO 競食）。");
+            redirect(BASE_URL . '/admin/pages/service_keywords.php?cat=' . (int)($_POST['category_id'] ?? 0));
+        }
         $u = $db->prepare("UPDATE service_keywords SET name=?, page_slug=?, sort_order=?, is_active=? WHERE id=?");
         $u->execute([$name, $page, $sort, $act, $id]);
         setFlash('success', '✅ 已儲存');
