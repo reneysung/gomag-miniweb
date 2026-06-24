@@ -209,6 +209,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $fields['subdomain_provisioned_at'] = date('Y-m-d H:i:s');
     }
 
+    // ── JSON-LD 防呆：自動補行銷頁 inline JSON-LD 漏逗號，補不回則下方警示 ──
+    require_once __DIR__ . '/../../includes/jsonld_guard.php';
+    $_jlg = jsonldGuardFix($fields['landing_extra_content']);
+    $fields['landing_extra_content'] = $_jlg['html'];
+
     $sets = implode(', ', array_map(fn($k) => "`$k` = :$k", array_keys($fields)));
     $stmt = $db->prepare("UPDATE clients SET $sets WHERE id = :id");
     $stmt->execute(array_merge($fields, ['id' => $clientId]));
@@ -229,11 +234,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     } catch (\Throwable $e) { /* service_keywords 表未建時略過 */ }
 
-    if ($_uploadErrors) {
+    $_jlNote = $_jlg['fixed'] > 0 ? '（已自動修正行銷頁 JSON-LD ' . $_jlg['fixed'] . ' 處逗號）' : '';
+    if (!empty($_jlg['errors'])) {
+        setFlash('error', '⚠️ 已儲存，但行銷頁內嵌 JSON-LD 仍有語法錯誤，會影響該頁結構化資料，請修正後重存：' . implode('；', $_jlg['errors']) . $_jlNote);
+    } elseif ($_uploadErrors) {
         // 有圖片上傳失敗 → 顯示明確原因（其他欄位已存好）
-        setFlash('error', '⚠️ 資料已存，但有圖片沒上傳成功：' . implode('；', $_uploadErrors));
+        setFlash('error', '⚠️ 資料已存，但有圖片沒上傳成功：' . implode('；', $_uploadErrors) . $_jlNote);
     } else {
-        setFlash('success', '✅ 基本資訊已儲存！');
+        setFlash('success', '✅ 基本資訊已儲存！' . $_jlNote);
     }
     redirect(BASE_URL . '/admin/pages/settings.php?saved=1');
 }

@@ -102,6 +102,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'is_active'              => !empty($_POST['is_active']) ? 1 : 0,
     ];
 
+    // ── JSON-LD 防呆：自動補行銷頁 inline JSON-LD 漏逗號，補不回則警示 ──
+    require_once __DIR__ . '/../../includes/jsonld_guard.php';
+    $_jlg = ['fixed' => 0, 'errors' => []];
+    if (!empty($fields['landing_extra_content'])) {
+        $_jlg = jsonldGuardFix($fields['landing_extra_content']);
+        $fields['landing_extra_content'] = $_jlg['html'];
+    }
+
     try {
         if ($row) {
             $set = implode(',', array_map(fn($k) => "$k=:$k", array_keys($fields)));
@@ -116,7 +124,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $db->prepare("INSERT INTO client_city_pages ($cols) VALUES ($ph)");
             $stmt->execute($fields);
         }
-        setFlash('success', '✅ 已儲存城市變體');
+        $_jlNote = $_jlg['fixed'] > 0 ? '（已自動修正 JSON-LD ' . $_jlg['fixed'] . ' 處逗號）' : '';
+        if (!empty($_jlg['errors'])) {
+            setFlash('error', '⚠️ 已儲存，但行銷頁 JSON-LD 仍有語法錯誤，請修正後重存：' . implode('；', $_jlg['errors']) . $_jlNote);
+        } else {
+            setFlash('success', '✅ 已儲存城市變體' . $_jlNote);
+        }
         redirect(BASE_URL . '/admin/pages/store_cities.php');
     } catch (PDOException $e) {
         if ((int)$e->errorInfo[1] === 1062) {
