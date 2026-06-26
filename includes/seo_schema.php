@@ -33,6 +33,7 @@ function localBusinessTypeFor(string $industry): string {
     if (preg_match('/(美容|美甲|美髮|美睫|紋繡|沙龍)/u', $ind))                                     return 'BeautySalon';
     if (preg_match('/(美髮|理髮)/u', $ind))                                                       return 'HairSalon';
     if (preg_match('/(汽車|機車|車體|烤漆|改裝|大燈|輪胎)/u', $ind))                                  return 'AutomotiveBusiness';
+    if (preg_match('/(冷氣|空調|HVAC)/u', $ind))                                                    return 'HVACBusiness';
     if (preg_match('/(室內設計|室內裝修|室內裝潢|空間設計|空間規劃|裝潢設計|建築設計|景觀設計|商空設計|店面設計|室內空間)/u', $ind)) return 'HomeAndConstructionBusiness';
     if (preg_match('/(清潔|搬家|裝潢|防水|抓漏|電器|水電|油漆|害蟲|除蟲|消毒|園藝|綠美化)/u', $ind))    return 'HomeAndConstructionBusiness';
     return 'LocalBusiness';
@@ -97,6 +98,15 @@ function schemaLocalBusiness(array $client, array $social, array $services, ?arr
             'addressCountry'  => 'TW',
             'addressLocality' => $client['address'],
         ];
+    }
+
+    // ── areaServed（到府/服務範圍型商家；只取縣市 token，避免整串地址塞進 City name）──
+    $_areaRaw = (string)($client['address_region'] ?? ($client['address'] ?? ''));
+    if ($_areaRaw !== '') {
+        $_areaName = preg_match('/(臺?[^,，\s]{1,3}?[市縣])/u', $_areaRaw, $_am)
+            ? str_replace('臺', '台', $_am[1])
+            : $_areaRaw;
+        $schema['areaServed'] = ['@type' => 'City', 'name' => $_areaName];
     }
 
     // ── GeoCoordinates（有經緯度才出）──

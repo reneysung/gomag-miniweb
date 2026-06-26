@@ -17,7 +17,7 @@ $fbUrl   = $social['fb_page_url'] ?? '';
   <div class="gn-wrap">
     <div class="gn-breadcrumb"><a href="<?= siteUrl($sub) ?>">首頁</a>　／　客戶好評</div>
     <div class="gn-eyebrow">Testimonials</div>
-    <h2 class="gn-h2">客戶好評</h2>
+    <h1 class="gn-h2">客戶好評</h1>
     <p class="gn-sub">每一則回饋，都是真實的服務紀錄</p>
   </div>
 </section>

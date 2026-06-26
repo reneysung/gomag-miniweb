@@ -26,6 +26,11 @@ $gnStats = array_slice($heroStats ?? [], 0, 4);
 
 // 是否冷氣/空調業（流程區只在此業種顯示 — 文案出自冷淨億點核可行銷頁）
 $gnIsAircon = (bool)preg_match('/冷氣|空調/u', $client['industry'] ?? '');
+
+// H1 關鍵字補強（SEO）：城市去「市/縣」＋產業 → 例「台中冷氣清洗」（reusable，無資料時為空不顯示）
+$gnCity = preg_replace('/[市縣]$/u', '', (string)($client['address_region'] ?? ''));
+if ($gnCity === '' && preg_match('/^(.{2,3}?)[市縣]/u', (string)($client['address'] ?? ''), $_mC)) $gnCity = $_mC[1];
+$gnH1Kw = trim($gnCity . ($client['industry'] ?? ''));
 ?>
 <div class="gn">
 
@@ -38,7 +43,7 @@ $gnIsAircon = (bool)preg_match('/冷氣|空調/u', $client['industry'] ?? '');
       <div class="gn-hero-tag"><?= h($client['industry'] ?? '專業服務') ?>
         <?php if (preg_match('/^(.{2,3}[市縣])/u', $client['address'] ?? '', $m)): ?>・<?= h($m[1]) ?><?php endif; ?>
       </div>
-      <h1 class="gn-hero-title"><?= h($client['brand_name']) ?></h1>
+      <h1 class="gn-hero-title"><?= h($client['brand_name']) ?><?php if ($gnH1Kw !== ''): ?><span class="gn-hero-kw"><?= h($gnH1Kw) ?></span><?php endif; ?></h1>
       <?php if (!empty($client['tagline'])): ?>
       <p class="gn-hero-sub"><?= h($client['tagline']) ?></p>
       <?php endif; ?>

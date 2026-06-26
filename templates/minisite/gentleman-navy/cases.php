@@ -57,7 +57,7 @@ $_regionUrl = fn(string $r) => (IS_LOCAL || IS_STAGING)
   <div class="gn-wrap">
     <div class="gn-breadcrumb"><a href="<?= siteUrl($sub) ?>">首頁</a>　／　施工案例<?= $_curRegion ? '　／　' . h($_regionLabels[$_curRegion]) : '' ?></div>
     <div class="gn-eyebrow">Case Studies</div>
-    <h2 class="gn-h2"><?= $_curRegion ? h($_regionLabels[$_curRegion]) . '施工案例' : '施工案例' ?></h2>
+    <h1 class="gn-h2"><?= $_curRegion ? h($_regionLabels[$_curRegion]) . '施工案例' : '施工案例' ?></h1>
     <p class="gn-sub">每一個案例都是完整相簿紀錄，點進去看 Before／After</p>
     <!-- 地區切換 pills -->
     <div class="gn-region-pills">

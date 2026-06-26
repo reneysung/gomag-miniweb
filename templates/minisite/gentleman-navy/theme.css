@@ -154,6 +154,7 @@ body {
   font-weight: 700; letter-spacing: .1em; line-height: 1.35;
   color: var(--gn-navy); margin: 0 0 14px;
 }
+.gn-hero-kw { display: block; font-family: "Noto Serif TC", serif; font-size: .4em; font-weight: 600; letter-spacing: .16em; color: var(--gn-navy); margin-top: 12px; }
 .gn-hero-sub { font-size: .96rem; color: var(--gn-ink); line-height: 1.9; margin-bottom: 26px; }
 .gn-hero-divider { width: 56px; height: 2px; background: var(--gn-navy); margin: 0 0 26px; }
 .gn-hero-checks { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 30px; }

@@ -18,7 +18,7 @@ $gnIsAircon = (bool)preg_match('/冷氣|空調/u', $client['industry'] ?? '');
   <div class="gn-wrap">
     <div class="gn-breadcrumb"><a href="<?= siteUrl($sub) ?>">首頁</a>　／　服務項目</div>
     <div class="gn-eyebrow">Our Services</div>
-    <h2 class="gn-h2">服務項目</h2>
+    <h1 class="gn-h2">服務項目</h1>
     <p class="gn-sub"><?= $gnIsAircon ? '到府施工、洗前洗後測溫對比，照片當日上傳 LINE 相簿' : '每一項服務，都以同樣的標準完成' ?></p>
   </div>
 </section>
