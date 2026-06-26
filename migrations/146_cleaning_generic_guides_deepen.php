@@ -1,12 +1,12 @@
 <?php
 // ============================================================
-// Migration 142 — SEO 改造 Round 1：深化 2 篇高曝光通用清潔文
+// Migration 146 — SEO 改造 Round 1：深化 2 篇高曝光通用清潔文
 // ------------------------------------------------------------
 // GSC：regular-cleaning-frequency(141 曝光/pos21.7)、moving-cleaning-cost(76/pos17)
 // 曝光最高但薄（1.8/2.2KB、純 h3/p、無行情表/FAQ）卡第 2-3 頁。
 // 改：升 gg- 結構化元件、加行情表、加 FAQ + 內嵌 FAQPage JSON-LD、補內鏈、
 //     refine meta_desc（補行情數字提 CTR）。人味鐵則：平實、無金句、無「不是X而是Y」。
-// 跑法：HTTP_HOST=www.gomag.com.tw php migrations/142_cleaning_generic_guides_deepen.php
+// 跑法：HTTP_HOST=www.gomag.com.tw php migrations/146_cleaning_generic_guides_deepen.php
 // 冪等：UPDATE by id。
 // ============================================================
 require_once __DIR__ . '/../includes/config.php';

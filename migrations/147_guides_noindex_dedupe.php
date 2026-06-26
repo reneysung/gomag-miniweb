@@ -1,6 +1,6 @@
 <?php
 // ============================================================
-// Migration 143 — SEO 改造 Round 3：noindex 弱重複城市攻略（反 scaled-content）
+// Migration 147 — SEO 改造 Round 3：noindex 弱重複城市攻略（反 scaled-content）
 // ------------------------------------------------------------
 // 方案 A（Reney 核可）：把近乎雷同、~0 曝光的城市攻略設 noindex,follow，
 //   移除 Google 眼中的 doorway/scaled-content 足跡，但頁面仍留站上（城市頁相關
@@ -9,7 +9,7 @@
 //   推薦懶人包、台中冷氣(差異化版)。
 //
 // 機制：guides 加 noindex 欄（之後可接後台 checkbox）；guide.php 讀旗標→$metaRobots。
-// 跑法：HTTP_HOST=www.gomag.com.tw php migrations/143_guides_noindex_dedupe.php
+// 跑法：HTTP_HOST=www.gomag.com.tw php migrations/147_guides_noindex_dedupe.php
 // 冪等：欄位查存在才加；UPDATE 重跑安全。
 // ============================================================
 require_once __DIR__ . '/../includes/config.php';

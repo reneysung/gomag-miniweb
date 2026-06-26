@@ -1,6 +1,6 @@
 <?php
 // ============================================================
-// Migration 144 — SEO 改造 Round 1(#1)：4 篇贏家懶人包補 FAQ + 群組內鏈
+// Migration 148 — SEO 改造 Round 1(#1)：4 篇贏家懶人包補 FAQ + 群組內鏈
 // ------------------------------------------------------------
 // 對象：台北/新竹/高雄/台中 裝潢細清懶人包（GSC pos 8–10、已卡第 1 頁底）。
 // 它們已 10–12KB、有客戶置入+編輯筆記+城市子分類內鏈，唯獨缺 FAQ。
@@ -8,7 +8,7 @@
 //     ② 延伸閱讀補「存活的」群組攻略內鏈（通用粗清vs細清 / 定期清潔 / 搬家退租；
 //        台中另加台中冷氣差異化版）—— 不連已 noindex 的城市重複頁。
 // 不灌肥客戶卡、不加新客戶置入（要加先問 Reney）。
-// 跑法：HTTP_HOST=www.gomag.com.tw php migrations/144_winner_listicles_faq_boost.php
+// 跑法：HTTP_HOST=www.gomag.com.tw php migrations/148_winner_listicles_faq_boost.php
 // 冪等：marker <!-- winner-boost-v1 --> 防重跑。
 // ============================================================
 require_once __DIR__ . '/../includes/config.php';

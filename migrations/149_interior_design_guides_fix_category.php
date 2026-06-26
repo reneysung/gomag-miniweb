@@ -1,6 +1,6 @@
 <?php
 // ============================================================
-// Migration 145 — 修室內設計攻略分類錯置（攻略掛不上子服務頁的 bug）
+// Migration 149 — 修室內設計攻略分類錯置（攻略掛不上子服務頁的 bug）
 // ------------------------------------------------------------
 // 現象：高雄/台中/台南室內設計子服務頁「沒攻略」(Reney 2026 回報)。
 // 根因：室內設計關鍵字/geo 頁已在 category 8（專業服務），但 7 篇室內設計攻略
@@ -9,7 +9,7 @@
 //   攻略一篇都掛不上室內設計頁（雖然 service_slug/city/noindex 都對）。
 // 修：把這 7 篇 interior-design 攻略改 category_id=8（與現行 IA 一致）。
 //   這些攻略 service_slug 都只標 interior-design（非多分類），改 cat 不影響別頁。
-// 跑法：HTTP_HOST=www.gomag.com.tw php migrations/145_interior_design_guides_fix_category.php
+// 跑法：HTTP_HOST=www.gomag.com.tw php migrations/149_interior_design_guides_fix_category.php
 // 冪等：UPDATE，重跑安全。
 // ============================================================
 require_once __DIR__ . '/../includes/config.php';
