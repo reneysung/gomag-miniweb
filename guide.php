@@ -34,6 +34,7 @@ if ($slug) {
     $canonical = $guideUrl($slug);
     $cover = $guide['cover_image'] ?: '';
 
+    if (!empty($guide['noindex'])) $metaRobots = 'noindex,follow';
     require_once __DIR__ . '/main/layout_head.php';
 
     $articleLd = [
