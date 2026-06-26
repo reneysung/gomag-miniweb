@@ -1,6 +1,6 @@
 <?php
 // ============================================================
-// Migration 141 — 台中冷氣清洗 SEO 補強（Reney 授權「都做」）
+// Migration 150 — 台中冷氣清洗 SEO 補強（Reney 授權「都做」）
 // ------------------------------------------------------------
 // (a) 修「洗冷氣」關鍵字池重複：#144 xilengqi page_slug 空（會被當成不存在的
 //     獨立頁 → doorway/孤立）→ 折入 aircon-clean。不動店家標記（#251 標的）。
@@ -11,7 +11,7 @@
 //     ★ 人味鐵則：平實、無金句、無「不是X而是Y」；不能無中生有（行情走合理區間、
 //       不捏造特定業者事實）。
 //
-// 跑法：HTTP_HOST=www.gomag.com.tw php migrations/141_taichung_aircon_seo_boost.php
+// 跑法：HTTP_HOST=www.gomag.com.tw php migrations/150_taichung_aircon_seo_boost.php
 // 冪等：全 UPDATE by id，重跑同值安全。
 // ============================================================
 require_once __DIR__ . '/../includes/config.php';
