@@ -302,11 +302,6 @@ body::after {
 
       <button type="submit" class="btn-login">登 入</button>
     </form>
-
-    <div class="login-hint">
-      <strong>測試帳號：</strong>xulang　／　<strong>密碼：</strong>admin1234<br>
-      （正式部署後請立即變更密碼）
-    </div>
   </div>
 
   <div class="login-footer">
