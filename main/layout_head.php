@@ -40,6 +40,7 @@ $currentPage = basename($_SERVER['PHP_SELF'], '.php');
 <link rel="alternate" hreflang="x-default" href="<?= h($canonical) ?>">
 <?php $_mainSitemap = (IS_LOCAL || IS_STAGING) ? BASE_URL . '/sitemap.xml' : 'https://www.gomag.com.tw/sitemap.xml'; ?>
 <link rel="sitemap" type="application/xml" href="<?= h($_mainSitemap) ?>" title="Sitemap">
+<meta property="og:site_name"   content="店家好口碑">
 <meta property="og:title"       content="<?= h($pageTitle) ?>">
 <meta property="og:description" content="<?= h($metaDesc) ?>">
 <meta property="og:type"        content="website">
