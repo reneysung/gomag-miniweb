@@ -907,8 +907,14 @@ if($featured): ?>
         <?php else: ?>
           <!-- 沒有 FB 粉絲頁：地圖放大 -->
           <div style="border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.1);min-height:400px">
-            <?php if($client['google_maps_embed']): ?>
-              <iframe src="<?= h($client['google_maps_embed']) ?>" width="100%" height="500" style="border:0" allowfullscreen loading="lazy"></iframe>
+            <?php if($client['google_maps_embed']):
+              $_emb = trim($client['google_maps_embed']);
+            ?>
+              <?php if (stripos($_emb, '<iframe') === 0): ?>
+                <?= $_emb /* DB 存整段 iframe markup → 直接輸出 */ ?>
+              <?php else: ?>
+                <iframe src="<?= h($_emb) ?>" width="100%" height="500" style="border:0" allowfullscreen loading="lazy"></iframe>
+              <?php endif; ?>
             <?php else: ?>
               <div style="height:400px;background:var(--g-bg-alt);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px">
                 <div style="font-size:3rem;margin-bottom:12px">🗺️</div>
@@ -950,8 +956,14 @@ if($featured): ?>
 
         <!-- 地圖 -->
         <div style="margin-top:24px;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.1);height:280px">
-          <?php if($client['google_maps_embed']): ?>
-            <iframe src="<?= h($client['google_maps_embed']) ?>" width="100%" height="100%" style="border:0;min-height:280px" allowfullscreen loading="lazy"></iframe>
+          <?php if($client['google_maps_embed']):
+            $_emb2 = trim($client['google_maps_embed']);
+          ?>
+            <?php if (stripos($_emb2, '<iframe') === 0): ?>
+              <?= $_emb2 /* DB 存整段 iframe markup → 直接輸出 */ ?>
+            <?php else: ?>
+              <iframe src="<?= h($_emb2) ?>" width="100%" height="100%" style="border:0;min-height:280px" allowfullscreen loading="lazy"></iframe>
+            <?php endif; ?>
           <?php else: ?>
             <div style="height:100%;background:var(--g-bg-alt);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px">
               <div style="font-size:3rem;margin-bottom:12px">🗺️</div>
