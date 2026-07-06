@@ -51,15 +51,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
     <priority>1.0</priority>
   </url>
 
-  <!-- 主站分類頁總覽 -->
-  <url>
-    <loc><?= htmlspecialchars($baseUrl) ?>/category</loc>
-    <lastmod><?= $today ?></lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- 各分類列表頁 -->
+  <!-- 各分類列表頁（/category 總覽頁未建、會 404，故 sitemap 不收） -->
   <?php foreach ($cats as $c): ?>
   <url>
     <loc><?= htmlspecialchars($baseUrl) ?>/category/<?= htmlspecialchars($c['slug']) ?></loc>
@@ -151,7 +143,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
   <?php
     $guideRows = [];
     try {
-        $guideRows = $db->query("SELECT slug, COALESCE(updated_at, published_at) AS modified FROM guides WHERE status='published' ORDER BY published_at DESC")->fetchAll();
+        $guideRows = $db->query("SELECT slug, COALESCE(updated_at, published_at) AS modified FROM guides WHERE status='published' AND COALESCE(noindex,0)=0 ORDER BY published_at DESC")->fetchAll();
     } catch (\Throwable $e) { $guideRows = []; /* 表未建時略過 */ }
     if ($guideRows):
   ?>
@@ -188,11 +180,14 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
 
   <!-- 城市行銷頁變體 /store/{slug}/{city}（client_city_pages 表） -->
   <?php
-    $cvRows = $db->query("SELECT c.subdomain, c.slug, ccp.city_slug, ccp.created_at
+    $dupPhCv = $dupSkip ? implode(',', array_fill(0, count($dupSkip), '?')) : "''";
+    $cvStmt = $db->prepare("SELECT c.subdomain, c.slug, ccp.city_slug, ccp.created_at
                           FROM client_city_pages ccp
                           JOIN clients c ON c.id = ccp.client_id AND c.is_active=1
-                          WHERE ccp.is_active=1
-                          ORDER BY ccp.client_id, ccp.sort_order")->fetchAll();
+                          WHERE ccp.is_active=1 AND c.slug NOT IN ($dupPhCv)
+                          ORDER BY ccp.client_id, ccp.sort_order");
+    $cvStmt->execute($dupSkip);
+    $cvRows = $cvStmt->fetchAll();
     foreach ($cvRows as $cv):
       // strtolower 對齊 store.php:9 的 canonical 大小寫
       $sub = strtolower($cv['subdomain'] ?: $cv['slug']);
@@ -279,6 +274,8 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
       $caseRegions = caseRegionsPresent($caseLocs);
       if (count($caseRegions) > 1) {
           foreach ($caseRegions as $rSlug) {
+              // 只有 taichung/changhua 有 .htaccess 的 /cases/{region} 路由，其餘會 404 → 不收
+              if (!in_array($rSlug, ['taichung', 'changhua'], true)) continue;
               $regionUrl = (IS_LOCAL || IS_STAGING)
                   ? $miniBase . '/cases.php?sub=' . urlencode($sub) . '&region=' . urlencode($rSlug)
                   : $miniBase . '/cases/' . $rSlug;

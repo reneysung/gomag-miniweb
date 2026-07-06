@@ -339,7 +339,8 @@ $ogImage = !empty($client['store_og_image'])
     : ($client['hero_image_path'] ? BASE_URL . '/' . $client['hero_image_path'] : '');
 // 多縣服務型客戶（如亞雷 #215）：base 頁無單一主場、會與台中/彰化城市變體互搶「裝潢細清」(內部競食)
 // → base canonical 指向主要城市變體把權重集中；city 變體頁仍各自 self-canonical（2026-06-15）
-$baseCanonicalCity = ['rre' => 'taichung'];  // sub => 主要城市 slug（只影響 base 頁本身的 canonical）
+// 2026-06-17 起 rre 台中變體已刪、主檔本身即台中頁 → 移除 rre 映射，避免 canonical 指向已 301 的 /store/rre/taichung
+$baseCanonicalCity = [];  // sub => 主要城市 slug（只影響 base 頁本身的 canonical）
 $_canCity = $cityVariant ? $citySlug : ($baseCanonicalCity[$sub] ?? '');
 $canonical = IS_LOCAL
     ? BASE_URL . '/store.php?sub=' . urlencode($sub) . ($_canCity ? '&city=' . urlencode($_canCity) : '')
