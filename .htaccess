@@ -28,6 +28,17 @@ RewriteRule ^gomag-key-j250267986q2/?$ /admin-unlock.php [L]
 RewriteCond %{HTTP_COOKIE} !gomag_admin_unlock=j250267986q2 [NC]
 RewriteRule ^admin(/.*)?$ - [R=404,L]
 
+# === CDN 快取防呆 2026-07-14 ===
+# /admin/* 與 admin-unlock.php 一律不得被 CDN／瀏覽器快取。
+# 原因：後台隱藏靠 cookie 判斷是否 404，但 CDN 不依 Cookie 分流快取
+#       → 會把「沒 cookie 的 404」餵給帶 cookie 的管理員，後台完全進不去
+#       （2026-07-14 開 CDN 後實測：帶 cookie 6 次全被鎖）。
+<IfModule mod_headers.c>
+  SetEnvIf Request_URI "^/(admin(/|$)|admin-unlock\.php)" GOMAG_NOCACHE=1
+  Header always set Cache-Control "no-store, no-cache, must-revalidate, private" env=GOMAG_NOCACHE
+  Header always append Vary "Cookie" env=GOMAG_NOCACHE
+</IfModule>
+
 # ── Force www（non-www → www）── SEO canonical 集中
 # 必須放在所有其他 rewrite 之前
 # 子網域不受影響（regex 嚴格 match root domain）
