@@ -21,6 +21,9 @@ Disallow: /admin/
 Disallow: /includes/
 Disallow: /install.php
 
+# 優惠券領取 API（POST 端點，GET 回 400；從未收錄，擋掉即從 GSC「其他 4xx」消失）
+Disallow: /coupon_claim.php
+
 # 註：2022 hack 殘留路徑（/edm/、/shopx.php、/coupon_show.php）已全部 404，
 # 不再 Disallow，讓 Google 重爬看到 404 → 自然刪舊索引
 # （之前 Disallow 反而擋 Google 看 404，造成「已建立索引但遭 robots 封鎖」）
