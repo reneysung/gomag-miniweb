@@ -7,12 +7,14 @@ require_once __DIR__ . '/../../includes/front_functions.php';  // deriveCitySlug
 requireLogin();
 
 $pageTitle = '基本資訊設定';
-$clientId  = getCurrentClientId() ?? 1;
+$clientId  = requireClientId();
 $db = getDB();
 
 // 儲存
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrf();
+    // 2026-07-20：防跨分頁改到別家客戶（表單為哪一家開的，就只能存到那一家）
+    assertFormClient($clientId, BASE_URL . '/admin/pages/settings.php');
 
     // 撈舊圖片路徑 — 上傳新圖時要刪舊檔，避免伺服器囤積孤兒檔
     $_oldImagesStmt = $db->prepare("SELECT logo_path, hero_image_path, owner_avatar, photos FROM clients WHERE id=?");
@@ -360,6 +362,7 @@ body[data-current-tab="minisite"] .tab-section[data-tab="store"] { display:none;
 
 <form method="POST" enctype="multipart/form-data">
 <input type="hidden" name="_token" value="<?= csrfToken() ?>">
+<input type="hidden" name="_client_id" value="<?= (int)$clientId ?>">
 <input type="hidden" name="_tab" value="<?= h($tab) ?>">
 
 <!-- ═══════ 平台設定（主站分類、小官網開關、外部官網）═══════ -->

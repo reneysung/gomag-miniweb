@@ -6,7 +6,7 @@ require_once __DIR__ . '/../../includes/helpers.php';
 requireLogin();
 
 $pageTitle = '客戶詢問列表';
-$clientId  = getCurrentClientId() ?? 1;
+$clientId  = requireClientId();
 $db = getDB();
 
 // 確保表存在

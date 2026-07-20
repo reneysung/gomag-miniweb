@@ -148,3 +148,31 @@ function getCurrentClientId(): ?int {
     }
     return $admin['client_id'] ? (int)$admin['client_id'] : null;
 }
+
+/**
+ * 取得目前編輯中的客戶 id；沒選客戶就導回客戶列表。
+ *
+ * 2026-07-20 加：原本各頁寫 `getCurrentClientId() ?? 1`，
+ * 一旦 super admin 把 viewing_client_id 清掉（clients.php 的「全部客戶」），
+ * 存檔會「安靜地」寫進客戶 #1（旭森）。改成明確擋下並提示。
+ */
+function requireClientId(): int {
+    $id = getCurrentClientId();
+    if (!$id) {
+        setFlash('warning', '尚未選擇要編輯的客戶，請先從客戶列表點選一家。');
+        redirect(BASE_URL . '/admin/pages/clients.php');
+    }
+    return (int)$id;
+}
+
+/**
+ * 防「跨分頁改到別家」：表單送出時比對它當初是為哪一家開的。
+ * 不一致代表使用者在另一個分頁切換過客戶 → 擋下不寫入。
+ */
+function assertFormClient(int $currentClientId, string $backUrl): void {
+    $posted = (int)($_POST['_client_id'] ?? 0);
+    if ($posted && $posted !== $currentClientId) {
+        setFlash('danger', '⚠️ 這個表單是為別的客戶開啟的（你可能在另一個分頁切換過客戶）。為避免寫錯資料，本次「沒有」儲存。請重新整理此頁後再編輯。');
+        redirect($backUrl);
+    }
+}

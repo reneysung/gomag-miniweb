@@ -6,7 +6,7 @@ require_once __DIR__ . '/../../includes/helpers.php';
 requireLogin();
 
 $pageTitle = 'SEO / AEO 設定';
-$clientId  = getCurrentClientId() ?? 1;
+$clientId  = requireClientId();
 $db = getDB();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

@@ -6,7 +6,7 @@ require_once __DIR__ . '/../../includes/helpers.php';
 requireLogin();
 
 $pageTitle = '客戶評價管理';
-$clientId  = getCurrentClientId() ?? 1;
+$clientId  = requireClientId();
 $db = getDB();
 $action = $_GET['action'] ?? 'list';
 $editId = (int)($_GET['id'] ?? 0);

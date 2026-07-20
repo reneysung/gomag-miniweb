@@ -6,7 +6,7 @@ require_once __DIR__ . '/../../includes/helpers.php';
 requireLogin();
 
 $pageTitle = '主題顏色';
-$clientId  = getCurrentClientId() ?? 1;
+$clientId  = requireClientId();
 $db = getDB();
 
 // 套用主題

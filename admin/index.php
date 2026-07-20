@@ -6,7 +6,7 @@ require_once __DIR__ . '/../includes/helpers.php';
 requireLogin();
 
 $pageTitle = 'Dashboard';
-$clientId  = getCurrentClientId() ?? 1;
+$clientId  = requireClientId();
 $admin     = currentAdmin();
 $db        = getDB();
 

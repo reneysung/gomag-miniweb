@@ -6,7 +6,7 @@ require_once __DIR__ . '/../../includes/helpers.php';
 requireLogin();
 
 $pageTitle = '專欄文章管理';
-$clientId  = getCurrentClientId() ?? 1;
+$clientId  = requireClientId();
 $db = getDB();
 $action = $_GET['action'] ?? 'list';
 $editId = (int)($_GET['id'] ?? 0);
@@ -123,7 +123,8 @@ require_once __DIR__ . '/../includes/layout_head.php';
 ?>
 
 <div class="content-wrap">
-  <?php echo flashHtml(); ?>
+  <?php /* flash 由 admin/includes/layout_head.php 統一渲染；原本這裡呼叫不存在的 flashHtml()
+           導致本頁自 2026-05-16 起一進列表就 fatal（2026-07-15 修） */ ?>
 
   <?php if ($action === 'list'): ?>
 
