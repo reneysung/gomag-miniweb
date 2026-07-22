@@ -72,7 +72,7 @@ if (!$cat) {
 $clientsStmt = $db->prepare("
     SELECT cl.id, cl.subdomain, cl.slug, cl.brand_name, cl.tagline,
            cl.has_minisite, cl.external_website_url, cl.hero_image_path, cl.hero_image_fit, cl.logo_path,
-           cl.address, cl.phone
+           cl.address, cl.phone, cl.city_slug
     FROM clients cl
     WHERE cl.category_id = ? AND cl.is_active = 1 AND cl.slug NOT IN ($dupPh)
     ORDER BY (cl.hero_image_path IS NULL OR cl.hero_image_path = '') ASC, cl.id DESC
@@ -80,8 +80,20 @@ $clientsStmt = $db->prepare("
 $clientsStmt->execute(array_merge([$cat['id']], $dupSkip));
 $clients = $clientsStmt->fetchAll();
 
-$pageTitle = $cat['name'] . '｜店家好口碑 台南店家分類';
-$metaDesc  = "瀏覽 {$cat['name']} 分類下的所有台南店家，共 " . count($clients) . " 家。" . ($cat['description'] ?: '');
+$pageTitle = $cat['name'] . '｜店家好口碑 全台店家分類';
+// 描述照實際收錄的縣市寫（原本寫死「台南店家」，但這頁的查詢不分縣市 → 描述與內容不符）
+$_cityMap   = getCityMap();
+$_catCities = [];
+foreach ($clients as $_c) {
+    $_cs = $_c['city_slug'] ?: deriveCitySlug($_c['address'] ?? '');
+    if ($_cs && isset($_cityMap[$_cs])) $_catCities[$_cs] = ($_catCities[$_cs] ?? 0) + 1;
+}
+arsort($_catCities);
+$_cityNames = array_map(fn($s) => $_cityMap[$s], array_slice(array_keys($_catCities), 0, 4));
+$metaDesc = "店家好口碑「{$cat['name']}」分類共收錄 " . count($clients) . " 家在地商家"
+          . ($_cityNames ? '，分布於' . implode('、', $_cityNames) . (count($_catCities) > 4 ? '等縣市' : '') : '')
+          . '。每家都有服務項目、真實評價與聯絡方式，可直接比較後聯絡。'
+          . ($cat['description'] ?: '');
 require_once __DIR__ . '/main/layout_head.php';
 ?>
 

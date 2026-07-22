@@ -31,7 +31,17 @@ if ($subOnly) {
     $stmt = $db->prepare("SELECT subdomain, slug, has_minisite, updated_at FROM clients WHERE is_active=1 AND COALESCE(is_placeholder, 0) = 0 AND slug NOT IN ($ph) ORDER BY id");
     $stmt->execute($dupSkip);
     $clients = $stmt->fetchAll();
-    $cats = $db->query('SELECT slug FROM categories WHERE is_active=1')->fetchAll();
+    // 分類頁只收「至少 1 家有效店家」的分類：0 家的分類頁是空殼，進 sitemap 只會扣分
+    $cats = $db->query(
+        'SELECT c.slug FROM categories c
+          WHERE c.is_active = 1
+            AND EXISTS (
+                SELECT 1 FROM clients cl
+                 WHERE cl.category_id = c.id
+                   AND cl.is_active = 1
+                   AND COALESCE(cl.is_placeholder, 0) = 0
+            )'
+    )->fetchAll();
 }
 
 $baseUrl = (IS_LOCAL || IS_STAGING) ? BASE_URL : 'https://www.gomag.com.tw';
@@ -215,6 +225,16 @@ echo '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
           ['cases', '0.7', 'monthly'],
           ['testimonials', '0.6', 'monthly'],
       ];
+      // 尊重客戶模板 meta.json 的 pages：模板有列 pages 就只收其中的 sub-page，
+      // 沒列的（如麥田 myturn-precision 沒有 testimonials）不收（避免收到 302/空頁）。
+      require_once __DIR__ . '/includes/minisite_template_loader.php';
+      $_tplStmt = $db->prepare("SELECT minisite_template FROM clients WHERE subdomain=? OR slug=? LIMIT 1");
+      $_tplStmt->execute([$sub, $sub]);
+      $_mtpl = (string)($_tplStmt->fetchColumn() ?: '_default');
+      $_tplPages = ($_mtpl !== '_default') ? minisiteTemplatePages($_mtpl) : [];
+      if ($_tplPages) {
+          $pages = array_values(array_filter($pages, fn($row) => $row[0] === '' || isset($_tplPages[$row[0]])));
+      }
       foreach ($pages as [$p, $prio, $freq]):
           $url = (IS_LOCAL || IS_STAGING)
               ? $miniBase . '/' . ($p ? $p . '.php' : 'index.php') . '?sub=' . urlencode($sub)
