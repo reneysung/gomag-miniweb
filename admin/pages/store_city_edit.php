@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../../includes/config.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/helpers.php';
+require_once __DIR__ . '/../../includes/waf_bypass.php';   // 主機 WAF 誤判繞道
 requireLogin();
 
 $db = getDB();
@@ -35,6 +36,7 @@ $cities = $db->query("SELECT slug, name, full_name FROM cities ORDER BY sort_ord
 // ─── POST ───
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrf();
+    wafDecodePost(['landing_extra_content', 'google_maps_embed']);
 
     $citySlug = strtolower(trim($_POST['city_slug'] ?? ''));
     $cityLabel = trim($_POST['city_label'] ?? '');
@@ -423,6 +425,7 @@ require_once __DIR__ . '/../includes/layout_head.php';
       <a href="https://<?= h($sub) ?>.gomag.com.tw/<?= h($row['city_slug']) ?>" target="_blank" rel="noopener" class="btn btn-ghost btn-lg">🌐 預覽小官網</a>
     <?php endif; ?>
   </div>
+<?php wafBypassFields(['landing_extra_content', 'google_maps_embed']); ?>
 </form>
 
 <script>
