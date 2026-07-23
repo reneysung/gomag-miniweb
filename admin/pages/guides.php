@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../../includes/config.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/helpers.php';
+require_once __DIR__ . '/../../includes/waf_bypass.php';   // 主機 WAF 誤判繞道
 require_once __DIR__ . '/../../includes/front_functions.php';  // getCityMap()
 requireLogin();
 
@@ -26,6 +27,7 @@ if ($editId) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrf();
+    wafDecodePost(['body_html', 'excerpt']);
     $action = $_POST['action'] ?? 'save';
 
     if ($action === 'add') {
@@ -163,6 +165,7 @@ require_once __DIR__ . '/../includes/layout_head.php';
     <a href="<?= BASE_URL ?>/admin/pages/guides.php" class="btn btn-ghost btn-lg">取消</a>
     <a href="<?= BASE_URL ?>/guide/<?= h($editing['slug']) ?>" target="_blank" rel="noopener" class="btn btn-ghost btn-lg" style="margin-left:auto;">🔍 預覽前台</a>
   </div>
+<?php wafBypassFields(['body_html', 'excerpt']); ?>
 </form>
 
 <?php else: ?>
