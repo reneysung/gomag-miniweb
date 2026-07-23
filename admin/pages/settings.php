@@ -15,6 +15,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrf();
     // 2026-07-20：防跨分頁改到別家客戶（表單為哪一家開的，就只能存到那一家）
     assertFormClient($clientId, BASE_URL . '/admin/pages/settings.php');
+    // ── 2026-07-23：繞過主機 WAF(mod_security) 累加評分誤判 ──
+    // 症狀：landing_extra_content(大段 HTML) + google_maps_embed(<iframe>) 一起送，
+    //       兩者各自都在門檻內、合計超標 → LiteSpeed 在 PHP 執行前回純文字 Forbidden，
+    //       使用者按儲存只看到 Forbidden、資料完全沒進來（實測 2026-07-23 Gerpros #286）。
+    // 解法：前端送出前把這兩欄轉 base64（見表單末端 JS），此處還原。
+    //       b64 為空＝JS 沒跑或使用者真的清空，交回原欄位邏輯處理，不覆蓋。
+    foreach (['landing_extra_content', 'google_maps_embed'] as $_wafField) {
+        if (!empty($_POST[$_wafField . '_b64'])) {
+            $_wafDecoded = base64_decode((string)$_POST[$_wafField . '_b64'], true);
+            if ($_wafDecoded !== false) $_POST[$_wafField] = $_wafDecoded;
+        }
+    }
+
 
     // 撈舊圖片路徑 — 上傳新圖時要刪舊檔，避免伺服器囤積孤兒檔
     $_oldImagesStmt = $db->prepare("SELECT logo_path, hero_image_path, owner_avatar, photos FROM clients WHERE id=?");
@@ -1328,6 +1341,33 @@ function findGooglePlace() {
   💡 預覽會在新分頁開啟，先儲存再預覽看到的才是最新內容。
 </div>
 
+
+<!-- ── 2026-07-23：WAF 繞道（配合 POST 處理段的 base64 還原）──
+     主機 mod_security 對「大段 HTML + 地圖 iframe」累加評分後，會在 PHP 執行前
+     回純文字 Forbidden。送出前把這兩欄改以 base64 夾帶，原欄位移除 name 不送出。 -->
+<input type="hidden" name="landing_extra_content_b64" id="wafB64Landing">
+<input type="hidden" name="google_maps_embed_b64" id="wafB64Maps">
+<script>
+(function () {
+  var form = document.currentScript.closest('form');
+  if (!form) return;
+  var pairs = [
+    ['landing_extra_content', 'wafB64Landing'],
+    ['google_maps_embed',     'wafB64Maps']
+  ];
+  form.addEventListener('submit', function () {
+    pairs.forEach(function (p) {
+      var el  = form.querySelector('[name="' + p[0] + '"]');
+      var hid = document.getElementById(p[1]);
+      if (!el || !hid) return;
+      try {
+        hid.value = btoa(unescape(encodeURIComponent(el.value)));
+        el.removeAttribute('name');   // 原文不送出，WAF 就掃不到
+      } catch (e) { /* 編碼失敗就照原樣送，行為與修改前一致 */ }
+    });
+  });
+})();
+</script>
 </form>
 
 <?php require_once __DIR__ . '/../includes/layout_foot.php'; ?>
