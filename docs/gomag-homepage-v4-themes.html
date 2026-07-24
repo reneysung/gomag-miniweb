@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>店家好口碑 — 主題式首頁 v4（demo）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --white:#fff; --bg:#fff; --bg-alt:#F7F7F5; --bg-warm:#FFF8F4;
+    --ink:#191919; --ink-soft:#4A4A4A; --ink-muted:#6B6B6B; --ink-light:#B0B0B0;
+    --accent:#FF5A36; --accent-hover:#E0421F; --accent-light:#FFE8DF;
+    --green:#048A50; --border:#E8E5E0; --dark:#141414;
+    --font:'Noto Sans TC','PingFang TC',sans-serif;
+    --num:'Manrope','Noto Sans TC',sans-serif;
+    --wrap:1240px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--font);background:var(--bg);color:var(--ink);font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased}
+  a{color:inherit;text-decoration:none}
+  img{max-width:100%;display:block}
+  .wrap{max-width:var(--wrap);margin:0 auto;padding:0 32px}
+
+  /* ---------- header ---------- */
+  .hdr{position:sticky;top:0;z-index:60;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
+  .hdr-in{max-width:var(--wrap);margin:0 auto;padding:14px 32px;display:flex;align-items:center;gap:34px}
+  .logo{display:flex;align-items:center;gap:9px;flex-shrink:0}
+  .logo-dot{width:29px;height:29px;background:var(--accent);border-radius:9px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px}
+  .logo-tx{font-weight:800;font-size:17px;letter-spacing:-.2px}
+  .nav{display:flex;gap:26px;font-size:14.5px;font-weight:500;color:var(--ink-soft)}
+  .nav a:hover{color:var(--accent)}
+  .hdr-sp{margin-left:auto;display:flex;align-items:center;gap:14px}
+  .btn-ghost{font-size:13.5px;font-weight:600;color:var(--ink-soft);padding:8px 14px;border:1px solid var(--border);border-radius:99px;white-space:nowrap}
+  .btn-solid{font-size:13.5px;font-weight:700;color:#fff;background:var(--ink);padding:9px 18px;border-radius:99px;white-space:nowrap}
+
+  /* ---------- hero ---------- */
+  .hero{padding:68px 0 44px;background:linear-gradient(180deg,var(--bg-warm) 0%,#fff 100%)}
+  .hero h1{font-size:46px;line-height:1.25;font-weight:900;letter-spacing:-1.2px;max-width:19ch}
+  .hero h1 em{font-style:normal;color:var(--accent)}
+  .hero p{margin-top:18px;font-size:17px;color:var(--ink-soft);max-width:46ch}
+  .promise{margin-top:26px;display:flex;flex-wrap:wrap;gap:10px}
+  .pchip{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;background:#fff;border:1px solid var(--border);padding:8px 15px;border-radius:99px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+  .pchip b{font-family:var(--num);color:var(--accent);font-size:15px}
+
+  .search{margin-top:34px;max-width:620px;display:flex;background:#fff;border:2px solid var(--ink);border-radius:99px;overflow:hidden;box-shadow:0 8px 26px rgba(0,0,0,.07)}
+  .search input{flex:1;border:0;outline:0;padding:16px 24px;font-size:15.5px;font-family:inherit}
+  .search button{border:0;background:var(--accent);color:#fff;font-weight:700;font-size:15px;padding:0 30px}
+
+  /* city rail */
+  .cityrail{margin-top:22px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .cityrail .lbl{font-size:13px;color:var(--ink-muted);margin-right:4px}
+  .cpill{font-size:13.5px;font-weight:600;padding:7px 15px;border-radius:99px;border:1px solid var(--border);background:#fff;color:var(--ink-soft)}
+  .cpill.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .cpill i{font-style:normal;font-family:var(--num);opacity:.55;margin-left:5px;font-size:12px}
+
+  /* ---------- section head ---------- */
+  section{padding:62px 0}
+  .sec-alt{background:var(--bg-alt)}
+  .sh{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:28px}
+  .sh h2{font-size:27px;font-weight:800;letter-spacing:-.6px;display:flex;align-items:center;gap:11px}
+  .sh h2 span.ico{font-size:24px}
+  .sh h2 u{text-decoration:none;font-family:var(--num);font-size:15px;font-weight:600;color:var(--ink-light);border:1px solid var(--border);border-radius:99px;padding:2px 10px;background:#fff}
+  .sh p{margin-top:5px;font-size:14.5px;color:var(--ink-muted)}
+  .more{font-size:14px;font-weight:600;color:var(--accent);white-space:nowrap}
+
+  /* ---------- featured ---------- */
+  .feat{display:grid;grid-template-columns:1.35fr 1fr 1fr;gap:20px}
+  .fcard{border-radius:16px;overflow:hidden;background:#fff;border:1px solid var(--border);display:flex;flex-direction:column;transition:.18s}
+  .fcard:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.09)}
+  .fthumb{aspect-ratio:16/10;position:relative;flex-shrink:0}
+  .fcard:first-child .fthumb{aspect-ratio:auto;flex:1;min-height:230px}
+  .g1{background:linear-gradient(135deg,#FF7A4D,#C7332E 60%,#7A1B22)}
+  .g2{background:linear-gradient(135deg,#F2C078,#C98A3E 55%,#6E4A1F)}
+  .g3{background:linear-gradient(135deg,#8FB8A0,#3F7D62 55%,#1E4436)}
+  .g4{background:linear-gradient(135deg,#9BB4D6,#4A6E9E 55%,#243B5C)}
+  .g5{background:linear-gradient(135deg,#D9A6B8,#A65674 55%,#5B2B3D)}
+  .g6{background:linear-gradient(135deg,#BFAF9A,#84705A 55%,#453A2C)}
+  .badge{position:absolute;left:14px;top:14px;background:rgba(0,0,0,.62);backdrop-filter:blur(5px);color:#fff;font-size:12px;font-weight:700;padding:5px 11px;border-radius:99px}
+  .badge b{font-family:var(--num)}
+  .fbody{padding:17px 18px 18px;display:flex;flex-direction:column;flex:1}
+  .kw{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.4px}
+  .ftitle{margin-top:6px;font-size:17.5px;font-weight:700;line-height:1.45;letter-spacing:-.3px}
+  .fcard:first-child .ftitle{font-size:21px}
+  .fdek{margin-top:8px;font-size:13.5px;color:var(--ink-muted);line-height:1.6}
+  .fmeta{margin-top:14px;padding-top:13px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--ink-muted)}
+  .stars{color:#F5A623;letter-spacing:-1px}
+  .fmeta b{font-family:var(--num);color:var(--ink);font-weight:700}
+  .names{margin-top:10px;font-size:12.5px;color:var(--ink-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* ---------- theme list rows ---------- */
+  .tgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .tcard{display:flex;gap:14px;background:#fff;border:1px solid var(--border);border-radius:13px;padding:14px;transition:.16s}
+  .tcard:hover{border-color:var(--ink);transform:translateY(-2px)}
+  .tthumb{width:78px;height:78px;border-radius:10px;flex-shrink:0;position:relative}
+  .tthumb u{position:absolute;right:-5px;bottom:-5px;background:#fff;border:1px solid var(--border);border-radius:99px;font-family:var(--num);font-size:11px;font-weight:700;padding:2px 7px;text-decoration:none;color:var(--ink)}
+  .tbody{min-width:0;display:flex;flex-direction:column;justify-content:center}
+  .ttitle{font-size:15px;font-weight:700;line-height:1.45;letter-spacing:-.2px}
+  .tdek{margin-top:4px;font-size:12.5px;color:var(--ink-muted);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .tmeta{margin-top:7px;font-size:11.5px;color:var(--ink-light);display:flex;gap:9px;align-items:center}
+  .tmeta .stars{font-size:11px}
+  .tmeta b{font-family:var(--num);color:var(--ink-soft)}
+
+  /* mixed section with sub-labels */
+  .sublab{display:flex;align-items:center;gap:9px;margin:32px 0 14px;font-size:16px;font-weight:800}
+  .sublab:first-of-type{margin-top:0}
+  .sublab u{text-decoration:none;font-family:var(--num);font-size:12.5px;font-weight:600;color:var(--ink-light)}
+  .sublab .ico{font-size:17px}
+
+  /* ---------- trust band ---------- */
+  .trust{background:var(--dark);color:#fff;padding:66px 0}
+  .trust h2{font-size:28px;font-weight:800;letter-spacing:-.6px;margin-bottom:8px}
+  .trust > .wrap > p{color:rgba(255,255,255,.6);font-size:15px;max-width:52ch}
+  .tcols{margin-top:38px;display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+  .tcol{border-top:2px solid var(--accent);padding-top:18px}
+  .tcol h3{font-size:17px;font-weight:700;margin-bottom:9px}
+  .tcol p{font-size:14px;color:rgba(255,255,255,.62);line-height:1.75}
+  .tcol .n{font-family:var(--num);font-size:34px;font-weight:800;color:var(--accent);line-height:1;margin-bottom:11px;display:block}
+
+  /* ---------- city index ---------- */
+  .cindex{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .cbox{border:1px solid var(--border);border-radius:13px;padding:18px 18px 16px;background:#fff;transition:.16s}
+  .cbox:hover{border-color:var(--ink)}
+  .cbox h3{font-size:17px;font-weight:800;display:flex;align-items:baseline;gap:8px}
+  .cbox h3 u{text-decoration:none;font-family:var(--num);font-size:12.5px;font-weight:600;color:var(--ink-light)}
+  .cbox ul{margin-top:11px;list-style:none;display:flex;flex-wrap:wrap;gap:6px}
+  .cbox li a{font-size:12.5px;color:var(--ink-soft);background:var(--bg-alt);border-radius:6px;padding:4px 9px;display:inline-block}
+  .cbox li a:hover{background:var(--accent-light);color:var(--accent)}
+
+  /* ---------- B2B cta ---------- */
+  .cta{background:var(--bg-warm);padding:60px 0}
+  .cta-in{display:flex;align-items:center;justify-content:space-between;gap:36px;flex-wrap:wrap}
+  .cta h2{font-size:26px;font-weight:800;letter-spacing:-.5px;line-height:1.4}
+  .cta p{margin-top:9px;font-size:15px;color:var(--ink-soft);max-width:50ch}
+  .cta a{background:var(--accent);color:#fff;font-weight:700;font-size:15.5px;padding:15px 34px;border-radius:99px;white-space:nowrap}
+
+  /* ---------- footer ---------- */
+  .ft{background:#fff;border-top:1px solid var(--border);padding:38px 0;font-size:13px;color:var(--ink-muted)}
+  .ft-in{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap}
+  .ft a{color:var(--ink-soft)}
+
+  /* ---------- annotation (demo only) ---------- */
+  .note{position:relative;background:#FFFBE6;border:1px dashed #E0C24A;border-radius:9px;padding:10px 14px;font-size:12.5px;color:#7A5E10;margin-bottom:18px;line-height:1.6}
+  .note b{color:#5A4408}
+
+  @media(max-width:1000px){
+    .feat{grid-template-columns:1fr 1fr}
+    .fcard:first-child{grid-column:span 2}
+    .tgrid{grid-template-columns:1fr 1fr}
+    .cindex{grid-template-columns:1fr 1fr}
+    .tcols{grid-template-columns:1fr}
+    .nav{display:none}
+  }
+  @media(max-width:640px){
+    .wrap,.hdr-in{padding-left:18px;padding-right:18px}
+    .hero{padding:44px 0 30px}
+    .hero h1{font-size:32px;letter-spacing:-.7px}
+    .hero p{font-size:15.5px}
+    .feat,.tgrid,.cindex{grid-template-columns:1fr}
+    .fcard:first-child{grid-column:auto}
+    .btn-ghost{display:none}
+    .hdr-in{gap:16px}
+    .search input{padding:14px 18px;font-size:14.5px}
+    .search button{padding:0 20px}
+    .cityrail .lbl{width:100%;margin-bottom:2px}
+    .trust h2,.cta h2{font-size:22px}
+    .tcols{gap:22px}
+    section{padding:44px 0}
+    .sh{flex-direction:column;align-items:flex-start}
+    .sh h2{font-size:22px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header class="hdr">
+  <div class="hdr-in">
+    <a class="logo" href="#"><span class="logo-dot">口</span><span class="logo-tx">店家好口碑</span></a>
+    <nav class="nav">
+      <a href="#eat">吃</a>
+      <a href="#home">住・家</a>
+      <a href="#etc">車・辦事</a>
+      <a href="#city">城市</a>
+      <a href="#">攻略</a>
+    </nav>
+    <div class="hdr-sp">
+      <a class="btn-ghost" href="#">我是店家</a>
+      <a class="btn-solid" href="#cta">免費諮詢</a>
+    </div>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<div class="hero">
+  <div class="wrap">
+    <h1>在地人真的會去的店，<br><em>一個主題一次看完</em></h1>
+    <p>每個主題我們只收 5 家以內。不是搜尋結果的排序，是實際合作過、附得上 Google 評價的店。</p>
+
+    <div class="promise">
+      <span class="pchip">每主題最多 <b>5</b> 家</span>
+      <span class="pchip">合作店家 <b>263</b> 家</span>
+      <span class="pchip">主題 <b>37</b> 個</span>
+      <span class="pchip">Google 評價即時同步</span>
+    </div>
+
+    <form class="search" onsubmit="return false">
+      <input type="text" placeholder="想找什麼？例如：台南火鍋、台南木地板、高雄室內設計">
+      <button type="submit">搜尋</button>
+    </form>
+
+    <div class="cityrail">
+      <span class="lbl">看城市：</span>
+      <a class="cpill on" href="#">台南<i>28</i></a>
+      <a class="cpill" href="#">高雄<i>7</i></a>
+      <a class="cpill" href="#">台中<i>—</i></a>
+      <a class="cpill" href="#">嘉義<i>—</i></a>
+      <a class="cpill" href="#">台東<i>1</i></a>
+      <a class="cpill" href="#">彰化<i>—</i></a>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 本週主打 ============ -->
+<section>
+  <div class="wrap">
+    <div class="note"><b>［說明］</b>這一區＝首頁最上面的「主題」。標題直接吃關鍵字（台南火鍋推薦），後面掛具體情境（溫體牛到麻辣鍋怎麼選）——這是漫途已經驗證有效的寫法。點進去就是客戶清單頁。</div>
+
+    <div class="sh">
+      <div>
+        <h2>本週主打主題</h2>
+        <p>依客戶數與搜尋熱度排序，每週輪替</p>
+      </div>
+      <a class="more" href="#eat">看全部 37 個主題 →</a>
+    </div>
+
+    <div class="feat">
+      <a class="fcard" href="#">
+        <div class="fthumb g1"><span class="badge"><b>11</b> 家</span></div>
+        <div class="fbody">
+          <div class="kw">台南 · 吃</div>
+          <div class="ftitle">台南火鍋推薦｜11 家一次看</div>
+          <div class="fdek">牧鍋、阿堂鮮蔬羊肉爐等 11 家一次看，溫體牛到麻辣鍋怎麼選（2026）</div>
+          <div class="fmeta"><span class="stars">★★★★★</span><b>4.7</b><span>· 1,284 則 Google 評價</span></div>
+          <div class="names">牧鍋・阿堂鮮蔬羊肉爐・二鍋・XM 麻辣火鍋…</div>
+        </div>
+      </a>
+
+      <a class="fcard" href="#">
+        <div class="fthumb g2"><span class="badge"><b>10</b> 家</span></div>
+        <div class="fbody">
+          <div class="kw">台南 · 辦事</div>
+          <div class="ftitle">台南室內設計推薦｜10 家一次看</div>
+          <div class="fdek">亞筑、麥田等 10 家一次看，老屋翻新客變怎麼發包</div>
+          <div class="fmeta"><span class="stars">★★★★★</span><b>4.9</b><span>· 316 則</span></div>
+          <div class="names">亞筑・麥田・聖德・全境…</div>
+        </div>
+      </a>
+
+      <a class="fcard" href="#">
+        <div class="fthumb g3"><span class="badge"><b>11</b> 家</span></div>
+        <div class="fbody">
+          <div class="kw">台南 · 吃</div>
+          <div class="ftitle">台南日式料理推薦｜11 家一次看</div>
+          <div class="fdek">小椿食堂、花火等 11 家一次看，居酒屋到丼飯怎麼挑</div>
+          <div class="fmeta"><span class="stars">★★★★☆</span><b>4.6</b><span>· 942 則</span></div>
+          <div class="names">小椿食堂・花火・鶴昇町…</div>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 吃 ============ -->
+<section class="sec-alt" id="eat">
+  <div class="wrap">
+    <div class="sh">
+      <div>
+        <h2><span class="ico">🍜</span>吃 <u>18 個主題</u></h2>
+        <p>火鍋・日式・熱炒・燒肉・吃到飽・辦桌外燴</p>
+      </div>
+      <a class="more" href="#">看全部 →</a>
+    </div>
+
+    <div class="tgrid">
+      <a class="tcard" href="#"><div class="tthumb g1"><u>8</u></div><div class="tbody">
+        <div class="ttitle">台南熱炒推薦</div>
+        <div class="tdek">活跳跳海鮮粥、仙香成都等 8 家一次看，聚餐宵夜怎麼點</div>
+        <div class="tmeta"><span class="stars">★★★★☆</span><b>4.5</b><span>· 631 則</span></div>
+      </div></a>
+
+      <a class="tcard" href="#"><div class="tthumb g2"><u>6</u></div><div class="tbody">
+        <div class="ttitle">台南燒肉推薦</div>
+        <div class="tdek">逐鹿炭火等 6 家一次看，吃到飽與單點怎麼選</div>
+        <div class="tmeta"><span class="stars">★★★★☆</span><b>4.6</b><span>· 428 則</span></div>
+      </div></a>
+
+      <a class="tcard" href="#"><div class="tthumb g5"><u>6</u></div><div class="tbody">
+        <div class="ttitle">台南吃到飽推薦</div>
+        <div class="tdek">二鍋、XM 麻辣等 6 家一次看，燒肉火鍋怎麼挑</div>
+        <div class="tmeta"><span class="stars">★★★★☆</span><b>4.4</b><span>· 517 則</span></div>
+      </div></a>
+
+      <a class="tcard" href="#"><div class="tthumb g3"><u>5</u></div><div class="tbody">
+        <div class="ttitle">高雄火鍋推薦</div>
+        <div class="tdek">牛老大涮牛肉等 5 家一次看，涮牛肉到壽喜燒怎麼選</div>
+        <div class="tmeta"><span class="stars">★★★★★</span><b>4.7</b><span>· 803 則</span></div>
+      </div></a>
+
+      <a class="tcard" href="#"><div class="tthumb g6"><u>5</u></div><div class="tbody">
+        <div class="ttitle">台南甜點推薦</div>
+        <div class="tdek">安格高鈣乳酪、莉莉安等 5 家一次看，生日蛋糕怎麼訂</div>
+        <div class="tmeta"><span class="stars">★★★★★</span><b>4.8</b><span>· 289 則</span></div>
+      </div></a>
+
+      <a class="tcard" href="#"><div class="tthumb g4"><u>2</u></div><div class="tbody">
+        <div class="ttitle">台南辦桌推薦</div>
+        <div class="tdek">洪廚、福泉 2 家總鋪師一次看，入厝喜宴怎麼訂</div>
+        <div class="tmeta"><span class="stars">★★★★★</span><b>4.9</b><span>· 174 則</span></div>
+      </div></a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 住・家 ============ -->
+<section id="home">
+  <div class="wrap">
+    <div class="sh">
+      <div>
+        <h2><span class="ico">🏠</span>住・家 <u>11 個主題</u></h2>
+        <p>木地板・清潔・油漆防水・系統櫃・淨水・驗屋</p>
+      </div>
+      <a class="more" href="#">看全部 →</a>
+    </div>
+
+    <div class="tgrid">
+      <a class="tcard" href="#"><div class="tthumb g6"><u>5</u></div><div class="tbody">
+        <div class="ttitle">台南木地板推薦</div>
+        <div class="tdek">昇揚、Gerpros 德藝緻等 5 家一次看，超耐磨海島型怎麼挑</div>
+        <div class="tmeta"><span class="stars">★★★★★</span><b>4.9</b><span>· 208 則</span></div>
+      </div></a>
+
+      <a class="tcard" href="#"><div class="tthumb g3"><u>4</u></div><div class="tbody">
+        <div class="ttitle">台南清潔公司推薦</div>
+        <div class="tdek">旭浪、享清等 4 家一次看，定期打掃退租細清怎麼挑</div>
+        <div class="tmeta"><span class="stars">★★★★★</span><b>4.8</b><span>· 356 則</span></div>
+      </div></a>
+
+      <a class="tcard" href="#"><div class="tthumb g4"><u>3</u></div><div class="tbody">
+        <div class="ttitle">高雄淨水器推薦</div>
+        <div class="tdek">蕎藝、水領導等 3 家一次看，全戶過濾怎麼選</div>
+        <div class="tmeta"><span class="stars">★★★★★</span><b>4.9</b><span>· 97 則</span></div>
+      </div></a>
+
+      <a class="tcard" href="#"><div class="tthumb g2"><u>3</u></div><div class="tbody">
+        <div class="ttitle">台南系統櫃推薦</div>
+        <div class="tdek">全境、高森等 3 家一次看，板材封邊五金怎麼挑</div>
+        <div class="tmeta"><span class="stars">★★★★★</span><b>4.8</b><span>· 121 則</span></div>
+      </div></a>
+
+      <a class="tcard" href="#"><div class="tthumb g1"><u>3</u></div><div class="tbody">
+        <div class="ttitle">台南油漆防水推薦</div>
+        <div class="tdek">振宏、胖匠等 3 家一次看，壁癌粉刷怎麼估價</div>
+        <div class="tmeta"><span class="stars">★★★★☆</span><b>4.6</b><span>· 88 則</span></div>
+      </div></a>
+
+      <a class="tcard" href="#"><div class="tthumb g5"><u>2</u></div><div class="tbody">
+        <div class="ttitle">台南驗屋推薦</div>
+        <div class="tdek">李好房、鼎創科技 2 家一次看，交屋驗屋怎麼安排</div>
+        <div class="tmeta"><span class="stars">★★★★★</span><b>4.9</b><span>· 64 則</span></div>
+      </div></a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 其餘生活分類 ============ -->
+<section class="sec-alt" id="etc">
+  <div class="wrap">
+    <div class="note"><b>［說明］</b>車 3、辦事 3、健康 1、玩住宿 1——主題數少，合成一區比各開一段誠實，也不會有一整排空版面。客戶變多再獨立出去。</div>
+
+    <div class="sh">
+      <div>
+        <h2>其他生活主題 <u>8 個</u></h2>
+        <p>這幾類客戶數還在累積中</p>
+      </div>
+    </div>
+
+    <div class="sublab"><span class="ico">🚗</span>車 <u>3 個</u></div>
+    <div class="tgrid">
+      <a class="tcard" href="#"><div class="tthumb g4"><u>6</u></div><div class="tbody">
+        <div class="ttitle">台南汽車包膜推薦</div>
+        <div class="tdek">星城、Hy 合業等 6 家一次看，TPU 犀牛皮怎麼挑</div>
+        <div class="tmeta"><span class="stars">★★★★★</span><b>4.9</b><span>· 412 則</span></div>
+      </div></a>
+      <a class="tcard" href="#"><div class="tthumb g6"><u>5</u></div><div class="tbody">
+        <div class="ttitle">台南汽車美容推薦</div>
+        <div class="tdek">濱緻、SPOTCO 等 5 家一次看，鍍膜漆面校正怎麼選</div>
+        <div class="tmeta"><span class="stars">★★★★★</span><b>4.8</b><span>· 337 則</span></div>
+      </div></a>
+      <a class="tcard" href="#"><div class="tthumb g1"><u>2</u></div><div class="tbody">
+        <div class="ttitle">高雄汽車保養推薦</div>
+        <div class="tdek">七號車庫等 2 家一次看，定保維修怎麼挑</div>
+        <div class="tmeta"><span class="stars">★★★★★</span><b>4.9</b><span>· 156 則</span></div>
+      </div></a>
+    </div>
+
+    <div class="sublab"><span class="ico">🏢</span>辦事 <u>3 個</u></div>
+    <div class="tgrid">
+      <a class="tcard" href="#"><div class="tthumb g2"><u>10</u></div><div class="tbody">
+        <div class="ttitle">台南室內設計推薦</div>
+        <div class="tdek">亞筑、麥田等 10 家一次看，老屋翻新客變怎麼發包</div>
+        <div class="tmeta"><span class="stars">★★★★★</span><b>4.9</b><span>· 316 則</span></div>
+      </div></a>
+      <a class="tcard" href="#"><div class="tthumb g4"><u>6</u></div><div class="tbody">
+        <div class="ttitle">高雄室內設計推薦</div>
+        <div class="tdek">聯漢、明日喆居等 6 家一次看，小宅放大怎麼規劃</div>
+        <div class="tmeta"><span class="stars">★★★★★</span><b>4.8</b><span>· 203 則</span></div>
+      </div></a>
+      <a class="tcard" href="#"><div class="tthumb g3"><u>2</u></div><div class="tbody">
+        <div class="ttitle">台東室內設計推薦</div>
+        <div class="tdek">聯漢等 2 家一次看，民宿移居宅怎麼規劃</div>
+        <div class="tmeta"><span class="stars">★★★★★</span><b>4.9</b><span>· 41 則</span></div>
+      </div></a>
+    </div>
+
+    <div class="sublab"><span class="ico">💊</span>健康 <u>1 個</u> <span style="font-weight:400;color:var(--ink-light);font-size:13px">・</span> <span class="ico">🏨</span>玩・住宿 <u>1 個</u></div>
+    <div class="tgrid">
+      <a class="tcard" href="#"><div class="tthumb g3"><u>4</u></div><div class="tbody">
+        <div class="ttitle">台南中醫推薦</div>
+        <div class="tdek">健恩、仲春堂等 4 家一次看，調理針灸怎麼挑</div>
+        <div class="tmeta"><span class="stars">★★★★★</span><b>4.8</b><span>· 178 則</span></div>
+      </div></a>
+      <a class="tcard" href="#"><div class="tthumb g5"><u>7</u></div><div class="tbody">
+        <div class="ttitle">台南汽車旅館推薦</div>
+        <div class="tdek">永華春、清水漾等 7 家一次看，休息住宿怎麼選</div>
+        <div class="tmeta"><span class="stars">★★★★☆</span><b>4.3</b><span>· 1,022 則</span></div>
+      </div></a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 為什麼信我們 ============ -->
+<div class="trust">
+  <div class="wrap">
+    <h2>為什麼這裡的名單值得看</h2>
+    <p>不是爬蟲抓來的清單，也不是誰出價高誰排前面。</p>
+    <div class="tcols">
+      <div class="tcol">
+        <span class="n">5</span>
+        <h3>每個主題最多 5 家</h3>
+        <p>清單長不代表有用。同一個主題我們不收超過 5 家，寧可推薦不到你要的，也不塞一堆湊數的店讓你自己篩。</p>
+      </div>
+      <div class="tcol">
+        <span class="n">100%</span>
+        <h3>評價直接接 Google</h3>
+        <p>星等與則數從 Google 地圖同步，不是我們自己編的。你在這裡看到幾分，點到 Google 就是幾分。</p>
+      </div>
+      <div class="tcol">
+        <span class="n">263</span>
+        <h3>每一家都實際合作過</h3>
+        <p>名單上的店都是簽約合作的在地店家，我們去過、拍過、確認過在營業。不掛不認識的店充版面。</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 城市索引 ============ -->
+<section id="city">
+  <div class="wrap">
+    <div class="sh">
+      <div>
+        <h2>依城市找</h2>
+        <p>目前主力在南部，其他縣市持續開放中</p>
+      </div>
+    </div>
+    <div class="cindex">
+      <div class="cbox">
+        <h3>台南 <u>28 個主題</u></h3>
+        <ul>
+          <li><a href="#">火鍋</a></li><li><a href="#">日式料理</a></li><li><a href="#">熱炒</a></li>
+          <li><a href="#">燒肉</a></li><li><a href="#">吃到飽</a></li><li><a href="#">甜點</a></li>
+          <li><a href="#">辦桌外燴</a></li><li><a href="#">木地板</a></li><li><a href="#">清潔公司</a></li>
+          <li><a href="#">室內設計</a></li><li><a href="#">汽車包膜</a></li><li><a href="#">中醫</a></li>
+        </ul>
+      </div>
+      <div class="cbox">
+        <h3>高雄 <u>7 個主題</u></h3>
+        <ul>
+          <li><a href="#">火鍋</a></li><li><a href="#">日式料理</a></li><li><a href="#">燒肉</a></li>
+          <li><a href="#">吃到飽</a></li><li><a href="#">室內設計</a></li><li><a href="#">淨水器</a></li>
+          <li><a href="#">汽車保養</a></li>
+        </ul>
+      </div>
+      <div class="cbox">
+        <h3>台東 <u>1 個主題</u></h3>
+        <ul><li><a href="#">室內設計</a></li></ul>
+      </div>
+      <div class="cbox">
+        <h3>其他縣市</h3>
+        <ul>
+          <li><a href="#">台中</a></li><li><a href="#">嘉義</a></li><li><a href="#">彰化</a></li>
+          <li><a href="#">屏東</a></li><li><a href="#">雲林</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ B2B CTA ============ -->
+<div class="cta" id="cta">
+  <div class="wrap cta-in">
+    <div>
+      <h2>你的店，也想出現在這些主題裡？</h2>
+      <p>我們一個主題只收 5 家。想知道你的行業在你的城市還有沒有位置，先聊聊。</p>
+    </div>
+    <a href="#">看合作方案</a>
+  </div>
+</div>
+
+<!-- ============ FOOTER ============ -->
+<footer class="ft">
+  <div class="wrap ft-in">
+    <div>© 2026 店家好口碑 gomag.com.tw</div>
+    <div>網站由 <a href="https://www.wmf.com.tw">口碑製造所</a> 製作維護</div>
+  </div>
+</footer>
+
+</body>
+</html>
