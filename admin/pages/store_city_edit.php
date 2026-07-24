@@ -100,6 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'hero_image_path'        => $heroPath ?: null,
         'filter_cases_by_region' => !empty($_POST['filter_cases_by_region']) ? 1 : 0,
         'hide_shared_sections'   => !empty($_POST['hide_shared_sections']) ? 1 : 0,
+        'hide_address'           => !empty($_POST['hide_address']) ? 1 : 0,
         'sort_order'             => (int)($_POST['sort_order'] ?? 0),
         'is_active'              => !empty($_POST['is_active']) ? 1 : 0,
     ];
@@ -228,6 +229,9 @@ require_once __DIR__ . '/../includes/layout_head.php';
 
       <div class="form-group" style="margin-top:16px; padding-top:16px; border-top:1px dashed #ccc;">
         <label style="font-weight:800;">📍 本縣市聯絡資訊（多縣市分點專用：留空＝用主檔的）</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;color:#c0392b;margin:6px 0;cursor:pointer;">
+          <input type="checkbox" name="hide_address" value="1" <?= (!empty($row['hide_address'])) ? 'checked' : '' ?>> 這個城市不顯示地址（只留電話 — 跨縣承接、無當地門市時勾）
+        </label>
         <div class="hint" style="margin-bottom:10px;">這家有多個縣市分點時，在這裡填「本縣市」的地址電話，<?= h($cityLabelDisplay ?? '') ?>行銷頁就顯示對應的，不再跟主檔共用。</div>
         <div style="display:grid; gap:10px;">
           <div>

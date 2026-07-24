@@ -289,6 +289,7 @@ if ($citySlug !== '') {
               'address','phone','mobile_phone','business_hours','google_maps_embed','external_website_url'] as $_f) {
         if (!empty($cityVariant[$_f])) $client[$_f] = $cityVariant[$_f];
     }
+    if (!empty($cityVariant['hide_address'])) $client['address'] = '';  // 跨縣承接：只留電話、不顯示地址
     $hideShared = !empty($cityVariant['hide_shared_sections']);
     // 依城市篩案例（location 前綴對 city_slug）
     if (!empty($cityVariant['filter_cases_by_region'])) {
@@ -440,6 +441,10 @@ $_cityNameToSlug = array_flip(getCityMap());  // 唯一來源：cities 表
 if (!empty($client['address']) && preg_match('/^([台臺][北中南東]市|新北市|桃園市|高雄市|嘉義[市縣]|新竹[市縣]|苗栗縣|彰化縣|南投縣|雲林縣|屏東縣|宜蘭縣|花蓮縣|台東縣|基隆市)/u', $client['address'], $_m)) {
     $_breadcrumbCity = str_replace('臺', '台', $_m[1]);
     $_breadcrumbCitySlug = $_cityNameToSlug[$_breadcrumbCity] ?? null;
+}
+if ($cityVariant) {  // 城市變體頁：麵包屑用變體城市，不從地址推（跨縣承接/隱藏地址時才正確）
+    $_breadcrumbCitySlug = $citySlug;
+    $_breadcrumbCity = getCityMap()[$citySlug] ?? ($cityVariant['city_label'] ?? null);
 }
 ?>
 <div class="m-container">
