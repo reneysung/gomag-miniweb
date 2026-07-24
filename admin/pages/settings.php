@@ -105,6 +105,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_uploadErrors[] = "Logo：{$_r}";
         }
     }
+    // Logo 移除（沒上傳新圖、但勾了移除）
+    elseif (!empty($_POST['remove_logo'])) {
+        if (!empty($_oldImages['logo_path'])) deleteImage($_oldImages['logo_path']);
+        $fields['logo_path'] = null;
+    }
     // Hero 圖片上傳 — 成功後刪舊檔
     if (!empty($_FILES['hero_image']['name'])) {
         $path = uploadImageX($_FILES['hero_image'], 'brand', $_r);
@@ -117,6 +122,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_uploadErrors[] = "Hero 主圖：{$_r}";
         }
     }
+    // Hero 主圖 移除（沒上傳新圖、但勾了移除）
+    elseif (!empty($_POST['remove_hero_image'])) {
+        if (!empty($_oldImages['hero_image_path'])) deleteImage($_oldImages['hero_image_path']);
+        $fields['hero_image_path'] = null;
+    }
     // Phase C: Owner avatar 上傳 — 成功後刪舊檔
     if (!empty($_FILES['owner_avatar']['name'])) {
         $path = uploadImageX($_FILES['owner_avatar'], 'brand', $_r);
@@ -128,6 +138,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($_r) {
             $_uploadErrors[] = "老闆頭像：{$_r}";
         }
+    }
+    // 老闆頭像 移除（沒上傳新圖、但勾了移除）
+    elseif (!empty($_POST['remove_owner_avatar'])) {
+        if (!empty($_oldImages['owner_avatar'])) deleteImage($_oldImages['owner_avatar']);
+        $fields['owner_avatar'] = null;
     }
 
     // Favicon 上傳：強制縮成 192×192 PNG 方形 → uploads/brand/favicon-{slug}.png
@@ -777,6 +792,11 @@ body[data-current-tab="minisite"] .tab-section[data-tab="store"] { display:none;
           </div>
         <?php endif; ?>
         <img id="logo_preview" style="display:none;max-height:60px;margin-bottom:8px;" alt="預覽">
+        <?php if ($client['logo_path']): ?>
+        <label style="display:flex;align-items:center;gap:6px;font-size:.82rem;color:#c0392b;margin-bottom:6px;cursor:pointer;">
+          <input type="checkbox" name="remove_logo" value="1"> 移除目前這張Logo（存檔後清空）
+        </label>
+        <?php endif; ?>
         <input type="file" name="logo" class="form-control" accept="image/*"
                onchange="previewImage(this,'logo_preview')">
         <div class="hint">建議尺寸：300×100px，PNG 透明背景</div>
@@ -816,6 +836,11 @@ body[data-current-tab="minisite"] .tab-section[data-tab="store"] { display:none;
           </div>
         <?php endif; ?>
         <img id="hero_preview" style="display:none;width:100%;max-height:80px;object-fit:cover;margin-bottom:8px;border-radius:6px;" alt="預覽">
+        <?php if ($client['hero_image_path']): ?>
+        <label style="display:flex;align-items:center;gap:6px;font-size:.82rem;color:#c0392b;margin-bottom:6px;cursor:pointer;">
+          <input type="checkbox" name="remove_hero_image" value="1"> 移除目前這張Hero 圖（存檔後清空）
+        </label>
+        <?php endif; ?>
         <input type="file" name="hero_image" class="form-control" accept="image/*"
                onchange="previewImage(this,'hero_preview')">
         <div class="hint">建議尺寸：1920×800px，JPG</div>
@@ -925,7 +950,12 @@ while (count($currentTags) < 4) $currentTags[] = '';
         </div>
         <div class="form-group-admin" style="margin:0;">
           <label>頭像（可選）</label>
-          <input type="file" name="owner_avatar" accept="image/*">
+          <?php if ($client['owner_avatar']): ?>
+        <label style="display:flex;align-items:center;gap:6px;font-size:.82rem;color:#c0392b;margin-bottom:6px;cursor:pointer;">
+          <input type="checkbox" name="remove_owner_avatar" value="1"> 移除目前這張頭像（存檔後清空）
+        </label>
+        <?php endif; ?>
+        <input type="file" name="owner_avatar" accept="image/*">
           <div class="hint">不上傳則用名字第一字 + 橘漸層 fallback</div>
         </div>
       </div>
