@@ -103,6 +103,26 @@
   .tmeta .stars{font-size:11px}
   .tmeta b{font-family:var(--num);color:var(--ink-soft)}
 
+  /* ---------- 影片 rail ---------- */
+  .vsec{background:var(--dark);color:#fff;padding:60px 0 64px}
+  .vsec .sh h2{color:#fff}
+  .vsec .sh p{color:rgba(255,255,255,.55)}
+  .vsec .sh h2 u{background:transparent;border-color:rgba(255,255,255,.22);color:rgba(255,255,255,.55)}
+  .vsec .more{color:var(--accent)}
+  .vrail{display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x proximity;scroll-padding-left:32px;padding:2px 0 14px;margin:0 -32px;padding-left:32px;padding-right:32px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.28) transparent}
+  .vrail::-webkit-scrollbar{height:6px}
+  .vrail::-webkit-scrollbar-thumb{background:rgba(255,255,255,.24);border-radius:99px}
+  .vcard{flex:0 0 186px;scroll-snap-align:start;text-align:left}
+  .vthumb{aspect-ratio:9/16;border-radius:13px;position:relative;overflow:hidden;transition:.18s}
+  .vcard:hover .vthumb{transform:translateY(-3px);box-shadow:0 14px 30px rgba(0,0,0,.5)}
+  .vthumb::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05) 30%,rgba(0,0,0,.72) 100%)}
+  .play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.9);display:grid;place-items:center;z-index:2}
+  .play::before{content:'';border-left:13px solid var(--ink);border-top:8px solid transparent;border-bottom:8px solid transparent;margin-left:3px}
+  .vdur{position:absolute;right:9px;top:9px;z-index:2;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);font-family:var(--num);font-size:11px;font-weight:600;padding:3px 8px;border-radius:99px}
+  .vcap{position:absolute;left:12px;right:12px;bottom:11px;z-index:2}
+  .vcap b{display:block;font-size:14px;font-weight:700;line-height:1.4;text-shadow:0 1px 4px rgba(0,0,0,.5)}
+  .vcap span{display:block;margin-top:3px;font-size:11.5px;color:rgba(255,255,255,.72)}
+
   /* mixed section with sub-labels */
   .sublab{display:flex;align-items:center;gap:9px;margin:32px 0 14px;font-size:16px;font-weight:800}
   .sublab:first-of-type{margin-top:0}
@@ -165,6 +185,9 @@
     .search input{padding:14px 18px;font-size:14.5px}
     .search button{padding:0 20px}
     .cityrail .lbl{width:100%;margin-bottom:2px}
+    .vrail{margin:0 -18px;padding-left:18px;padding-right:18px;gap:11px;scroll-padding-left:18px}
+    .vcard{flex:0 0 156px}
+    .vsec{padding:44px 0 48px}
     .trust h2,.cta h2{font-size:22px}
     .tcols{gap:22px}
     section{padding:44px 0}
@@ -183,6 +206,7 @@
       <a href="#eat">吃</a>
       <a href="#home">住・家</a>
       <a href="#etc">車・辦事</a>
+      <a href="#video">影片</a>
       <a href="#city">城市</a>
       <a href="#">攻略</a>
     </nav>
@@ -323,6 +347,56 @@
     </div>
   </div>
 </section>
+
+<!-- ============ 影片 ============ -->
+<div class="vsec" id="video">
+  <div class="wrap">
+    <div class="note" style="background:#2A2410;border-color:#6B5A1E;color:#D8C88A"><b style="color:#F0DFA0">［說明］</b>直式 9:16，橫向滑。<b style="color:#F0DFA0">片是我們自己到現場拍的、自己剪的</b>（張家牛肉麵那支已核可的模板）——這句才是真正的差異點，別家入口網站沒有人真的去。這批片本來就會發 FB Reels，首頁再用一次不用多花成本。<b style="color:#F0DFA0">刻意不寫「不是廣告」</b>：那是抄七分之二的話，而且這些確實是行銷片。</div>
+
+    <div class="sh">
+      <div>
+        <h2>30 秒看一家店 <u>28 支</u></h2>
+        <p>每一支都是我們自己到店裡拍的、自己剪的。想知道現場長什麼樣，比翻照片快。</p>
+      </div>
+      <a class="more" href="#">看全部影片 →</a>
+    </div>
+
+    <div class="vrail">
+      <a class="vcard" href="#"><div class="vthumb g1">
+        <span class="vdur">0:24</span><span class="play"></span>
+        <div class="vcap"><b>牧鍋</b><span>台南 · 火鍋</span></div>
+      </div></a>
+      <a class="vcard" href="#"><div class="vthumb g3">
+        <span class="vdur">0:28</span><span class="play"></span>
+        <div class="vcap"><b>小椿食堂</b><span>台南 · 日式料理</span></div>
+      </div></a>
+      <a class="vcard" href="#"><div class="vthumb g6">
+        <span class="vdur">0:22</span><span class="play"></span>
+        <div class="vcap"><b>逐鹿炭火燒肉</b><span>台南 · 燒肉</span></div>
+      </div></a>
+      <a class="vcard" href="#"><div class="vthumb g2">
+        <span class="vdur">0:31</span><span class="play"></span>
+        <div class="vcap"><b>洪廚總鋪師</b><span>台南 · 辦桌外燴</span></div>
+      </div></a>
+      <a class="vcard" href="#"><div class="vthumb g4">
+        <span class="vdur">0:26</span><span class="play"></span>
+        <div class="vcap"><b>亞筑室內設計</b><span>台南 · 室內設計</span></div>
+      </div></a>
+      <a class="vcard" href="#"><div class="vthumb g5">
+        <span class="vdur">0:19</span><span class="play"></span>
+        <div class="vcap"><b>活跳跳海鮮粥</b><span>台南 · 熱炒</span></div>
+      </div></a>
+      <a class="vcard" href="#"><div class="vthumb g3">
+        <span class="vdur">0:25</span><span class="play"></span>
+        <div class="vcap"><b>昇揚木地板</b><span>台南 · 木地板</span></div>
+      </div></a>
+      <a class="vcard" href="#"><div class="vthumb g1">
+        <span class="vdur">0:23</span><span class="play"></span>
+        <div class="vcap"><b>牛老大涮牛肉</b><span>高雄 · 火鍋</span></div>
+      </div></a>
+    </div>
+  </div>
+</div>
 
 <!-- ============ 住・家 ============ -->
 <section id="home">
