@@ -6,6 +6,7 @@ require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/helpers.php';
 require_once __DIR__ . '/../../includes/waf_bypass.php';   // 主機 WAF 誤判繞道
 require_once __DIR__ . '/../../includes/front_functions.php';  // getCityMap()
+require_once __DIR__ . '/../../includes/geo_page_clients.php'; // 主題頁勾選店家
 requireLogin();
 
 if (currentAdmin()['role'] !== 'super') {
@@ -33,7 +34,7 @@ if ($editId) {
 // ─── POST ─────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verifyCsrf();
-    wafDecodePost(['intro_html', 'faqs_text']);
+    wafDecodePost(['intro_html', 'faqs_text', 'picks_json']);
     $action = $_POST['action'] ?? 'save';
 
     if ($action === 'add') {
@@ -84,7 +85,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $stmt = $db->prepare("UPDATE geo_category_pages SET $sets WHERE id = :id");
             $stmt->execute(array_merge($fields, ['id' => $id]));
-            setFlash('success', '✅ 交叉頁內容已儲存');
+
+            // 勾選的店家（picks_json 由前端 JS 組出來，順序即顯示順序）
+            // 沒送 picks_json（舊表單／JS 沒跑）→ 完全不動勾選，避免誤清空
+            $picksMsg = '';
+            if (isset($_POST['picks_json'])) {
+                $picks = json_decode((string)$_POST['picks_json'], true);
+                if (is_array($picks)) {
+                    $n = saveGeoPagePicks($db, $id, $picks);
+                    $picksMsg = $n ? "，已指定 {$n} 家店" : '，未指定店家（前台改回自動列店）';
+                }
+            }
+            setFlash('success', '✅ 交叉頁內容已儲存' . $picksMsg);
         } catch (PDOException $e) {
             setFlash('error', '儲存失敗：同城市×分類×子服務已存在（子服務 slug 重複）');
             redirect(BASE_URL . '/admin/pages/geo_category.php?edit=' . $id);
@@ -118,6 +130,40 @@ require_once __DIR__ . '/../includes/layout_head.php';
     $eSvc  = $editing['service_slug'] ?? '';
     $eSvcN = $editing['service_name'] ?? '';
     $ePath = '/city/' . $editing['city_slug'] . '/' . ($eCat['slug'] ?? '') . ($eSvc !== '' ? '/' . $eSvc : '');
+
+    // ── 勾選店家：已選 + 候選 ──
+    $ePicks = getGeoPagePicks($db, (int)$editing['id']);
+    $eCands = getGeoPageCandidates($db, $editing['city_slug'], (int)$editing['category_id'], $eSvc);
+    $eCandById = [];
+    foreach ($eCands as $c) $eCandById[(int)$c['id']] = $c;
+    // 前端初始狀態：已選的照 sort_order 排在前，其餘當候選
+    $eInit = [];
+    foreach ($ePicks as $cid => $p) {
+        if (!isset($eCandById[$cid])) {
+            // 已選但不在候選（例如店改了城市）→ 仍要顯示，才不會被靜靜丟掉
+            $x = $db->prepare("SELECT id, brand_name, slug, category_id, is_placeholder, city_slug, 0 AS via_variant, 0 AS suggested FROM clients WHERE id = ?");
+            $x->execute([$cid]);
+            $row = $x->fetch(PDO::FETCH_ASSOC);
+            if (!$row) continue;
+            $eCandById[$cid] = $row;
+            $eCands[] = $row;
+        }
+        $eInit[] = [
+            'client_id'    => $cid,
+            'name'         => $eCandById[$cid]['brand_name'],
+            'blurb'        => $p['blurb'],
+            'is_highlight' => $p['is_highlight'],
+            'orphan'       => empty($eCandById[$cid]['city_slug']) || $eCandById[$cid]['city_slug'] !== $editing['city_slug'],
+        ];
+    }
+    $eCandJs = array_map(fn($c) => [
+        'id'        => (int)$c['id'],
+        'name'      => $c['brand_name'],
+        'cat'       => $catById[(int)$c['category_id']]['name'] ?? '',
+        'suggested' => !empty($c['suggested']),
+        'variant'   => !empty($c['via_variant']),
+        'ph'        => !empty($c['is_placeholder']),
+    ], $eCands);
 ?>
 <!-- ════════ 編輯表單 ════════ -->
 <form method="POST">
@@ -176,12 +222,146 @@ require_once __DIR__ . '/../includes/layout_head.php';
     </div>
   </div>
 
+  <!-- ════════ 這個主題要放哪些店 ════════ -->
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header">
+      <h2>🏪 這個主題要放哪些店</h2>
+      <p style="color:var(--muted); margin:6px 0 0; font-size:.85rem;">
+        勾了就照你排的順序顯示，每家附推薦理由。<strong>一家都不勾＝前台維持原本的自動列店</strong>（照關鍵字標籤，排序是「最晚建立的排最前」）。
+      </p>
+    </div>
+    <div class="card-body">
+      <div id="pickWarn" style="display:none; background:#FFF6E5; border:1px solid #E8C56A; color:#7A5A10; padding:10px 14px; border-radius:8px; margin-bottom:14px; font-size:.88rem;"></div>
+
+      <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start;">
+
+        <!-- 已選 -->
+        <div style="flex:1.4; min-width:340px;">
+          <div style="font-weight:700; margin-bottom:8px;">已選（<span id="pickCount">0</span> 家）</div>
+          <div id="pickChosen"></div>
+          <div id="pickEmpty" style="padding:20px; border:1px dashed var(--border); border-radius:8px; color:var(--muted); font-size:.88rem;">
+            還沒選任何店。從右邊「可加入」按 ＋ 加進來。
+          </div>
+        </div>
+
+        <!-- 候選 -->
+        <div style="flex:1; min-width:260px;">
+          <div style="font-weight:700; margin-bottom:8px;">可加入（<?= count($eCandJs) ?> 家在 <?= h($eCityName) ?>）</div>
+          <input type="text" id="pickFilter" class="form-control" placeholder="輸入店名篩選…" style="margin-bottom:8px;" autocomplete="off">
+          <div id="pickPool" style="max-height:420px; overflow-y:auto; border:1px solid var(--border); border-radius:8px;"></div>
+          <small style="color:var(--muted); display:block; margin-top:6px;">
+            🏷 ＝已標到「<?= h($eSvcN ?: $eSvc ?: '本分類') ?>」關鍵字的店（系統建議）。清單含在本城有行銷頁變體的跨縣店。
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <textarea name="picks_json" id="picksJson" style="display:none"></textarea>
+  <script>
+  (function () {
+    var CANDS = <?= json_encode($eCandJs, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+    var state = <?= json_encode(array_values($eInit), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+    var byId = {}; CANDS.forEach(function (c) { byId[c.id] = c; });
+
+    var elChosen = document.getElementById('pickChosen'),
+        elEmpty  = document.getElementById('pickEmpty'),
+        elPool   = document.getElementById('pickPool'),
+        elCount  = document.getElementById('pickCount'),
+        elWarn   = document.getElementById('pickWarn'),
+        elFilter = document.getElementById('pickFilter'),
+        elJson   = document.getElementById('picksJson');
+
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (m) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]; }); }
+
+    function renderChosen() {
+      elEmpty.style.display = state.length ? 'none' : '';
+      elCount.textContent = state.length;
+      elChosen.innerHTML = state.map(function (p, i) {
+        var c = byId[p.client_id] || {};
+        return '<div style="border:1px solid var(--border);border-radius:9px;padding:12px;margin-bottom:10px;background:var(--bg);">' +
+          '<div style="display:flex;align-items:center;gap:8px;">' +
+            '<span style="background:#FF5A36;color:#fff;font-weight:800;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:.8rem;flex-shrink:0;">' + (i + 1) + '</span>' +
+            '<strong style="flex:1;">' + esc(p.name || c.name || ('#' + p.client_id)) + '</strong>' +
+            (p.orphan ? '<span style="font-size:.7rem;color:#a44;">⚠ 不在本城</span>' : '') +
+            '<label style="font-size:.78rem;color:var(--muted);white-space:nowrap;"><input type="checkbox" data-hl="' + i + '"' + (p.is_highlight ? ' checked' : '') + '> 編輯精選</label>' +
+            '<button type="button" class="btn btn-sm btn-ghost" data-up="' + i + '"' + (i === 0 ? ' disabled' : '') + '>▲</button>' +
+            '<button type="button" class="btn btn-sm btn-ghost" data-down="' + i + '"' + (i === state.length - 1 ? ' disabled' : '') + '>▼</button>' +
+            '<button type="button" class="btn btn-sm btn-ghost" data-rm="' + i + '" style="color:#a44;">移除</button>' +
+          '</div>' +
+          '<textarea data-blurb="' + i + '" class="form-control" rows="3" style="margin-top:8px;" ' +
+            'placeholder="這家店在「' + esc(<?= json_encode($eSvcN ?: $eSvc ?: '本主題', JSON_UNESCAPED_UNICODE) ?>) + '」的推薦理由（每個主題各寫一份，別跟其他主題共用）">' +
+            esc(p.blurb || '') + '</textarea>' +
+          '<small style="color:var(--muted);">' + (p.blurb || '').length + ' 字</small>' +
+        '</div>';
+      }).join('');
+      elWarn.style.display = state.length > 5 ? '' : 'none';
+      if (state.length > 5) elWarn.textContent = '⚠️ 選了 ' + state.length + ' 家。首頁寫的是「每個主題最多 5 家」，超過會自打嘴巴 — 確定要這樣就繼續。';
+      renderPool();
+      sync();
+    }
+
+    function renderPool() {
+      var q = (elFilter.value || '').trim().toLowerCase();
+      var chosen = {}; state.forEach(function (p) { chosen[p.client_id] = 1; });
+      var list = CANDS.filter(function (c) {
+        return !chosen[c.id] && (!q || c.name.toLowerCase().indexOf(q) >= 0);
+      });
+      elPool.innerHTML = list.length ? list.map(function (c) {
+        return '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--border);">' +
+          '<button type="button" class="btn btn-sm btn-primary" data-add="' + c.id + '">＋</button>' +
+          '<span style="flex:1;">' + esc(c.name) +
+            (c.suggested ? ' <span title="已標到本主題關鍵字">🏷</span>' : '') +
+            (c.variant ? ' <span title="跨縣行銷頁變體" style="font-size:.7rem;color:#888;">跨縣</span>' : '') +
+            (c.ph ? ' <span style="font-size:.7rem;color:#a80;">陪襯</span>' : '') +
+          '</span>' +
+          '<small style="color:var(--muted);">' + esc(c.cat) + '</small>' +
+        '</div>';
+      }).join('') : '<div style="padding:16px;color:var(--muted);font-size:.85rem;">沒有符合的店家。</div>';
+    }
+
+    function sync() { elJson.value = JSON.stringify(state); }
+
+    elChosen.addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      var i;
+      if ((i = b.dataset.up) !== undefined)   { i = +i; state.splice(i - 1, 0, state.splice(i, 1)[0]); renderChosen(); }
+      else if ((i = b.dataset.down) !== undefined) { i = +i; state.splice(i + 1, 0, state.splice(i, 1)[0]); renderChosen(); }
+      else if ((i = b.dataset.rm) !== undefined)   { i = +i; state.splice(i, 1); renderChosen(); }
+    });
+    elChosen.addEventListener('input', function (e) {
+      var i = e.target.dataset.blurb;
+      if (i === undefined) return;
+      state[+i].blurb = e.target.value;
+      var s = e.target.nextElementSibling;
+      if (s) s.textContent = e.target.value.length + ' 字';
+      sync();
+    });
+    elChosen.addEventListener('change', function (e) {
+      var i = e.target.dataset.hl;
+      if (i === undefined) return;
+      state[+i].is_highlight = e.target.checked ? 1 : 0;
+      sync();
+    });
+    elPool.addEventListener('click', function (e) {
+      var b = e.target.closest('button[data-add]'); if (!b) return;
+      var c = byId[+b.dataset.add]; if (!c) return;
+      state.push({ client_id: c.id, name: c.name, blurb: '', is_highlight: 0, orphan: false });
+      renderChosen();
+    });
+    elFilter.addEventListener('input', renderPool);
+
+    renderChosen();
+  })();
+  </script>
+
   <div class="form-actions" style="margin-top:24px; display:flex; gap:10px;">
     <button type="submit" class="btn btn-primary btn-lg">💾 儲存</button>
     <a href="<?= BASE_URL ?>/admin/pages/geo_category.php" class="btn btn-ghost btn-lg">取消</a>
     <a href="<?= BASE_URL ?><?= h($ePath) ?>" target="_blank" rel="noopener" class="btn btn-ghost btn-lg" style="margin-left:auto;">🔍 預覽前台</a>
   </div>
-<?php wafBypassFields(['intro_html', 'faqs_text']); ?>
+<?php wafBypassFields(['intro_html', 'faqs_text', 'picks_json']); ?>
 </form>
 
 <?php else: ?>

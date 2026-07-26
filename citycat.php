@@ -3,6 +3,7 @@
 require_once __DIR__ . '/includes/config.php';
 require_once __DIR__ . '/includes/helpers.php';
 require_once __DIR__ . '/includes/front_functions.php';
+require_once __DIR__ . '/includes/geo_page_clients.php';   // 主題頁手動勾選店家
 
 $db = getDB();
 $slug    = strtolower(trim($_GET['slug'] ?? ''));
@@ -44,7 +45,7 @@ $hasSub = count($subServices) > 0;
 // ─── 本頁交叉頁內容（樞紐：service_slug=''；子服務：service_slug=svc）──
 $geo = null;
 try {
-    $g = $db->prepare("SELECT intro_html, faqs, hero_image, meta_title, meta_desc, service_name
+    $g = $db->prepare("SELECT id, intro_html, faqs, hero_image, meta_title, meta_desc, service_name
         FROM geo_category_pages WHERE city_slug = ? AND category_id = ? AND service_slug = ? AND is_active = 1 LIMIT 1");
     $g->execute([$slug, $catId, $svcSlug]);
     $geo = $g->fetch() ?: null;
@@ -72,7 +73,18 @@ $cols = "cl.id, cl.subdomain, cl.slug, cl.brand_name, cl.tagline,
          cl.has_minisite, cl.external_website_url, cl.hero_image_path, cl.hero_image_fit,
          cl.address, cl.phone, cl.is_placeholder";
 $clients = [];
-if ($isSub) {
+
+// 後台有手動勾選 → 照後台排的順序跑（清單頁形式，每家附推薦理由）
+// 沒勾選 → 走下面原本的自動列店（現有頁面行為不變）
+$isCurated = false;
+if ($geo && !empty($geo['id'])) {
+    $curated = getGeoPageCuratedClients($db, (int)$geo['id'], $cols, $slug);
+    if ($curated) { $clients = $curated; $isCurated = true; }
+}
+
+if ($isCurated) {
+    // 已由後台指定，不再自動撈
+} elseif ($isSub) {
     // 子服務頁：列出該城、有標到「effective page = svc」關鍵字的店
     try {
         // 列店條件：本城地址店（city_slug 相符）OR 在本城有啟用的城市行銷頁變體
@@ -300,6 +312,44 @@ if ($navServices):
     <a href="<?= BASE_URL ?>/category.php?slug=<?= h($catSlug) ?>" class="g-section-link">看全台<?= h($catName) ?></a>
   </div>
 
+  <?php if ($isCurated): /* ═══ 後台勾選版：編號清單 + 每家推薦理由 ═══ */ ?>
+  <div class="g-pick-list">
+    <?php $rank = 0; foreach ($clients as $cl):
+        $rank++;
+        $cHero  = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
+        $isPH   = !empty($cl['is_placeholder']);
+        $cAddr  = (!empty($cl['via_variant']) && !empty($cl['variant_address'])) ? $cl['variant_address'] : $cl['address'];
+        $cPhone = (!empty($cl['via_variant']) && !empty($cl['variant_phone']))   ? $cl['variant_phone']   : $cl['phone'];
+        $cUrl   = clientStoreUrl($cl, !empty($cl['via_variant']) ? $slug : '');
+        $blurb  = trim((string)($cl['blurb'] ?? ''));
+    ?>
+    <article class="g-pick">
+      <div class="g-pick-media">
+        <span class="g-pick-rank"><?= $rank ?></span>
+        <a class="g-pick-img" href="<?= h($cUrl) ?>"<?= gStoreImgStyle($cHero, $cl['hero_image_fit'] ?? null) ?>>
+          <?php if (!$cHero): ?>
+          <span class="g-pick-img-fallback"><?= h($catIcon) ?></span>
+          <?php endif; ?>
+        </a>
+      </div>
+      <div class="g-pick-body">
+        <h3 class="g-pick-name">
+          <a href="<?= h($cUrl) ?>"><?= h($cl['brand_name']) ?></a>
+          <?php if (!empty($cl['is_highlight'])): ?><span class="g-pick-flag">編輯精選</span><?php endif; ?>
+        </h3>
+        <?php if ($cl['tagline']): ?><div class="g-pick-tagline"><?= h($cl['tagline']) ?></div><?php endif; ?>
+        <?php if ($blurb !== ''): ?><div class="g-pick-blurb"><?= nl2br(h($blurb)) ?></div><?php endif; ?>
+        <div class="g-pick-facts">
+          <?php if ($cAddr): ?><span>📍 <?= h($cAddr) ?></span><?php endif; ?>
+          <?php if ($cPhone && !$isPH): ?><span>📞 <?= h($cPhone) ?></span><?php endif; ?>
+        </div>
+        <a class="g-pick-cta" href="<?= h($cUrl) ?>">看 <?= h($cl['brand_name']) ?> 詳細介紹 →</a>
+      </div>
+    </article>
+    <?php endforeach; ?>
+  </div>
+
+  <?php else: // ═══ 未勾選：維持原本的自動列店網格 ═══ ?>
   <div class="g-store-grid">
     <?php foreach ($clients as $cl):
         $cHero = $cl['hero_image_path'] ? BASE_URL . '/' . h($cl['hero_image_path']) : '';
@@ -325,6 +375,7 @@ if ($navServices):
     </a>
     <?php endforeach; ?>
   </div>
+  <?php endif; ?>
 </section>
 <?php else: ?>
 <!-- 0 店空狀態：有內容但本區尚無收錄商家 → B2B 歡迎上架（隨有沒有店自動切換）-->

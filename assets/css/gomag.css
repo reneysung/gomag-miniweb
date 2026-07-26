@@ -2198,3 +2198,32 @@
 .g-guide-body .gg-faq .gg-q{font-weight:700;color:var(--g-ink);padding:.95em 0 .3em}
 .g-guide-body .gg-faq .gg-q::before{content:"Q";display:inline-block;color:#fff;background:var(--g-accent);font-weight:800;font-size:.8rem;width:1.4em;height:1.4em;line-height:1.4em;text-align:center;border-radius:5px;margin-right:.5em}
 .g-guide-body .gg-faq .gg-a{color:var(--g-ink-soft);padding:0 0 .95em 0;border-bottom:1px solid var(--g-border);line-height:1.85}
+
+/* ═══════════════════════════════════════════════════════════
+   主題頁「後台勾選版」清單（citycat.php $isCurated）
+   一家一列：編號 + 圖 + 店名 + 推薦理由 + 地址電話 + CTA
+   跟自動列店的 .g-store-grid 並存：有勾選才用這個
+   ═══════════════════════════════════════════════════════════ */
+.g-pick-list{display:flex;flex-direction:column;gap:20px;max-width:880px}
+.g-pick{display:flex;gap:20px;padding:20px;border:1px solid var(--g-border);border-radius:14px;background:var(--g-white);transition:box-shadow .18s,border-color .18s}
+.g-pick:hover{border-color:var(--g-ink);box-shadow:0 8px 26px rgba(0,0,0,.07)}
+.g-pick-media{position:relative;flex-shrink:0}
+.g-pick-rank{position:absolute;left:-8px;top:-8px;z-index:2;width:30px;height:30px;border-radius:50%;background:var(--g-accent);color:#fff;font-family:var(--g-font-num,inherit);font-weight:800;font-size:.95rem;display:grid;place-items:center;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.g-pick-img{display:block;width:180px;height:135px;border-radius:10px;background:var(--g-bg-alt) center/cover no-repeat;overflow:hidden}
+.g-pick-img-fallback{display:grid;place-items:center;width:100%;height:100%;font-size:2rem;opacity:.4}
+.g-pick-body{min-width:0;flex:1}
+.g-pick-name{margin:0;font-size:1.18rem;font-weight:800;letter-spacing:-.2px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.g-pick-name a{color:var(--g-ink);text-decoration:none}
+.g-pick-name a:hover{color:var(--g-accent)}
+.g-pick-flag{font-size:.7rem;font-weight:700;color:var(--g-accent);background:var(--g-accent-light);border-radius:100px;padding:3px 9px}
+.g-pick-tagline{margin-top:4px;font-size:.9rem;color:var(--g-ink-muted)}
+.g-pick-blurb{margin-top:10px;font-size:.95rem;line-height:1.85;color:var(--g-ink-soft)}
+.g-pick-facts{margin-top:12px;display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.85rem;color:var(--g-ink-muted)}
+.g-pick-cta{display:inline-block;margin-top:14px;font-size:.88rem;font-weight:700;color:var(--g-accent);text-decoration:none}
+.g-pick-cta:hover{text-decoration:underline}
+@media(max-width:640px){
+  .g-pick{flex-direction:column;gap:14px;padding:16px}
+  .g-pick-img{width:100%;height:190px}
+  .g-pick-rank{left:10px;top:10px}
+  .g-pick-name{font-size:1.06rem}
+}
