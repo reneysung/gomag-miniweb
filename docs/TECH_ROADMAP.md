@@ -23,13 +23,45 @@
 
 **技術棧方向** —— 往你已驗證的 Cloudflare Pages + Supabase 靠攏(IvyLife、JourneyLift 已在跑)。
 
-## 三、必須先做的技術驗證(擋路的三題)
+## 三、技術驗證(已驗證 2026-07-26,官方文件佐證)
 
-動工前先花半天驗這三件,沒答案別開發:
+> 🔴 **前提修正**:原本寫「免費/Pro/Business 無法把 `*.domain` 設 proxied,那是 Enterprise」——**已不成立**。CF DNS 文件現明寫「Customers on **all plans** can create and proxy wildcard DNS records.」(以前確實 Enterprise-only,CF 近期放寬)。這條翻案讓原本擔心的兩個繞道(逐筆建 DNS / For SaaS)都不需要。
 
-1. 免費/Pro/Business 方案無法把 `*.domain` 設成 proxied(那是 Enterprise)。用 **Cloudflare API 自動建 proxied DNS 記錄**繞過,寫進後台新增客戶流程——實際可行嗎?一個新客戶幾秒?
-2. 或走 **Cloudflare for SaaS custom hostnames**,每個 hostname 實際多少錢?(以你每客戶月收算單價)
-3. Cloudflare Pages 怎麼接子網域——Pages 自訂網域,還是前面掛 dispatch Worker?
+**Q1:proxied wildcard 可行嗎?一個新客戶幾秒?**
+✅ 可行,一個新客戶 **0 秒、0 API 呼叫、0 成本**。`*.gomag.com.tw` 一條 wildcard 記錄涵蓋所有子網域,新增客戶只要 DB INSERT 一筆(subdomain 欄),`newclient.gomag.com.tw` 立即解析。不用打 CF API,那段後台流程可砍掉。
+
+**Q2:Cloudflare for SaaS 每個 hostname 多少錢?**
+✅ 前 100 個免費、超過每個 **$0.10/月**(Free/Pro/Business 皆可,PAYG 上限 5 萬)。**但本場景不需要它** —— For SaaS 是給「客戶帶自己買的網域」用的(`www.客戶品牌.com`→你的 app)。`xxx.gomag.com.tw` 用 wildcard 即可,一毛不付。只有未來要支援客戶自有網域才會用到 For SaaS。
+
+**Q3:Pages 怎麼接子網域——Pages 自訂網域 vs dispatch Worker?**
+✅ **都不用 Pages 自訂網域,用 Worker wildcard route。** Pages 自訂網域每 project 上限 100/250/500(免費/Pro/Business)且**不支援 wildcard**,207+ 客戶會撞上限還要逐一註冊;Workers 文件直接建議「超過 100 個自訂網域改用 wildcard route」。CF 官方多租戶範例就是一個 Worker 掛 `*/*` route、讀 Host header 查租戶。
+
+### 建議架構(比原規劃簡化一個量級)
+
+```
+*.gomag.com.tw  (一條 proxied wildcard DNS，免費)
+        ↓
+一個 Worker，route = *.gomag.com.tw/*
+        ↓
+讀 Host header 取 subdomain → 查 Supabase → 渲染該客戶頁面
+        ↓
+新增客戶 = DB INSERT 一筆。不碰 DNS、不碰 CF API、不逐一部署。
+```
+
+- **SSL**:免費 Universal SSL 涵蓋 apex + 一層 wildcard,`client.gomag.com.tw` 自動 HTTPS 免費。
+- **成本**:DNS/wildcard 免費、Worker 免費方案 10 萬 req/日,到量升 Workers Paid $5/月無上限。**非 per-client 收費**。
+- **價值主張**:每家有自己的子網域 + 自己的 HTTPS,「擁有獨立網站」保留。
+
+### 唯一待實測(10 分鐘,非半天)
+
+proxied wildcard 的免費 Universal SSL 憑證簽發後,`隨便一個.gomag.com.tw` 是否真的 valid(理論上涵蓋,一層 wildcard 的 DCV 偶有眉角)。開一條 wildcard 記錄 + curl 一個沒建過的子網域看憑證即知,不用寫程式。
+
+### 佐證來源
+- [CF DNS — Wildcard records](https://developers.cloudflare.com/dns/manage-dns-records/reference/wildcard-dns-records/)（all plans can proxy wildcard）
+- [Pages — Limits](https://developers.cloudflare.com/pages/platform/limits/)（自訂網域 100/250/500、不支援 wildcard）
+- [Workers — Limits](https://developers.cloudflare.com/workers/platform/limits/)（>100 自訂網域改用 wildcard route）
+- [CF for SaaS — Worker as origin](https://developers.cloudflare.com/cloudflare-for-platforms/cloudflare-for-saas/start/advanced-settings/worker-as-origin/)（`*/*` route 多租戶範例）
+- [CF for SaaS — 2025-05 PAYG 更新](https://developers.cloudflare.com/changelog/2025-05-19-paygo-updates/)（custom hostname 定價/上限）
 
 ## 四、首頁(規劃完成,搬 Claude Code 建置)
 
