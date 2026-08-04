@@ -259,8 +259,15 @@ if ($isPlaceholder) {
     $avgRating->execute([$cid]);
     $rating = $avgRating->fetch();
 
-    // 行銷頁不顯示 Google 評價（API 成本 + 需逐家 place_id + 無法濾掉負評）— 改用站內 testimonials
+    // 行銷頁預設不顯示 Google 評價（見下方統一開關）— 平常改用站內 testimonials
     $googleReviews = null;
+}
+
+// Google 真實評價：後台「顯示 Google 評價」開關 + 有 place_id 才抓（預設關）。
+// getGoogleReviews() 有 24h 檔案快取，抓不到回 null → 不顯示 Google 區塊、維持 testimonials。
+if (!$isPlaceholder && !empty($client['show_google_reviews']) && !empty($client['google_place_id'])) {
+    require_once __DIR__ . '/includes/google_reviews.php';
+    $googleReviews = getGoogleReviews((string)$client['google_place_id']);
 }
 
 // 主 CTA URL：mini-site > 外部官網 > none
@@ -1105,6 +1112,59 @@ if ($useBlocks && $testimonials) {
     $maxCount = max($ratingCounts) ?: 1;
 }
 ?>
+
+<?php if ($googleReviews):
+  $_gAvg  = (float)($googleReviews['rating'] ?? 0);
+  $_gCnt  = (int)($googleReviews['userRatingCount'] ?? 0);
+  $_gRevs = array_slice($googleReviews['reviews'] ?? [], 0, 6);
+?>
+<!-- ═══════ Google 真實評價（後台「顯示 Google 評價」開啟才出現）═══════ -->
+<section class="g-reviews-block g-google-reviews">
+  <div class="g-reviews-block-inner">
+    <div class="g-greview-head">
+      <span class="g-greview-badge">
+        <span class="g-greview-g">G</span> Google 評價
+      </span>
+      <?php if (!empty($googleReviews['mapsUrl'])): ?>
+      <a class="g-greview-maps" href="<?= h($googleReviews['mapsUrl']) ?>" target="_blank" rel="noopener nofollow">在 Google 地圖查看全部 →</a>
+      <?php endif; ?>
+    </div>
+
+    <div class="g-reviews-summary">
+      <div class="g-summary-score">
+        <div class="g-summary-num"><?= number_format($_gAvg, 1) ?></div>
+        <div class="g-summary-stars"><?= str_repeat('★', (int)round($_gAvg)) ?><?= str_repeat('☆', 5 - (int)round($_gAvg)) ?></div>
+        <div class="g-summary-count"><?= $_gCnt ?> 則 Google 評論</div>
+      </div>
+      <p class="g-greview-note">以下為 Google 地圖上的真實評論，即時同步、未經篩選。</p>
+    </div>
+
+    <?php if ($_gRevs): ?>
+    <div class="g-reviews-list">
+      <?php foreach ($_gRevs as $r):
+        $nm = trim((string)($r['author'] ?? '')) ?: '匿名';
+        $init = mb_substr($nm, 0, 1, 'UTF-8');
+      ?>
+      <div class="g-review-item">
+        <div class="g-review-head">
+          <?php if (!empty($r['avatar'])): ?>
+          <img class="g-review-avatar" src="<?= h($r['avatar']) ?>" alt="<?= h($nm) ?>" loading="lazy" referrerpolicy="no-referrer" style="width:40px;height:40px;object-fit:cover;">
+          <?php else: ?>
+          <div class="g-review-avatar"><?= h($init) ?></div>
+          <?php endif; ?>
+          <div>
+            <div class="g-review-name"><?= h($nm) ?></div>
+            <div class="g-review-stars-small"><?= str_repeat('★', (int)$r['rating']) ?><?= str_repeat('☆', 5 - (int)$r['rating']) ?><?php if (!empty($r['relative'])): ?><span style="color:var(--g-ink-light);font-weight:400;"> · <?= h($r['relative']) ?></span><?php endif; ?></div>
+          </div>
+        </div>
+        <?php if (!empty($r['text'])): ?><p class="g-review-text"><?= h(mb_strimwidth($r['text'], 0, 220, '…', 'UTF-8')) ?></p><?php endif; ?>
+      </div>
+      <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
+  </div>
+</section>
+<?php endif; ?>
 
 <?php if ($useBlocks && $testimonials): ?>
 <!-- ═══════ Reviews Summary（新版 — 含五星分布）═══════ -->

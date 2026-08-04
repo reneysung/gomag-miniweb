@@ -2227,3 +2227,13 @@
   .g-pick-rank{left:10px;top:10px}
   .g-pick-name{font-size:1.06rem}
 }
+
+/* ═══════ Google 真實評價區塊（store.php，後台開關開啟才顯示）═══════ */
+.g-google-reviews .g-greview-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.g-greview-badge{display:inline-flex;align-items:center;gap:9px;font-size:1.12rem;font-weight:800;color:var(--g-ink);letter-spacing:-.2px}
+.g-greview-g{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#fff;border:1px solid var(--g-border);font-family:var(--g-font-num,inherit);font-weight:800;font-size:15px;
+  background:conic-gradient(from -45deg,#4285F4 0 25%,#EA4335 0 50%,#FBBC05 0 75%,#34A853 0);color:#fff;-webkit-text-fill-color:#fff;text-shadow:0 0 2px rgba(0,0,0,.35)}
+.g-greview-maps{font-size:.88rem;font-weight:700;color:var(--g-accent);text-decoration:none;white-space:nowrap}
+.g-greview-maps:hover{text-decoration:underline}
+.g-greview-note{margin:10px 0 0;font-size:.82rem;color:var(--g-ink-muted);line-height:1.6}
+.g-google-reviews .g-summary-count{color:#4285F4;font-weight:700}

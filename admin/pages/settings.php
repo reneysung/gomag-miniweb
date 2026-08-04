@@ -75,6 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'legacy_store_id'        => trim($_POST['legacy_store_id'] ?? ''),
         'google_maps_embed'      => trim($_POST['google_maps_embed'] ?? ''),
         'google_place_id'        => trim($_POST['google_place_id'] ?? ''),
+        'show_google_reviews'    => isset($_POST['show_google_reviews']) ? 1 : 0,
         // SEO 欄位 — 主站行銷頁 store.php 用
         'store_meta_title'       => trim($_POST['store_meta_title'] ?? ''),
         'store_meta_desc'        => trim($_POST['store_meta_desc'] ?? ''),
@@ -1316,8 +1317,20 @@ $_cityVarCount = (int)$db->query("SELECT COUNT(*) FROM client_city_pages WHERE c
         <button type="button" class="btn btn-accent" onclick="findGooglePlace()">🔍 自動搜尋</button>
       </div>
       <div class="hint" id="google-find-status">
-        填入 Place ID 後，店家頁會自動顯示 Google 真實評分跟評論。
         按「自動搜尋」會用「店名 + 地址」呼叫 Google 找出對應的 place_id。
+      </div>
+    </div>
+
+    <div class="form-group-admin" style="margin-top:14px; padding-top:14px; border-top:1px dashed var(--border);">
+      <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+        <input type="checkbox" name="show_google_reviews" value="1" style="width:18px; height:18px;"
+               <?= !empty($client['show_google_reviews']) ? 'checked' : '' ?>>
+        <span><strong>在店家頁顯示 Google 真實評價</strong>（星等＋評論）</span>
+      </label>
+      <div class="hint" style="margin-top:6px;">
+        ⚠️ 打開後會顯示 <strong>Google 上的真實評論，包含負評</strong>（擋不掉）。
+        建議先按「🔍 預覽行銷頁」看過評價再決定要不要開。有負評的店就別開、或不填 place_id。
+        需先填上方 Place ID 才有作用。
       </div>
     </div>
   </div>
