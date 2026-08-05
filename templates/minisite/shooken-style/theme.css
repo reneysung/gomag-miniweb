@@ -454,6 +454,13 @@ body {
   background: var(--ss-ivory-soft);
   display: flex;
   flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+.ss-sku:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 32px rgba(60, 40, 20, .13);
 }
 .ss-sku-img {
   width: 100%;
@@ -503,6 +510,16 @@ body {
   padding-top: 14px;
   border-top: 1px solid var(--ss-line);
 }
+.ss-sku-cta {
+  margin-top: 14px;
+  font-family: "Manrope", sans-serif;
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .18em;
+  color: var(--ss-gold);
+  text-transform: uppercase;
+}
+.ss-sku:hover .ss-sku-cta { color: var(--ss-brown); }
 
 /* ═══════ 4 原料介紹（cases page）═══════ */
 .ss-ingredients {

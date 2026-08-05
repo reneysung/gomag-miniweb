@@ -82,7 +82,7 @@ $orderUrl = 'https://www.banshin.com.tw/product/';
     <div class="ss-container">
       <div class="ss-sku-grid">
         <?php foreach ($allSkus as $sku): ?>
-        <article class="ss-sku">
+        <a class="ss-sku" href="<?= htmlspecialchars($orderUrl) ?>" target="_blank" rel="noopener">
           <?php if ($sku['image']): ?>
           <img class="ss-sku-img" src="<?= BASE_URL ?>/<?= htmlspecialchars($sku['image']) ?>" alt="<?= htmlspecialchars($sku['name']) ?>" loading="lazy">
           <?php else: ?>
@@ -95,8 +95,9 @@ $orderUrl = 'https://www.banshin.com.tw/product/';
             <h3 class="ss-sku-name"><?= htmlspecialchars($sku['name']) ?></h3>
             <p class="ss-sku-desc"><?= htmlspecialchars($sku['desc']) ?></p>
             <div class="ss-sku-price"><?= htmlspecialchars($sku['price']) ?></div>
+            <div class="ss-sku-cta">宅配訂購 →</div>
           </div>
-        </article>
+        </a>
         <?php endforeach; ?>
       </div>
     </div>
