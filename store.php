@@ -113,7 +113,7 @@ if (!function_exists('renderStoreCoupon')) {
     </div>
 
     <div class="g-coupon-actions">
-      <button type="button" class="g-coupon-btn g-coupon-btn-dl" id="g-coupon-dl" onclick="gCouponDownload()" disabled>⬇️ 下載優惠券</button>
+      <button type="button" class="g-coupon-btn g-coupon-btn-dl" id="g-coupon-dl" onclick="gCouponDownload()" disabled>📥 儲存優惠券</button>
       <a class="g-coupon-btn g-coupon-btn-line" href="<?= h($lineUrl) ?>" target="_blank" rel="noopener"
          onclick="if(typeof window.gtag==='function'){gtag('event','coupon_line_book',{page_path:location.pathname});}">💬 加 LINE 預約</a>
     </div>
@@ -219,14 +219,15 @@ function gCouponDownload(){
   if(qr && qr.complete && qr.naturalWidth){ try{ x.drawImage(qr,W/2-120,yy,240,240); }catch(e){} yy+=262; } else { yy+=10; }
   if(G_EXPIRY){ x.fillStyle='#888'; x.font='400 22px sans-serif'; x.fillText('有效期限至 '+G_EXPIRY,W/2,yy); }
   x.fillStyle='#1a1a1a'; x.font='700 24px sans-serif'; x.fillText('結帳前出示此券給店家',W/2,H-64);
-  var out=document.getElementById('g-coupon-img-out'), tip=document.getElementById('g-coupon-tip');
+  var out=document.getElementById('g-coupon-img-out'), tip=document.getElementById('g-coupon-tip'), dl=document.getElementById('g-coupon-dl');
   try{
     var url=c.toDataURL('image/png');
-    var a=document.createElement('a'); a.href=url; a.download='優惠券.png'; document.body.appendChild(a); a.click(); a.remove();
-    if(out){ out.src=url; out.hidden=false; }
-    if(tip){ tip.textContent='已產生優惠券 — 手機請長按上圖儲存到相簿 👆'; }
-    if(typeof window.gtag==='function'){ gtag('event','coupon_download',{page_path:location.pathname}); }
-  }catch(e){ if(tip){ tip.textContent='存不下來？直接截圖這張券即可 📸'; } }
+    // 手機瀏覽器對「程式觸發下載」常擋（跳「不支援下載」）→ 改成顯示圖片、請使用者長按儲存（最可靠）
+    if(out){ out.src=url; out.hidden=false; out.scrollIntoView({behavior:'smooth',block:'center'}); }
+    if(dl){ dl.textContent='✅ 已產生，長按圖片儲存'; }
+    if(tip){ tip.innerHTML='👆 <b>長按上方優惠券圖片</b>，選「儲存圖片／加入照片」存到手機<br><span style="opacity:.85;">電腦：對圖片按右鍵另存。存不了就直接截圖 📸</span>'; }
+    if(typeof window.gtag==='function'){ gtag('event','coupon_save_img',{page_path:location.pathname}); }
+  }catch(e){ if(tip){ tip.textContent='請直接截圖這張優惠券即可 📸'; } }
 }
 document.addEventListener('keydown',function(e){ if(e.key==='Escape') gCouponClose(); });
 function gCouponSizeAnts(){
