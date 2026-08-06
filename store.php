@@ -220,13 +220,20 @@ function gCouponDownload(){
   if(G_EXPIRY){ x.fillStyle='#888'; x.font='400 22px sans-serif'; x.fillText('有效期限至 '+G_EXPIRY,W/2,yy); }
   x.fillStyle='#1a1a1a'; x.font='700 24px sans-serif'; x.fillText('結帳前出示此券給店家',W/2,H-64);
   var out=document.getElementById('g-coupon-img-out'), tip=document.getElementById('g-coupon-tip'), dl=document.getElementById('g-coupon-dl');
+  function gCouponShow(src){
+    if(out){ out.src=src; out.hidden=false; out.scrollIntoView({behavior:'smooth',block:'center'}); }
+    if(dl){ dl.textContent='✅ 長按下方圖片儲存'; }
+    if(tip){ tip.innerHTML='👆 <b>長按下方優惠券圖片</b>，選「儲存圖片／加入照片」存到相簿<br><span style="opacity:.85;">存不了就直接截圖 📸</span>'; }
+    if(typeof window.gtag==='function'){ gtag('event','coupon_save_img',{page_path:location.pathname}); }
+  }
   try{
     var url=c.toDataURL('image/png');
-    // 手機瀏覽器對「程式觸發下載」常擋（跳「不支援下載」）→ 改成顯示圖片、請使用者長按儲存（最可靠）
-    if(out){ out.src=url; out.hidden=false; out.scrollIntoView({behavior:'smooth',block:'center'}); }
-    if(dl){ dl.textContent='✅ 已產生，長按圖片儲存'; }
-    if(tip){ tip.innerHTML='👆 <b>長按上方優惠券圖片</b>，選「儲存圖片／加入照片」存到手機<br><span style="opacity:.85;">電腦：對圖片按右鍵另存。存不了就直接截圖 📸</span>'; }
-    if(typeof window.gtag==='function'){ gtag('event','coupon_save_img',{page_path:location.pathname}); }
+    if(dl){ dl.textContent='處理中…'; }
+    // data URI 安卓長按存不了 → 傳伺服器換成「真實網址的圖」，長按才會出現「儲存圖片」；失敗退回 data URI
+    fetch(G_BASE+'/coupon_image.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'png='+encodeURIComponent(url)})
+      .then(function(r){return r.json();})
+      .then(function(d){ gCouponShow((d&&d.ok&&d.url)?d.url:url); })
+      .catch(function(){ gCouponShow(url); });
   }catch(e){ if(tip){ tip.textContent='請直接截圖這張優惠券即可 📸'; } }
 }
 document.addEventListener('keydown',function(e){ if(e.key==='Escape') gCouponClose(); });
