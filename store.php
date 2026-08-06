@@ -83,10 +83,10 @@ if (!function_exists('renderStoreCoupon')) {
       <div class="g-coupon-ticket-icon">🎁</div>
       <div class="g-coupon-card-text">
         <div class="g-coupon-card-title"><?= h($title) ?></div>
-        <div class="g-coupon-card-sub">加 LINE 好友即可領取・點我開券</div>
+        <div class="g-coupon-card-sub">點我開券・存到手機出示給店家</div>
       </div>
     </div>
-    <span class="g-coupon-cta">🔒 加 LINE 領取優惠券</span>
+    <span class="g-coupon-cta">🎁 領取優惠券</span>
   </div>
 </section>
 
@@ -111,6 +111,14 @@ if (!function_exists('renderStoreCoupon')) {
       <?php endif; ?>
       <div class="g-coupon-voucher-show">📲 結帳前出示此 QR／核銷碼給店家</div>
     </div>
+
+    <div class="g-coupon-actions">
+      <button type="button" class="g-coupon-btn g-coupon-btn-dl" id="g-coupon-dl" onclick="gCouponDownload()" disabled>⬇️ 下載優惠券</button>
+      <a class="g-coupon-btn g-coupon-btn-line" href="<?= h($lineUrl) ?>" target="_blank" rel="noopener"
+         onclick="if(typeof window.gtag==='function'){gtag('event','coupon_line_book',{page_path:location.pathname});}">💬 加 LINE 預約</a>
+    </div>
+    <p class="g-coupon-tip" id="g-coupon-tip">存不下來？直接截圖這張券也可以 📸</p>
+    <img id="g-coupon-img-out" class="g-coupon-img-out" alt="優惠券圖片（手機請長按儲存）" hidden>
   </div>
 </div>
 
@@ -153,25 +161,36 @@ if (!function_exists('renderStoreCoupon')) {
 .g-coupon-voucher-desc{font-size:.85rem;line-height:1.6;opacity:.95;text-align:left;background:rgba(255,255,255,.12);
   border-radius:10px;padding:10px 12px;margin-bottom:14px;}
 .g-coupon-voucher-show{font-size:.92rem;font-weight:800;background:rgba(0,0,0,.18);border-radius:999px;padding:9px;}
+.g-coupon-actions{display:flex;gap:10px;margin-top:14px;}
+.g-coupon-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;text-align:center;font-weight:800;font-size:1rem;
+  padding:14px 10px;border-radius:12px;border:none;cursor:pointer;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.25);transition:transform .12s,opacity .12s;}
+.g-coupon-btn:active{transform:scale(.97);}
+.g-coupon-btn-dl{background:#fff;color:#FF5A36;}
+.g-coupon-btn-dl:disabled{opacity:.5;cursor:default;}
+.g-coupon-btn-line{background:#06C755;color:#fff;}
+.g-coupon-tip{text-align:center;color:#fff;font-size:.82rem;opacity:.92;margin:12px 0 0;line-height:1.5;}
+.g-coupon-img-out{display:block;width:100%;max-width:340px;margin:14px auto 0;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.4);}
 </style>
 <script>
+var G_LINE=<?= $lineJs ?>, G_SLUG=<?= $slugJs ?>, G_BASE=<?= $baseJs ?>;
+var G_BRAND=<?= json_encode($brand, JSON_UNESCAPED_UNICODE) ?>, G_TITLE=<?= json_encode($title, JSON_UNESCAPED_UNICODE) ?>, G_EXPIRY=<?= json_encode($expiry, JSON_UNESCAPED_UNICODE) ?>;
+
+// 點券：只開 modal + 產核銷碼（不再自動跳 LINE，避免安卓跳走回不來看不到券）
 function gCouponUnlock(){
-  var line=<?= $lineJs ?>, slug=<?= $slugJs ?>, base=<?= $baseJs ?>;
-  if(line){ window.open(line,'_blank','noopener'); }
   var m=document.getElementById('g-coupon-modal');
   if(m){ m.classList.add('open'); m.setAttribute('aria-hidden','false'); }
-  if(typeof window.gtag==='function'){ gtag('event','coupon_get',{page_path:location.pathname}); }
+  if(typeof window.gtag==='function'){ gtag('event','coupon_open',{page_path:location.pathname}); }
   var box=document.getElementById('g-coupon-code-val'), qr=document.getElementById('g-coupon-qr');
   if(!box || box.dataset.done==='1') return;   // 同頁已領過就不重發
   box.textContent='領取中…';
-  fetch(base+'/coupon_claim.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'slug='+encodeURIComponent(slug)})
+  fetch(G_BASE+'/coupon_claim.php',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'slug='+encodeURIComponent(G_SLUG)})
     .then(function(r){return r.json();})
     .then(function(d){
       if(d&&d.ok&&d.code){
         box.textContent=d.display||d.code; box.dataset.done='1';
-        if(qr){ var ru=base+'/coupon_redeem.php?c='+encodeURIComponent(d.code);
-          qr.src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=8&data='+encodeURIComponent(ru);
-          qr.hidden=false; }
+        var ru=G_BASE+'/coupon_redeem.php?c='+encodeURIComponent(d.code);
+        if(qr){ qr.crossOrigin='anonymous'; qr.src='https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=6&data='+encodeURIComponent(ru); qr.hidden=false; }
+        var dl=document.getElementById('g-coupon-dl'); if(dl){ dl.disabled=false; }
       } else { box.textContent='請稍後再試'; }
     })
     .catch(function(){ box.textContent='請稍後再試'; });
@@ -179,6 +198,35 @@ function gCouponUnlock(){
 function gCouponClose(){
   var m=document.getElementById('g-coupon-modal');
   if(m){ m.classList.remove('open'); m.setAttribute('aria-hidden','true'); }
+}
+// 下載優惠券：把券畫成一張 PNG（含店名/優惠/核銷碼/QR）→ 觸發下載 + 顯示可長按儲存的圖
+function gCouponRR(x,rx,ry,w,h,r){ x.beginPath(); x.moveTo(rx+r,ry); x.arcTo(rx+w,ry,rx+w,ry+h,r); x.arcTo(rx+w,ry+h,rx,ry+h,r); x.arcTo(rx,ry+h,rx,ry,r); x.arcTo(rx,ry,rx+w,ry,r); x.closePath(); }
+function gCouponWrap(x,text,cx,cy,maxW,lh){ var chars=(text||'').split(''),line='',lines=[]; for(var i=0;i<chars.length;i++){ var t=line+chars[i]; if(x.measureText(t).width>maxW && line){ lines.push(line); line=chars[i]; } else line=t; } if(line)lines.push(line); for(var j=0;j<lines.length;j++){ x.fillText(lines[j],cx,cy+j*lh); } return lines.length*lh; }
+function gCouponDownload(){
+  var qr=document.getElementById('g-coupon-qr');
+  var code=((document.getElementById('g-coupon-code-val')||{}).textContent||'').trim();
+  var W=720,H=1000,c=document.createElement('canvas'); c.width=W; c.height=H;
+  var x=c.getContext('2d');
+  x.fillStyle='#FF5A36'; x.fillRect(0,0,W,H);
+  gCouponRR(x,34,34,W-68,H-68,30); x.fillStyle='#fff'; x.fill();
+  x.textAlign='center'; x.textBaseline='alphabetic';
+  x.fillStyle='#FF5A36'; x.font='700 30px sans-serif'; x.fillText('獨家優惠券',W/2,120);
+  x.fillStyle='#1a1a1a'; x.font='700 28px sans-serif'; x.fillText(G_BRAND,W/2,172);
+  x.fillStyle='#111'; x.font='900 44px sans-serif'; var used=gCouponWrap(x,G_TITLE,W/2,246,W-170,54); var yy=246+used+26;
+  x.fillStyle='#FFF3EF'; gCouponRR(x,80,yy,W-160,96,16); x.fill();
+  x.fillStyle='#c0392b'; x.font='700 20px sans-serif'; x.fillText('核銷碼（出示給店家）',W/2,yy+34);
+  x.fillStyle='#FF5A36'; x.font='900 40px monospace'; x.fillText(code||'—',W/2,yy+78); yy+=132;
+  if(qr && qr.complete && qr.naturalWidth){ try{ x.drawImage(qr,W/2-120,yy,240,240); }catch(e){} yy+=262; } else { yy+=10; }
+  if(G_EXPIRY){ x.fillStyle='#888'; x.font='400 22px sans-serif'; x.fillText('有效期限至 '+G_EXPIRY,W/2,yy); }
+  x.fillStyle='#1a1a1a'; x.font='700 24px sans-serif'; x.fillText('結帳前出示此券給店家',W/2,H-64);
+  var out=document.getElementById('g-coupon-img-out'), tip=document.getElementById('g-coupon-tip');
+  try{
+    var url=c.toDataURL('image/png');
+    var a=document.createElement('a'); a.href=url; a.download='優惠券.png'; document.body.appendChild(a); a.click(); a.remove();
+    if(out){ out.src=url; out.hidden=false; }
+    if(tip){ tip.textContent='已產生優惠券 — 手機請長按上圖儲存到相簿 👆'; }
+    if(typeof window.gtag==='function'){ gtag('event','coupon_download',{page_path:location.pathname}); }
+  }catch(e){ if(tip){ tip.textContent='存不下來？直接截圖這張券即可 📸'; } }
 }
 document.addEventListener('keydown',function(e){ if(e.key==='Escape') gCouponClose(); });
 function gCouponSizeAnts(){
