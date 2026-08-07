@@ -221,10 +221,16 @@ function gCouponDownload(){
   x.fillStyle='#1a1a1a'; x.font='700 24px sans-serif'; x.fillText('結帳前出示此券給店家',W/2,H-64);
   var out=document.getElementById('g-coupon-img-out'), tip=document.getElementById('g-coupon-tip'), dl=document.getElementById('g-coupon-dl');
   function gCouponShow(src){
+    // LINE／FB 內建瀏覽器會擋所有下載與長按存圖（它們的限制，非本站問題）→ 只能截圖
+    var inApp=/\bLine\/|FBAN|FBAV|FB_IAB|Instagram/i.test(navigator.userAgent||'');
     if(out){ out.src=src; out.hidden=false; out.scrollIntoView({behavior:'smooth',block:'center'}); }
-    if(dl){ dl.textContent='✅ 長按下方圖片儲存'; }
-    if(tip){ tip.innerHTML='👆 <b>長按下方優惠券圖片</b>，選「儲存圖片／加入照片」存到相簿<br><span style="opacity:.85;">存不了就直接截圖 📸</span>'; }
-    if(typeof window.gtag==='function'){ gtag('event','coupon_save_img',{page_path:location.pathname}); }
+    if(dl){ dl.textContent=inApp?'✅ 券已產生，請截圖保存':'✅ 長按下方圖片儲存'; }
+    if(tip){
+      tip.innerHTML = inApp
+        ? '📸 <b>直接截圖這張券即可保存</b><br><span style="opacity:.85;">（在 LINE／FB 內無法下載圖片，這是它們的限制。想要乾淨券圖：點畫面右上角「⋯」→「用預設瀏覽器開啟」，再長按存圖）</span>'
+        : '👆 <b>長按下方優惠券圖片</b>，選「儲存圖片／加入照片」存到相簿<br><span style="opacity:.85;">或直接截圖也可以 📸</span>';
+    }
+    if(typeof window.gtag==='function'){ gtag('event','coupon_save_img',{page_path:location.pathname,in_app:inApp}); }
   }
   try{
     var url=c.toDataURL('image/png');
