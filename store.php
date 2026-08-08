@@ -534,7 +534,7 @@ if ($cityVariant) {  // 城市變體頁：麵包屑用變體城市，不從地�
     <span class="sep">›</span>
     <?php endif; ?>
     <?php if ($client['cat_slug']): ?>
-    <a href="<?= BASE_URL ?>/category.php?slug=<?= h($client['cat_slug']) ?>"><?= h($client['cat_icon']) ?> <?= h($client['cat_name']) ?></a>
+    <a href="<?= BASE_URL ?>/category/<?= h($client['cat_slug']) ?>"><?= h($client['cat_icon']) ?> <?= h($client['cat_name']) ?></a>
     <span class="sep">›</span>
     <?php endif; ?>
     <span style="color:var(--m-primary); font-weight:600;"><?= h($client['brand_name']) ?></span>
@@ -574,7 +574,7 @@ if ($showTopBanner):
   <div class="g-store-hero-inner">
     <div>
       <?php if ($client['cat_name']): ?>
-      <a href="<?= BASE_URL ?>/category.php?slug=<?= h($client['cat_slug']) ?>" class="g-store-hero-cat-pill">
+      <a href="<?= BASE_URL ?>/category/<?= h($client['cat_slug']) ?>" class="g-store-hero-cat-pill">
         <?= h($client['cat_icon']) ?> <?= h($client['cat_name']) ?>
       </a>
       <?php endif; ?>
@@ -692,7 +692,7 @@ if ($showTopBanner):
       <div>
         <?php if ($client['cat_name']): ?>
         <div style="margin-bottom:8px;">
-          <a href="<?= BASE_URL ?>/category.php?slug=<?= h($client['cat_slug']) ?>"
+          <a href="<?= BASE_URL ?>/category/<?= h($client['cat_slug']) ?>"
              style="display:inline-block; padding:4px 12px; background:var(--m-bg); border-radius:999px; font-size:.8rem; color:var(--m-text-muted);">
             <?= h($client['cat_icon']) ?> <?= h($client['cat_name']) ?>
           </a>
@@ -1495,7 +1495,7 @@ $otherCities = $cityVariant
     <div class="g-similar-head">
       <h2 class="g-similar-title">類似的<?= h($client['cat_name'] ?? '') ?>店家</h2>
       <?php if ($client['cat_slug']): ?>
-      <a href="<?= BASE_URL ?>/category.php?slug=<?= h($client['cat_slug']) ?>" class="g-section-link">看全部 <?= h($client['cat_name']) ?></a>
+      <a href="<?= BASE_URL ?>/category/<?= h($client['cat_slug']) ?>" class="g-section-link">看全部 <?= h($client['cat_name']) ?></a>
       <?php endif; ?>
     </div>
     <div class="g-similar-grid">

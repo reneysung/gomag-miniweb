@@ -27,8 +27,8 @@ if (!$slug) {
 
     $pageTitle = '所有分類｜店家好口碑';
     $metaDesc  = '瀏覽店家好口碑所有店家分類：餐飲美食、居家服務、美容美髮、教育學習等。';
-    // canonical 固定指乾淨網址 /category（避免 category.php 被判為 / 的重複）
-    $canonical = BASE_URL . '/category';
+    // canonical：總覽頁實際網址就是 /category.php（無 bare /category rewrite），self-canonical
+    $canonical = BASE_URL . '/category.php';
     require_once __DIR__ . '/main/layout_head.php';
     ?>
 
@@ -47,7 +47,7 @@ if (!$slug) {
 
         <div class="m-cat-grid" style="grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));">
           <?php foreach ($allCats as $cat): ?>
-          <a class="m-cat-card" href="<?= BASE_URL ?>/category.php?slug=<?= h($cat['slug']) ?>">
+          <a class="m-cat-card" href="<?= BASE_URL ?>/category/<?= h($cat['slug']) ?>">
             <div class="icon" style="font-size:2.4rem;"><?= h($cat['icon']) ?></div>
             <div class="name"><?= h($cat['name']) ?></div>
             <div class="count"><?= $cat['client_count'] ?> 家店家</div>

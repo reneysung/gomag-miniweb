@@ -101,6 +101,8 @@ if ($q !== '') {
 
 $pageTitle = $q ? "搜尋「{$q}」｜店家好口碑" : '搜尋店家｜店家好口碑';
 $metaDesc  = $q ? "搜尋「{$q}」找到 " . count($results) . " 家店家。" : '搜尋台南店家、服務、地點。';
+// 搜尋結果頁不進索引（每個 ?q= 都是薄頁、又互相雷同）；follow 讓連結權重仍流動
+$metaRobots = 'noindex,follow';
 
 require_once __DIR__ . '/main/layout_head.php';
 ?>

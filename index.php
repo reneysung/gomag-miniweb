@@ -258,7 +258,7 @@ require_once __DIR__ . '/main/layout_head.php';
           $coverUrl = h(mediaUrl($cover));
       }
     ?>
-    <a class="g-explore-card" href="<?= BASE_URL ?>/category.php?slug=<?= h($cat['slug']) ?>">
+    <a class="g-explore-card" href="<?= BASE_URL ?>/category/<?= h($cat['slug']) ?>">
       <?php if ($coverUrl): ?>
       <div class="g-explore-card-img" style="background-image:url('<?= h($coverUrl) ?>');"></div>
       <?php else: ?>
@@ -312,7 +312,7 @@ require_once __DIR__ . '/main/layout_head.php';
       <h2 class="g-section-title"><?= h($catGroup['cat_name']) ?>精選</h2>
       <p class="g-section-sub">在地口碑代表店家</p>
     </div>
-    <a href="<?= BASE_URL ?>/category.php?slug=<?= h($catGroup['cat_slug']) ?>" class="g-section-link">看全部 <?= h($catGroup['cat_name']) ?></a>
+    <a href="<?= BASE_URL ?>/category/<?= h($catGroup['cat_slug']) ?>" class="g-section-link">看全部 <?= h($catGroup['cat_name']) ?></a>
   </div>
 
   <div class="g-store-grid">

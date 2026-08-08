@@ -49,7 +49,7 @@ require_once __DIR__ . '/main/layout_head.php';
   </div>
   <div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center;">
     <?php foreach ($cats as $c): ?>
-    <a href="<?= BASE_URL ?>/category.php?slug=<?= h($c['slug']) ?>"
+    <a href="<?= BASE_URL ?>/category/<?= h($c['slug']) ?>"
        style="display:inline-flex; align-items:center; gap:6px; background:white; border:1.5px solid var(--g-border); color:var(--g-ink); padding:8px 14px; border-radius:100px; font-size:14px; text-decoration:none; transition:all .2s;"
        onmouseover="this.style.borderColor='var(--g-ink)'; this.style.background='var(--g-bg-alt)';"
        onmouseout="this.style.borderColor='var(--g-border)'; this.style.background='white';">

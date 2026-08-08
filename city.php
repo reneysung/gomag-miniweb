@@ -561,7 +561,7 @@ function renderCityStoreCard(array $cl, string $currentCity = ''): void {
       </h2>
     </div>
     <?php if ($catSlug): ?>
-    <a href="<?= BASE_URL ?>/category.php?slug=<?= h($catSlug) ?>" class="g-section-link">看全台<?= h($catName) ?></a>
+    <a href="<?= BASE_URL ?>/category/<?= h($catSlug) ?>" class="g-section-link">看全台<?= h($catName) ?></a>
     <?php endif; ?>
   </div>
 

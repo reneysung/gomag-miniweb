@@ -309,7 +309,7 @@ if ($navServices):
     <div>
       <h2 class="g-section-title"><?= h($catIcon) ?> <?= h($cityName) ?><?= h($pageLabel) ?>店家 <span class="g-section-title-meta">（<?= $totalStores ?> 家）</span></h2>
     </div>
-    <a href="<?= BASE_URL ?>/category.php?slug=<?= h($catSlug) ?>" class="g-section-link">看全台<?= h($catName) ?></a>
+    <a href="<?= BASE_URL ?>/category/<?= h($catSlug) ?>" class="g-section-link">看全台<?= h($catName) ?></a>
   </div>
 
   <?php if ($isCurated): /* ═══ 後台勾選版：編號清單 + 每家推薦理由 ═══ */ ?>
@@ -460,7 +460,7 @@ if ($relGuides):
     <a href="<?= BASE_URL ?>/citycat.php?slug=<?= h($slug) ?>&cat=<?= h($catSlug) ?>" class="g-cta-btn g-cta-btn-secondary">← 回<?= h($cityName) ?><?= h($catName) ?></a>
     <?php endif; ?>
     <a href="<?= BASE_URL ?>/city.php?slug=<?= h($slug) ?>" class="g-cta-btn g-cta-btn-secondary">← 回<?= h($cityName) ?>全部店家</a>
-    <a href="<?= BASE_URL ?>/category.php?slug=<?= h($catSlug) ?>" class="g-cta-btn g-cta-btn-secondary">看全台<?= h($catName) ?> →</a>
+    <a href="<?= BASE_URL ?>/category/<?= h($catSlug) ?>" class="g-cta-btn g-cta-btn-secondary">看全台<?= h($catName) ?> →</a>
   </div>
 </section>
 

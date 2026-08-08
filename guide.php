@@ -92,7 +92,7 @@ if ($slug) {
         <a href="<?= BASE_URL ?>/city/<?= h($guide['city_slug']) ?>/<?= h($gCat['slug']) ?>" class="g-cta-btn g-cta-btn-primary"><?= h($gCity) ?><?= h($gCat['name']) ?>店家 →</a>
         <?php endif; ?>
         <?php if ($gCat): ?>
-        <a href="<?= BASE_URL ?>/category.php?slug=<?= h($gCat['slug']) ?>" class="g-cta-btn g-cta-btn-secondary">看全台<?= h($gCat['name']) ?> →</a>
+        <a href="<?= BASE_URL ?>/category/<?= h($gCat['slug']) ?>" class="g-cta-btn g-cta-btn-secondary">看全台<?= h($gCat['name']) ?> →</a>
         <?php endif; ?>
         <a href="<?= BASE_URL ?>/guide.php" class="g-cta-btn g-cta-btn-secondary">← 更多攻略</a>
       </div>
