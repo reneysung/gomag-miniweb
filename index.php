@@ -153,6 +153,8 @@ $pageTitle = getPlatformSetting('main_meta_title', '店家好口碑｜全台在�
 // 首頁描述：後台「平台設定 → 首頁 Meta Description」填了就用，沒填則用動態 fallback
 $metaDesc  = getPlatformSetting('main_meta_desc', "匯集 {$totalClients}+ 家全台優質店家：餐飲美食、居家服務、美容美髮、專業服務 — 一站式店家平台。");
 $isHomepage = true;  // 觸發 main/layout_head.php 的 WebSite + SearchAction schema
+// canonical 固定指根網址 /（避免 /index.php 被判為 / 的重複、Google 選不同 canonical）
+$canonical = BASE_URL . '/';
 
 require_once __DIR__ . '/main/layout_head.php';
 ?>

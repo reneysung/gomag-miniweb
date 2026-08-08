@@ -27,6 +27,8 @@ if (!$slug) {
 
     $pageTitle = '所有分類｜店家好口碑';
     $metaDesc  = '瀏覽店家好口碑所有店家分類：餐飲美食、居家服務、美容美髮、教育學習等。';
+    // canonical 固定指乾淨網址 /category（避免 category.php 被判為 / 的重複）
+    $canonical = BASE_URL . '/category';
     require_once __DIR__ . '/main/layout_head.php';
     ?>
 
@@ -94,6 +96,8 @@ $metaDesc = "店家好口碑「{$cat['name']}」分類共收錄 " . count($clien
           . ($_cityNames ? '，分布於' . implode('、', $_cityNames) . (count($_catCities) > 4 ? '等縣市' : '') : '')
           . '。每家都有服務項目、真實評價與聯絡方式，可直接比較後聯絡。'
           . ($cat['description'] ?: '');
+// canonical 固定指乾淨網址 /category/{slug}（避免 ?slug= 舊網址被判重複、Google 選不同 canonical）
+$canonical = BASE_URL . '/category/' . $slug;
 require_once __DIR__ . '/main/layout_head.php';
 ?>
 
