@@ -370,6 +370,15 @@ if ($citySlug !== '') {
     }
 }
 
+// 有小官網的客戶：行銷頁若已有自訂 landing（走口碑/評價角度，見下方 SEO 註解），共用的
+// about_text + services 會與小官網(品牌/服務頁)重複 → GSC 判「重複網頁 / 選了不同 canonical」。
+// 此時行銷頁只留自訂 landing，藏掉共用兩塊（不動 canonical、不改共用欄位、小官網不受影響）。
+// 排除示範性質客戶（happysteakcyi / fooddemo）：其行銷頁保留完整 about+services。
+$_dedupExclude = ['happysteakcyi', 'fooddemo'];
+$dupWithMinisite = $miniSiteUrl
+    && !empty($client['landing_extra_content'])
+    && !in_array($client['slug'], $_dedupExclude, true);
+
 // Hero 圖顯示方式（cover=照片填滿 / contain=Logo 完整顯示）— 新舊 hero 共用
 $_heroFit = (($client['hero_image_fit'] ?? 'cover') === 'contain') ? 'contain' : 'cover';
 // 舊版 hero 圖片配置：右圖卡優先用 Logo（沒 Logo 才用主圖）；上方主圖橫幅只在「Logo 與主圖是兩張不同圖」時才出現（避免同圖重複）
@@ -879,7 +888,7 @@ if ($useBlocks && !empty($client['photos'])) {
 <!-- ═══════ 關於我們 ═══════ -->
 <?php
 $aboutTags = !empty($client['about_tags']) ? json_decode($client['about_tags'], true) : [];
-if ($client['about_text'] || ($aboutTags && is_array($aboutTags))):
+if (!$dupWithMinisite && ($client['about_text'] || ($aboutTags && is_array($aboutTags)))):
 ?>
 <section class="m-section">
   <div class="m-container" style="max-width:800px;">
@@ -1042,8 +1051,8 @@ if ($client['about_text'] || ($aboutTags && is_array($aboutTags))):
 
 <?php /* 城市變體勾「只顯示自寫內容」→ 藏「服務項目以下」共用區塊（評價/網友分享等）；城市切換 nav 例外保留 */ ?>
 <?php if (!$hideShared): ?>
-<!-- ═══════ 服務項目（舊 fallback — 沒 blocks 才用）═══════ -->
-<?php if (!$useBlocks && $services): ?>
+<!-- ═══════ 服務項目（舊 fallback — 沒 blocks 才用；有小官網+自訂landing 則藏，避免與小官網重複）═══════ -->
+<?php if (!$useBlocks && $services && !$dupWithMinisite): ?>
 <section class="m-section" style="background:var(--m-bg);">
   <div class="m-container">
     <h2 class="m-section-title">服務項目</h2>
