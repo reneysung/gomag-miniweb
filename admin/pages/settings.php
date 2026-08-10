@@ -1319,6 +1319,7 @@ $_cityVarCount = (int)$db->query("SELECT COUNT(*) FROM client_city_pages WHERE c
       <div class="hint" id="google-find-status">
         按「自動搜尋」會用「店名 + 地址」呼叫 Google 找出對應的 place_id。
       </div>
+      <div id="g-place-preview" style="margin-top:8px; font-size:.92rem; line-height:1.5;"></div>
     </div>
 
     <div class="form-group-admin" style="margin-top:14px; padding-top:14px; border-top:1px dashed var(--border);">
@@ -1352,8 +1353,9 @@ function findGooglePlace() {
     .then(d => {
       if (d.ok) {
         input.value = d.place_id;
-        status.innerHTML = '✅ 找到了！記得按「儲存設定」';
+        status.innerHTML = '✅ 找到了！請看下方確認是不是本店，再按「儲存設定」';
         status.style.color = 'var(--success)';
+        checkGooglePlace();
       } else {
         status.innerHTML = '❌ ' + (d.msg || '失敗');
         status.style.color = 'var(--danger)';
@@ -1364,6 +1366,45 @@ function findGooglePlace() {
       status.style.color = 'var(--danger)';
     });
 }
+
+// 防呆：查這個 place_id 實際是哪家店，跟本店名比對，配錯時大聲警告
+var G_BRAND_ADMIN = '<?= h(addslashes($client['brand_name'] ?? '')) ?>';
+function gPlaceMatch(gname){
+  if(!gname || !G_BRAND_ADMIN) return true;
+  var b = G_BRAND_ADMIN.replace(/工作室|有限公司|股份|企業社|美學|沙龍|的店|studio/gi,'').trim();
+  if(b.length < 2) b = G_BRAND_ADMIN.slice(0,3);
+  for(var len=Math.min(4,b.length); len>=2; len--)
+    for(var i=0; i+len<=b.length; i++)
+      if(gname.indexOf(b.substr(i,len)) >= 0) return true;
+  return false;
+}
+function checkGooglePlace(){
+  var input = document.getElementById('google_place_id');
+  var box = document.getElementById('g-place-preview');
+  if(!input || !box) return;
+  var pid = (input.value||'').trim();
+  if(!pid){ box.innerHTML=''; return; }
+  box.innerHTML = '<span style="color:var(--muted)">查詢這個 ID 是哪家店…</span>';
+  var fd = new FormData(); fd.append('place_id', pid);
+  fetch('<?= BASE_URL ?>/admin/check_place.php', { method:'POST', body:fd })
+    .then(r => r.json())
+    .then(d => {
+      if(!d.ok){ box.innerHTML = '<span style="color:var(--danger)">⚠️ ' + (d.msg||'查不到此 place_id') + '</span>'; return; }
+      var stars = d.rating ? (' ★' + d.rating + ' (' + d.cnt + ' 則)') : ' （無評價）';
+      box.innerHTML = '此 ID 抓到：<strong>' + d.name + '</strong>' + stars + '　'
+        + (gPlaceMatch(d.name)
+            ? '<span style="color:var(--success);font-weight:700;">✓ 與本店相符</span>'
+            : '<span style="color:#fff;background:var(--danger);padding:3px 9px;border-radius:6px;font-weight:800;">⚠ 這不是「' + G_BRAND_ADMIN + '」！很可能配錯店，開啟前務必確認</span>');
+    })
+    .catch(e => { box.innerHTML = '<span style="color:var(--danger)">查詢失敗</span>'; });
+}
+document.addEventListener('DOMContentLoaded', function(){
+  var inp = document.getElementById('google_place_id');
+  if(inp){
+    if((inp.value||'').trim()) checkGooglePlace();
+    inp.addEventListener('blur', checkGooglePlace);
+  }
+});
 </script>
 
 <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">

@@ -100,6 +100,40 @@ function getGoogleReviews(string $placeId, bool $forceRefresh = false): ?array
 }
 
 /**
+ * 輕量查一個 place_id 的基本資料（店名/星等/則數/地址），供後台防呆預覽用。
+ * 只取 displayName 等基本欄位，不抓 reviews（較省 API）。查不到回 null。
+ */
+function getGooglePlaceBasic(string $placeId): ?array
+{
+    if (empty($placeId)) return null;
+    $apiKey = getPlatformSetting('google_maps_api_key', '');
+    if (empty($apiKey)) return null;
+
+    $ch = curl_init('https://places.googleapis.com/v1/places/' . rawurlencode($placeId));
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 8,
+        CURLOPT_HTTPHEADER => [
+            'X-Goog-Api-Key: ' . $apiKey,
+            'X-Goog-FieldMask: id,displayName,rating,userRatingCount,formattedAddress',
+            'Accept-Language: zh-TW',
+        ],
+    ]);
+    $resp = curl_exec($ch);
+    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    if ($code !== 200 || !$resp) return null;
+    $d = json_decode($resp, true);
+    if (!is_array($d)) return null;
+    return [
+        'name'    => $d['displayName']['text'] ?? '',
+        'rating'  => isset($d['rating']) ? (float)$d['rating'] : null,
+        'cnt'     => (int)($d['userRatingCount'] ?? 0),
+        'address' => $d['formattedAddress'] ?? '',
+    ];
+}
+
+/**
  * 用店家名 + 地址自動找 Google place_id（一次性 / 後台批次用）
  *
  * @param string $name 店家名
