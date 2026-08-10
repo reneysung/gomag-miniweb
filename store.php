@@ -109,16 +109,16 @@ if (!function_exists('renderStoreCoupon')) {
       <?php if ($desc !== ''): ?>
       <div class="g-coupon-voucher-desc"><?= nl2br(h($desc)) ?></div>
       <?php endif; ?>
-      <div class="g-coupon-voucher-show">📲 結帳前出示此 QR／核銷碼給店家</div>
+      <div class="g-coupon-voucher-show">📲 優惠請出示此圖給店家</div>
     </div>
 
-    <div class="g-coupon-actions">
-      <button type="button" class="g-coupon-btn g-coupon-btn-dl" id="g-coupon-dl" onclick="gCouponDownload()" disabled>📥 儲存優惠券</button>
-      <a class="g-coupon-btn g-coupon-btn-line" href="<?= h($lineUrl) ?>" target="_blank" rel="noopener"
-         onclick="if(typeof window.gtag==='function'){gtag('event','coupon_line_book',{page_path:location.pathname});}">💬 加 LINE 預約</a>
-    </div>
-    <p class="g-coupon-tip" id="g-coupon-tip">存不下來？直接截圖這張券也可以 📸</p>
-    <img id="g-coupon-img-out" class="g-coupon-img-out" alt="優惠券圖片（手機請長按儲存）" hidden>
+    <a class="g-coupon-btn g-coupon-btn-line g-coupon-btn-hero" href="<?= h($lineUrl) ?>" target="_blank" rel="noopener"
+       onclick="if(typeof window.gtag==='function'){gtag('event','coupon_line_book',{page_path:location.pathname});}">💬 加 LINE 搶先預約</a>
+    <p class="g-coupon-tip" id="g-coupon-tip">想留著這張券？直接截圖保存 📸
+      <button type="button" id="g-coupon-dl" onclick="gCouponDownload()" disabled
+        style="background:none;border:0;color:#fff;text-decoration:underline;cursor:pointer;font-size:.82rem;opacity:.9;padding:0;">或存成圖片</button>
+    </p>
+    <img id="g-coupon-img-out" class="g-coupon-img-out" alt="優惠券圖片" hidden>
   </div>
 </div>
 
@@ -168,8 +168,10 @@ if (!function_exists('renderStoreCoupon')) {
 .g-coupon-btn-dl{background:#fff;color:#FF5A36;}
 .g-coupon-btn-dl:disabled{opacity:.5;cursor:default;}
 .g-coupon-btn-line{background:#06C755;color:#fff;}
+.g-coupon-btn-hero{display:flex;width:100%;margin-top:14px;font-size:1.12rem;padding:16px;box-shadow:0 6px 20px rgba(6,199,85,.45);}
 .g-coupon-tip{text-align:center;color:#fff;font-size:.82rem;opacity:.92;margin:12px 0 0;line-height:1.5;}
 .g-coupon-img-out{display:block;width:100%;max-width:340px;margin:14px auto 0;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.4);}
+.g-coupon-img-out[hidden]{display:none;}
 </style>
 <script>
 var G_LINE=<?= $lineJs ?>, G_SLUG=<?= $slugJs ?>, G_BASE=<?= $baseJs ?>;
