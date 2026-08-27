@@ -24,6 +24,10 @@ $slug_redirects = [
     '065957487'          => '062263168',            // 二鍋壽喜燒（id=90 → 13）
     'cleaningcompany5'   => 'sanfengclean',         // 三峰清潔公司（id=197 → 218）
     'weddingbanquet8'    => 'hongchu',              // 洪廚囍宴舊網址（排「台南辦桌推薦」#3，救回 SEO）
+    // ── 重複資料合併（同店多筆）→ 301 到主檔（2026-08-27）──
+    '063133213'          => '062133729',            // 作愚行（id=82 → 83）
+    '0981787769'         => '062133729',            // 夠創意/作愚行同店（id=84 → 83）
+    // 注意：sanyuan(#287) 是 sanyuan.wmf.com.tw 小官網試點，非重複，勿加 301
 ];
 if (isset($slug_redirects[$sub])) {
     $newSub = $slug_redirects[$sub];
@@ -339,7 +343,7 @@ $miniSiteUrl = null;
 if ($client['has_minisite']) {
     $miniSiteUrl = (IS_LOCAL || IS_STAGING)
         ? BASE_URL . '/site/index.php?sub=' . urlencode($client['subdomain'] ?? $client['slug'])
-        : 'https://' . ($client['subdomain'] ?? $client['slug']) . '.' . MINISITE_DOMAIN . '/';
+        : 'https://' . ($client['subdomain'] ?? $client['slug']) . '.' . clientMinisiteDomain($client) . '/';
 }
 
 // ── 城市行銷頁變體 /store/{slug}/{city} ──
