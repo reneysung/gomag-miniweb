@@ -15,6 +15,39 @@ $extraCss = [BASE_URL . '/assets/css/gomag.css'];
 // 攻略文卡片連結
 $guideUrl = fn($s) => (IS_LOCAL || IS_STAGING) ? BASE_URL . '/guide.php?slug=' . urlencode($s) : 'https://www.gomag.com.tw/guide/' . urlencode($s);
 
+// ─── 攻略 301 → 子服務頁（反自蝕，2026-09-12）───
+// 這些 -recommend／懶人包 與 IA 子服務頁打同一個「某城某服務推薦」清單詞，
+// 子服務頁才是主頁（有店家卡、家數更多）→ 權重併回子服務頁，避免自我競食。
+$guide_redirects = [
+    // 裝潢細清 ×7（templated 多城懶人包）
+    'tainan-fine-clean-recommend'      => '/city/tainan/home-service/reno-detail',
+    'kaohsiung-fine-clean-recommend'   => '/city/kaohsiung/home-service/reno-detail',
+    'taichung-fine-clean-recommend'    => '/city/taichung/home-service/reno-detail',
+    'taipei-fine-clean-recommend'      => '/city/taipei/home-service/reno-detail',
+    'newtaipei-fine-clean-recommend'   => '/city/newtaipei/home-service/reno-detail',
+    'taoyuan-fine-clean-recommend'     => '/city/taoyuan/home-service/reno-detail',
+    'hsinchu-fine-clean-recommend'     => '/city/hsinchu/home-service/reno-detail',
+    // 汽車旅館 ×6（templated 多城懶人包）
+    'tainan-motel-recommend'           => '/city/tainan/lodging/motel',
+    'kaohsiung-motel-recommend'        => '/city/kaohsiung/lodging/motel',
+    'taichung-motel-recommend'         => '/city/taichung/lodging/motel',
+    'taipei-motel-recommend'           => '/city/taipei/lodging/motel',
+    'newtaipei-motel-recommend'        => '/city/newtaipei/lodging/motel',
+    'taoyuan-motel-recommend'          => '/city/taoyuan/lodging/motel',
+    // 台南專屬純推薦清單 ×5
+    'tainan-hotpot-recommend'          => '/city/tainan/food/hotpot',
+    'tainan-izakaya-recommend'         => '/city/tainan/food/japanese',
+    'tainan-interior-design-recommend' => '/city/tainan/professional/interior-design',
+    'tainan-cleaning-company-recommend'=> '/city/tainan/home-service/cleaning',
+    'tainan-handover-inspection-guide' => '/city/tainan/home-service/home-inspection',
+];
+if ($slug && isset($guide_redirects[$slug])) {
+    $target = ((IS_LOCAL || IS_STAGING) ? BASE_URL : 'https://www.gomag.com.tw') . $guide_redirects[$slug];
+    header('HTTP/1.1 301 Moved Permanently');
+    header('Location: ' . $target);
+    exit;
+}
+
 // ═══════════════════════════════════════════════════════════
 //   單篇模式 /guide/{slug}
 // ═══════════════════════════════════════════════════════════
