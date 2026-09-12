@@ -77,6 +77,11 @@ if (!function_exists('renderStoreCoupon')) {
         $lineJs  = json_encode($lineUrl, JSON_UNESCAPED_SLASHES);
         $slugJs  = json_encode((string)($client['slug'] ?? ''), JSON_UNESCAPED_SLASHES);
         $baseJs  = json_encode(rtrim(BASE_URL, '/'), JSON_UNESCAPED_SLASHES);
+        // 「把券存到消費者自己的 LINE」功能（需 LINE Login + push 已設定）
+        require_once __DIR__ . '/includes/line_coupon.php';
+        $lineSave = lineCouponEnabled()
+            ? rtrim(BASE_URL, '/') . '/coupon_line_start.php?slug=' . urlencode((string)($client['slug'] ?? ''))
+            : '';
         ?>
 <!-- ═══════ 優惠券 ═══════ -->
 <section class="g-coupon-sec">
@@ -116,6 +121,10 @@ if (!function_exists('renderStoreCoupon')) {
       <div class="g-coupon-voucher-show">📲 優惠請出示此圖給店家</div>
     </div>
 
+    <?php if ($lineSave !== ''): ?>
+    <a class="g-coupon-btn g-coupon-btn-savel g-coupon-btn-hero" href="<?= h($lineSave) ?>"
+       onclick="if(typeof window.gtag==='function'){gtag('event','coupon_save_line',{page_path:location.pathname});}">🎁 把這張券存到我的 LINE</a>
+    <?php endif; ?>
     <a class="g-coupon-btn g-coupon-btn-line g-coupon-btn-hero" href="<?= h($lineUrl) ?>" target="_blank" rel="noopener"
        onclick="if(typeof window.gtag==='function'){gtag('event','coupon_line_book',{page_path:location.pathname});}">💬 加 LINE 搶先預約</a>
     <p class="g-coupon-tip" id="g-coupon-tip">想留著這張券？直接截圖保存 📸
@@ -172,6 +181,7 @@ if (!function_exists('renderStoreCoupon')) {
 .g-coupon-btn-dl{background:#fff;color:#FF5A36;}
 .g-coupon-btn-dl:disabled{opacity:.5;cursor:default;}
 .g-coupon-btn-line{background:#06C755;color:#fff;}
+.g-coupon-btn-savel{background:#fff;color:#FF5A36;box-shadow:0 6px 20px rgba(0,0,0,.3);}
 .g-coupon-btn-hero{display:flex;width:100%;margin-top:14px;font-size:1.12rem;padding:16px;box-shadow:0 6px 20px rgba(6,199,85,.45);}
 .g-coupon-tip{text-align:center;color:#fff;font-size:.82rem;opacity:.92;margin:12px 0 0;line-height:1.5;}
 .g-coupon-img-out{display:block;width:100%;max-width:340px;margin:14px auto 0;border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.4);}

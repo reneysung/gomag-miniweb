@@ -2,9 +2,14 @@
 // includes/config.example.php
 // ─── 複製此檔為 includes/config.php（已被 .gitignore 排除）───
 //
-// 安全模式（loader）：staging/prod 的 DB 密碼放在 webroot 外
+// 安全模式（loader）：staging/prod 的機密放在 webroot 外
 //   /home/{user}/domains/{domain}/gomag-secrets.php
-//     <?php $GOMAG_SECRET_DB_PASS = '...';
+//     <?php
+//     $GOMAG_SECRET_DB_PASS    = '...';   // DB 密碼
+//     // 消費者「把優惠券存到 LINE」功能（口碑製造所 OA @316swndx）
+//     $GOMAG_LINE_LOGIN_ID     = '...';   // LINE Login channel ID
+//     $GOMAG_LINE_LOGIN_SECRET = '...';   // LINE Login channel secret
+//     $GOMAG_LINE_PUSH_TOKEN   = '...';   // 口碑製造所 Messaging API long-lived token
 //   mode 600
 // 本檔不含明文密碼。
 
@@ -55,7 +60,9 @@ if (IS_LOCAL) {
 }
 
 // 子網域 mini-site 域名
-define('MINISITE_DOMAIN', 'gomag.com.tw');
+define('MINISITE_DOMAIN', 'gomag.com.tw');           // 預設／fallback
+// 所有支援的白牌域名（新客戶可走 wmf.com.tw）。未定義時 front_functions.php 會 fallback 成 [MINISITE_DOMAIN]
+define('MINISITE_DOMAINS', ['gomag.com.tw', 'wmf.com.tw']);
 
 // 清理 loader 暫存變數
 unset($GOMAG_SECRET_DB_PASS, $_secretFile);
