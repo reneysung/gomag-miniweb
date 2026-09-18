@@ -219,9 +219,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $l = trim($statLabels[$i] ?? '');
         if ($v && $l) $heroStats[] = ['value' => $v, 'label' => $l];
     }
-    if ($heroStats) {
-        $fields['hero_stats'] = json_encode($heroStats, JSON_UNESCAPED_UNICODE);
-    }
+    // 清空時要寫 null，否則全刪光後 UPDATE 略過此欄、舊值刪不掉
+    $fields['hero_stats'] = $heroStats ? json_encode($heroStats, JSON_UNESCAPED_UNICODE) : null;
 
     // About Tags（JSON）
     $aboutTags = [];
