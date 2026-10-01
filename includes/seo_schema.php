@@ -18,7 +18,7 @@ function getCanonicalUrl(string $sub, string $pageKey): string {
         'articles'     => 'column',
     ];
     $path = $prodPathMap[$pageKey] ?? $pageKey;
-    $base = 'https://' . $sub . '.' . MINISITE_DOMAIN;
+    $base = 'https://' . $sub . '.' . currentMinisiteDomain();
     if ($path === '') return $base . '/';
     return $base . '/' . $path;
 }
@@ -48,7 +48,7 @@ function schemaLocalBusiness(array $client, array $social, array $services, ?arr
     $bizType = localBusinessTypeFor($client['industry'] ?? '');
     $bizUrl  = (IS_LOCAL || IS_STAGING)
         ? BASE_URL . '/site/index.php?sub=' . ($client['subdomain'] ?? $client['slug'])
-        : 'https://' . ($client['subdomain'] ?? $client['slug']) . '.' . MINISITE_DOMAIN . '/';
+        : 'https://' . ($client['subdomain'] ?? $client['slug']) . '.' . clientMinisiteDomain($client) . '/';
     $schema = [
         '@type'   => $bizType,
         '@id'     => '#business',
@@ -193,13 +193,8 @@ function schemaLocalBusiness(array $client, array $social, array $services, ?arr
                     'name'  => $it['name'],
                 ];
                 if (!empty($it['desc'])) $menuItem['description'] = $it['desc'];
-                if (!empty($it['price'])) {
-                    $menuItem['offers'] = [
-                        '@type'         => 'Offer',
-                        'price'         => (string)$it['price'],
-                        'priceCurrency' => 'TWD',
-                    ];
-                }
+                // 不輸出 offers（同 Service）：避免 Google 把 Menu 當商品/商家 offer 要電商欄位。
+                // 菜名與價格仍顯示在頁面可見內容裡，只是不進結構化資料。
                 if (!empty($it['image'])) {
                     $menuItem['image'] = (str_starts_with($it['image'], 'http') ? $it['image'] : BASE_URL . '/' . $it['image']);
                 }
@@ -367,13 +362,9 @@ function schemaServiceList(array $services, array $client): array {
         if (!empty($svc['short_desc'])) $item['description'] = $svc['short_desc'];
         if (!empty($svc['full_desc']))  $item['description'] = $svc['full_desc'];
         if (!empty($svc['image_path'])) $item['image'] = BASE_URL . '/' . $svc['image_path'];
-        if (!empty($svc['price_text'])) {
-            $item['offers'] = [
-                '@type'         => 'Offer',
-                'priceCurrency' => 'TWD',
-                'description'   => $svc['price_text'],
-            ];
-        }
+        // 不輸出 offers：在地服務無運送/退貨/庫存，帶 offers 會觸發 Google 電商欄位警告
+        // （GSC wnc_10030322「商家資訊 offers 缺 availability/shippingDetails/hasMerchantReturnPolicy」）。
+        // 價格說明仍顯示在頁面上，只是不進結構化資料。
         $items[] = $item;
     }
     return $items;
@@ -386,8 +377,8 @@ function schemaServiceList(array $services, array $client): array {
 function schemaWebSite(array $client, string $sub): array {
     $base = (IS_LOCAL || IS_STAGING)
         ? BASE_URL . '/site/index.php?sub=' . $sub
-        : 'https://' . $sub . '.' . MINISITE_DOMAIN;
-    return [
+        : 'https://' . $sub . '.' . clientMinisiteDomain($client);
+    $ws = [
         '@context' => 'https://schema.org',
         '@type'    => 'WebSite',
         'url'      => $base . '/',
@@ -404,6 +395,23 @@ function schemaWebSite(array $client, string $sub): array {
             'query-input' => 'required name=search_term_string',
         ],
     ];
+
+    // publisher = Organization with logo（Google SERP 顯示網站 logo 的關鍵）
+    // 有 logo_path 才 emit publisher.logo，否則只放 Organization name
+    $publisher = [
+        '@type' => 'Organization',
+        'name'  => $client['brand_name'],
+        'url'   => $base . '/',
+    ];
+    if (!empty($client['logo_path'])) {
+        $publisher['logo'] = [
+            '@type' => 'ImageObject',
+            'url'   => BASE_URL . '/' . $client['logo_path'],
+        ];
+    }
+    $ws['publisher'] = $publisher;
+
+    return $ws;
 }
 
 /**
@@ -544,14 +552,18 @@ function outputJsonLd(array $site, string $sub, string $pageKey): void {
         if (!empty($c['description'])) {
             $artSchema['description'] = mb_strimwidth(strip_tags($c['description']), 0, 300, '…');
         }
-        // image：after > before > client hero
-        $imgPath = $c['after_image'] ?? ($c['before_image'] ?? null);
-        if ($imgPath) {
-            // 若 caseThumb 函式可用就用，否則直接拼
-            $thumbed = function_exists('caseThumb') ? caseThumb($imgPath) : $imgPath;
-            $artSchema['image'] = BASE_URL . '/' . $thumbed;
-        } elseif (!empty($client['hero_image_path'])) {
-            $artSchema['image'] = BASE_URL . '/' . $client['hero_image_path'];
+        // image：優先用 _album_images 陣列（case_detail.php glob 提前注入，最多 10 張）
+        //        否則退回單張 after/before/hero
+        if (!empty($c['_album_images']) && is_array($c['_album_images'])) {
+            $artSchema['image'] = array_map(fn($p) => BASE_URL . '/' . $p, $c['_album_images']);
+        } else {
+            $imgPath = $c['after_image'] ?? ($c['before_image'] ?? null);
+            if ($imgPath) {
+                $thumbed = function_exists('caseThumb') ? caseThumb($imgPath) : $imgPath;
+                $artSchema['image'] = BASE_URL . '/' . $thumbed;
+            } elseif (!empty($client['hero_image_path'])) {
+                $artSchema['image'] = BASE_URL . '/' . $client['hero_image_path'];
+            }
         }
         // 出版/修改時間
         if (!empty($c['created_at'])) {
@@ -577,7 +589,7 @@ function outputJsonLd(array $site, string $sub, string $pageKey): void {
         $a = $site['_current_article'];
         $articleUrl = (IS_LOCAL || IS_STAGING)
             ? BASE_URL . '/site/article_detail.php?sub=' . urlencode($sub) . '&slug=' . urlencode($a['slug'])
-            : 'https://' . $sub . '.' . MINISITE_DOMAIN . '/column/' . rawurlencode($a['slug']);
+            : 'https://' . $sub . '.' . currentMinisiteDomain() . '/column/' . rawurlencode($a['slug']);
         $blogSchema = [
             '@context'  => 'https://schema.org',
             '@type'     => 'BlogPosting',
