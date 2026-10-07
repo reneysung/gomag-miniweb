@@ -1176,7 +1176,7 @@ if ($useBlocks && $testimonials) {
       <div class="g-review-item">
         <div class="g-review-head">
           <?php if (!empty($r['avatar'])): ?>
-          <img class="g-review-avatar" src="<?= h($r['avatar']) ?>" alt="<?= h($nm) ?>" loading="lazy" referrerpolicy="no-referrer" style="width:40px;height:40px;object-fit:cover;">
+          <img class="g-review-avatar" src="<?= h($r['avatar']) ?>" alt="<?= h($nm) ?>" referrerpolicy="no-referrer" style="width:40px;height:40px;object-fit:cover;" data-init="<?= h($init) ?>" onerror="this.onerror=null;var d=document.createElement('div');d.className='g-review-avatar';d.textContent=this.getAttribute('data-init');this.replaceWith(d)">
           <?php else: ?>
           <div class="g-review-avatar"><?= h($init) ?></div>
           <?php endif; ?>
