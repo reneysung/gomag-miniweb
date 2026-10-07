@@ -1164,11 +1164,7 @@ if (!$dupWithMinisite && ($client['about_text'] || ($aboutTags && is_array($abou
       <?php foreach (array_slice($googleReviews['reviews'], 0, 6) as $rev): ?>
       <div style="background:var(--m-bg); padding:18px; border-radius:var(--m-radius); border:1px solid var(--m-border);">
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-          <?php if (!empty($rev['avatar'])): ?>
-          <img src="<?= h($rev['avatar']) ?>" alt="" style="width:36px; height:36px; border-radius:50%; object-fit:cover;" referrerpolicy="no-referrer">
-          <?php else: ?>
-          <div style="width:36px; height:36px; border-radius:50%; background:var(--m-primary); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700;"><?= mb_substr($rev['author'], 0, 1) ?></div>
-          <?php endif; ?>
+          <?= gReviewAvatar($rev['avatar'] ?? '', $rev['author'] ?? '', 36, 'var(--m-primary)', '#fff') ?>
           <div style="flex:1; min-width:0;">
             <div style="font-weight:700; font-size:.9rem; color:var(--m-primary);"><?= h($rev['author']) ?></div>
             <div style="color:#fbbf24; font-size:.85rem;">
@@ -1234,11 +1230,7 @@ if ($useBlocks && $testimonials) {
       ?>
       <div class="g-review-item">
         <div class="g-review-head">
-          <?php if (!empty($r['avatar'])): ?>
-          <img class="g-review-avatar" src="<?= h($r['avatar']) ?>" alt="<?= h($nm) ?>" loading="lazy" referrerpolicy="no-referrer" style="width:40px;height:40px;object-fit:cover;">
-          <?php else: ?>
-          <div class="g-review-avatar"><?= h($init) ?></div>
-          <?php endif; ?>
+          <?= gReviewAvatar($r['avatar'] ?? '', $nm, 40) ?>
           <div>
             <div class="g-review-name"><?= h($nm) ?></div>
             <div class="g-review-stars-small"><?= str_repeat('★', (int)$r['rating']) ?><?= str_repeat('☆', 5 - (int)$r['rating']) ?><?php if (!empty($r['relative'])): ?><span style="color:var(--g-ink-light);font-weight:400;"> · <?= h($r['relative']) ?></span><?php endif; ?></div>

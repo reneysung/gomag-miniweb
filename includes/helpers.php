@@ -192,3 +192,32 @@ function paginate(int $total, int $perPage, int $currentPage): array {
     $offset = ($currentPage - 1) * $perPage;
     return ['total' => $total, 'per_page' => $perPage, 'current' => $currentPage, 'total_pages' => $totalPages, 'offset' => $offset];
 }
+
+/**
+ * Google 評論頭像（永不破圖版）
+ * 底層先畫「姓名首字」圓圈，真頭像 <img> 疊在上面：
+ *  - 頭像載入中／慢載 → 先看到首字，不會空白或出現破圖 icon
+ *  - 頭像過期 404、被 Google 擋、網路失敗 → onerror 直接移除 <img>，只留首字
+ *  - URL 是 //lh3... 這種協定相對網址 → 補成 https:
+ * $size：像素；$bg/$fg：首字圓圈底色/字色（可傳 CSS 變數）
+ */
+function gReviewAvatar(?string $url, ?string $name, int $size = 40, string $bg = 'var(--g-accent-light, #ffe9e3)', string $fg = 'var(--g-accent, #ff5a36)'): string {
+    $nm   = trim((string)$name) ?: '匿';
+    $init = mb_substr($nm, 0, 1, 'UTF-8');
+    $url  = trim((string)$url);
+    if (str_starts_with($url, '//')) $url = 'https:' . $url;
+    if ($url !== '' && !preg_match('#^https://#i', $url)) $url = '';   // 只接受 https，其餘一律走首字
+
+    $box = 'position:relative;display:inline-grid;place-items:center;flex-shrink:0;overflow:hidden;border-radius:50%;'
+         . "width:{$size}px;height:{$size}px;background:{$bg};color:{$fg};"
+         . 'font-weight:700;font-size:' . max(12, (int)round($size * 0.38)) . 'px;line-height:1;';
+    $html = '<span class="g-review-avatar g-avatar-safe" style="' . $box . '" aria-hidden="true">'
+          . '<span>' . h($init) . '</span>';
+    if ($url !== '') {
+        $html .= '<img src="' . h($url) . '" alt="" width="' . $size . '" height="' . $size . '"'
+               . ' loading="lazy" decoding="async" referrerpolicy="no-referrer"'
+               . ' onerror="this.remove()"'
+               . ' style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+    }
+    return $html . '</span>';
+}
