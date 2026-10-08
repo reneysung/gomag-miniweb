@@ -1175,11 +1175,7 @@ if ($useBlocks && $testimonials) {
       ?>
       <div class="g-review-item">
         <div class="g-review-head">
-          <?php if (!empty($r['avatar'])): ?>
-          <img class="g-review-avatar" src="<?= h($r['avatar']) ?>" alt="<?= h($nm) ?>" referrerpolicy="no-referrer" style="width:40px;height:40px;object-fit:cover;" data-init="<?= h($init) ?>" onerror="this.onerror=null;var d=document.createElement('div');d.className='g-review-avatar';d.textContent=this.getAttribute('data-init');this.replaceWith(d)">
-          <?php else: ?>
-          <div class="g-review-avatar"><?= h($init) ?></div>
-          <?php endif; ?>
+          <?= gReviewAvatar($r['avatar'] ?? '', $nm, 40) ?>
           <div>
             <div class="g-review-name"><?= h($nm) ?></div>
             <div class="g-review-stars-small"><?= str_repeat('★', (int)$r['rating']) ?><?= str_repeat('☆', 5 - (int)$r['rating']) ?><?php if (!empty($r['relative'])): ?><span style="color:var(--g-ink-light);font-weight:400;"> · <?= h($r['relative']) ?></span><?php endif; ?></div>

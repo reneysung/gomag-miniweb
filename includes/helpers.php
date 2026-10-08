@@ -35,6 +35,29 @@ function h(mixed $str): string {
     return htmlspecialchars((string)$str, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 }
 
+// Google 評論頭像「永不破圖」：首字圓圈永遠墊底，有效 https 圖才疊上去。
+// 慢載→底下先露首字；過期/被擋→img onerror 自己移除、露出首字；非 https→直接不放圖。
+function gReviewAvatar(?string $url, ?string $name, int $size = 40, string $bg = 'var(--g-accent-light, #ffe9e3)', string $fg = 'var(--g-accent, #ff5a36)'): string {
+    $nm   = trim((string)$name) ?: '匿';
+    $init = mb_substr($nm, 0, 1, 'UTF-8');
+    $url  = trim((string)$url);
+    if (str_starts_with($url, '//')) $url = 'https:' . $url;
+    if ($url !== '' && !preg_match('#^https://#i', $url)) $url = '';   // 只接受 https，其餘一律走首字
+
+    $box = 'position:relative;display:inline-grid;place-items:center;flex-shrink:0;overflow:hidden;border-radius:50%;'
+         . "width:{$size}px;height:{$size}px;background:{$bg};color:{$fg};"
+         . 'font-weight:700;font-size:' . max(12, (int)round($size * 0.38)) . 'px;line-height:1;';
+    $html = '<span class="g-review-avatar g-avatar-safe" style="' . $box . '" aria-hidden="true">'
+          . '<span>' . h($init) . '</span>';
+    if ($url !== '') {
+        $html .= '<img src="' . h($url) . '" alt="" width="' . $size . '" height="' . $size . '"'
+               . ' loading="lazy" decoding="async" referrerpolicy="no-referrer"'
+               . ' onerror="this.remove()"'
+               . ' style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;">';
+    }
+    return $html . '</span>';
+}
+
 // 安全重導向
 function redirect(string $url): never {
     header('Location: ' . $url);
