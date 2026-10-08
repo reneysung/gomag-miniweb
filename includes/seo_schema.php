@@ -500,13 +500,7 @@ function outputJsonLd(array $site, string $sub, string $pageKey): void {
         if (!empty($svc['short_desc'])) $svcSchema['description'] = $svc['short_desc'];
         elseif (!empty($svc['full_desc'])) $svcSchema['description'] = mb_strimwidth(strip_tags($svc['full_desc']), 0, 300, '…');
         if (!empty($svc['image_path'])) $svcSchema['image'] = BASE_URL . '/' . $svc['image_path'];
-        if (!empty($svc['price_text'])) {
-            $svcSchema['offers'] = [
-                '@type'         => 'Offer',
-                'priceCurrency' => 'TWD',
-                'description'   => $svc['price_text'],
-            ];
-        }
+        // 不輸出 offers（同 schemaServiceList）：在地服務無運送/退貨/庫存，避免 GSC 電商欄位警告
         // 服務區域：用 client address_region 優先
         if (!empty($client['address_region'])) {
             $svcSchema['areaServed'] = ['@type' => 'City', 'name' => $client['address_region']];
