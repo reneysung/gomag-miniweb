@@ -8,9 +8,8 @@ PHP 主站 + miniweb 子網域 + 後台管理。207 家在地客戶。Hostinger 
 
 - **本機開發**：`/Users/songmingwei/Sites/localhost/miniweb/`
 - **MAMP**：`/Applications/MAMP/htdocs/miniweb` → symlink 到上面
-- **Staging（測試區）**：`https://aqua-elephant-856571.hostingersite.com` — 平常先部署/驗證這裡
 - **Production（正式公開站，已上線）**：`https://www.gomag.com.tw`
-- ⚠️ staging 與正式站是**同帳號下兩個獨立 docroot、共用同一個 DB**，兩份程式碼會各自分歧。部署＝staging 先驗 → 再 promote 到正式站（見下「部署紀律」）。
+- ⚠️ **測試站（aqua-elephant-856571.hostingersite.com）已於 2026-10-08 退休**：主機上的網站設定已不存在、對外打不開（看到的少數頁面是 CDN 舊快取）。檔案還留在 `~/domains/aqua-elephant…/`，不再使用。部署一律直接上正式站，靠 diff＋備份＋上線實測把關（見下「部署紀律」）。
 
 ## SSH / Production 操作
 
@@ -19,7 +18,6 @@ Host: 145.79.14.161
 Port: 65002
 User: u331306067
 Pass: <已移除明文，請 reset 後存到密碼管理器 / 1Password；勿再寫回此檔>
-Web root (staging): /home/u331306067/domains/aqua-elephant-856571.hostingersite.com/public_html
 Web root (正式站 www.gomag.com.tw): /home/u331306067/domains/gomag.com.tw/public_html   ← 含舊系統 062051129/ 子資料夾（勿動）
 ```
 
@@ -30,18 +28,18 @@ Web root (正式站 www.gomag.com.tw): /home/u331306067/domains/gomag.com.tw/pub
 ssh -i ~/.ssh/id_ed25519_hostinger -o IdentitiesOnly=yes -p 65002 u331306067@145.79.14.161
 ```
 
-### 部署紀律（2026-05-20 更新）
-1. **兩個 docroot、同一個 DB**：staging（aqua-elephant）與正式站（gomag.com.tw）是兩份獨立程式碼、共用同一 DB → migration 跑一次兩邊都生效，promote 只需搬「程式碼」。
-2. **流程**：本機 `main`（== staging）→ 部署 staging 驗證 → diff 正式站 vs staging → 備份正式站 → promote（覆蓋 app 檔）。**不碰** config.php / 舊系統 `062051129/` / `upload/` / `_backups/` / `_logs/`。
-3. **部署前務必 diff**：staging 與正式站會各自分歧，直接整檔覆蓋會弄丟對方獨有的東西（教訓：`.htaccess` 正式站有 `/cases/(taichung|changhua)` 規則 staging 沒有 → 要外科手術只加新規則）。歷史見 memory `gomag-repo-divergence`、`gomag-deploy-infra`。
-4. **覆蓋前先備份**到該 docroot 的 `_backups/<name>_YYYYMMDD-HHMMSS/`。
-5. **box 上跑 DB CLI 腳本要前綴 `HTTP_HOST`**（staging 用 `aqua-elephant-856571.hostingersite.com`、正式站用 `www.gomag.com.tw`），否則 config.php 當成 local → 連 root/root 失敗。
+### 部署紀律（2026-10-08 改版：測試站退休，直接上正式站）
+1. **動工前先檢查 git 分岔**：`git fetch` 後確認本機包含 `origin/main`（`git merge-base --is-ancestor origin/main HEAD`）。可能有其他 session 推過東西；從舊版分出去的那條如果直接部署，會把已經修好的東西加回來。
+2. **流程**：本機改好 → 拉正式站同一個檔案下來 **diff**（應該只差這次改的部分）→ **備份**正式站原檔 → 上傳 → 主機上 `php -l` 檢查語法 → **上線實測**（curl 或瀏覽器，網址加 `?cb=` 避開快取）→ commit + push。**不碰** config.php / 舊系統 `062051129/` / `upload/` / `_backups/` / `_logs/`。
+3. **部署前務必 diff**：正式站可能有本機沒有的改動（線上 ≠ git），整檔覆蓋會弄丟。diff 出現不是這次改的差異 → 先停下來查，不要直接蓋（教訓：`.htaccess` 正式站有 `/cases/(taichung|changhua)` 規則本機沒有 → 只用外科手術加新規則）。歷史見 memory `gomag-repo-divergence`、`gomag-deploy-infra`。
+4. **覆蓋前先備份**到正式站的 `_backups/<name>_YYYYMMDD-HHMMSS/`。改資料庫前，先把要改的資料列存成 json 放 `_backups/`（沒有測試站可以先試，備份就是退路）。
+5. **box 上跑 DB CLI 腳本要前綴 `HTTP_HOST=www.gomag.com.tw`**，否則 config.php 會當成本機環境，用 root/root 連線失敗。
 
 ## 環境變數判斷
 
-`includes/config.php` 用 `IS_LOCAL` / `IS_STAGING` / `IS_PROD` 三段切換。
+`includes/config.php` 用 `IS_LOCAL` / `IS_STAGING` / `IS_PROD` 三段切換（`IS_STAGING` 分支保留但已無作用，測試站已退休）。
 - 本機：MAMP localhost:8889 / root / root
-- Staging / Prod：u331306067_miniweb / `<已移除明文，見 server 端 includes/config.php>`
+- Prod：u331306067_miniweb / `<已移除明文，見 server 端 includes/config.php>`
 - ⚠️ `includes/config.php` 已 .gitignore（含密碼），有 `config.example.php` 範本
 
 ## Git 狀態
