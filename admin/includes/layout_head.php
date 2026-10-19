@@ -515,6 +515,10 @@ textarea.form-control { resize: vertical; min-height: 90px; }
        href="<?= BASE_URL ?>/admin/pages/cities.php">
       <span class="icon">🌏</span> 城市管理
     </a>
+    <a class="nav-item <?= $currentPage === 'click_stats' ? 'active' : '' ?>"
+       href="<?= BASE_URL ?>/admin/pages/click_stats.php">
+      <span class="icon">📈</span> 店家頁點擊統計
+    </a>
 
     <!-- ═══════ 📦 舊系統（super only / 已停用、保留資料但建議走「區塊管理」）═══════ -->
     <details style="margin-top:14px;padding:0 12px">
@@ -599,7 +603,7 @@ textarea.form-control { resize: vertical; min-height: 90px; }
       if (!empty($clientData['has_minisite'])) {
           // mini-site：PROD 用子網域，LOCAL/STAGING 用 path
           $_previewUrl = IS_PROD
-              ? 'https://' . urlencode($_sub) . '.' . MINISITE_DOMAIN . '/'
+              ? 'https://' . urlencode($_sub) . '.' . clientMinisiteDomain($clientData) . '/'
               : BASE_URL . '/site/index.php?sub=' . urlencode($_sub);
           $_previewLabel = '🌐 預覽小官網';
       } else {

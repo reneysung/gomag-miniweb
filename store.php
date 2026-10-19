@@ -514,6 +514,40 @@ if (!empty($client['updated_at'])) {
 }
 ?>
 <script type="application/ld+json"><?= json_encode($jsonLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
+<script>
+// 店家頁按鈕點擊記錄 → /track_click.php（後台 click_stats.php）。整頁一個監聽器，
+// 依連結種類分類，所以預設版型、客製模板、客製落地頁的按鈕都算得到；頁首頁尾與 Google 評價區不算。
+(function(){
+  var CID=<?= (int)$cid ?>;
+  var SITE=<?= json_encode(strtolower(preg_replace('/^www\./', '', (string)(parse_url((string)($client['external_website_url'] ?? ''), PHP_URL_HOST) ?: '')))) ?>;
+  var ORDER=<?= json_encode(strtolower(preg_replace('/^www\./', '', (string)(parse_url((string)($client['order_url'] ?? ''), PHP_URL_HOST) ?: '')))) ?>;
+  function hostOf(h){ var m=h.match(/^https?:\/\/([^\/?#]+)/); return m ? m[1].replace(/^www\./,'') : ''; }
+  function act(h){
+    h=h.toLowerCase();
+    if(h.indexOf('tel:')===0) return 'phone';
+    if(/line\.me|lin\.ee|coupon_line_start/.test(h)) return 'line';
+    if(/google\.[a-z.]+\/maps|maps\.google|goo\.gl\/maps|maps\.app\.goo\.gl/.test(h)) return 'map';
+    if(/facebook\.com|fb\.com|fb\.me|instagram\.com/.test(h)) return 'social';
+    if(/foodpanda|ubereats/.test(h)) return 'order';
+    var host=hostOf(h); if(!host) return '';
+    if(ORDER && host===ORDER) return 'order';
+    if(SITE && host===SITE) return 'website';
+    if(/^[a-z0-9-]+\.(gomag|wmf)\.com\.tw$/.test(host)) return 'minisite';
+    return '';
+  }
+  function send(a){
+    try{ var f=new FormData(); f.append('cid',CID); f.append('a',a); f.append('p',location.pathname);
+         navigator.sendBeacon('/track_click.php', f); }catch(e){}
+  }
+  document.addEventListener('click', function(e){
+    var t=e.target; if(!t || !t.closest) return;
+    if(t.closest('.g-site-header,.g-site-nav,.g-site-footer,.g-google-reviews')) return;
+    var el=t.closest('a[href]');
+    if(el){ var a=act(el.getAttribute('href')||''); if(a) send(a); return; }
+    if(t.closest('.g-coupon-card')) send('coupon');
+  }, true);
+})();
+</script>
 
 <?php
 // ─── 視覺模板系統 Phase 3：若客戶選了非 _default 模板且模板有 render.php，delegate 過去 ──
