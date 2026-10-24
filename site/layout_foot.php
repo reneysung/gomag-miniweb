@@ -101,5 +101,6 @@ const obs=new IntersectionObserver((es)=>{
 },{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
 document.querySelectorAll('.animate-in').forEach(el=>obs.observe(el));
 </script>
+<?php require_once __DIR__ . '/_click_tracker.php'; ?>
 </body>
 </html>

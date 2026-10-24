@@ -29,14 +29,25 @@ if ($data) {
 }
 
 // 店家頁：slug → 店名＋按鈕點擊（同一段日期）
-$slugInfo = [];
-foreach ($db->query("SELECT id, slug, brand_name FROM clients") as $c) $slugInfo[strtolower($c['slug'])] = $c;
-$clickByCid = [];
+$slugInfo = []; $hostInfo = [];
+foreach ($db->query("SELECT id, slug, subdomain, minisite_domain, has_minisite, brand_name FROM clients") as $c) {
+    $slugInfo[strtolower($c['slug'])] = $c;
+    if (!empty($c['has_minisite'])) {
+        $hostInfo[strtolower(($c['subdomain'] ?: $c['slug']) . '.' . ($c['minisite_domain'] ?: 'gomag.com.tw'))] = $c;
+    }
+}
+$clickByKey = [];
 if ($data) {
-    $st = $db->prepare("SELECT client_id, COUNT(*) n FROM click_events WHERE created_at >= ? AND created_at < ? + INTERVAL 1 DAY GROUP BY client_id");
+    $st = $db->prepare("SELECT source, page_path, COUNT(*) n FROM click_events WHERE created_at >= ? AND created_at < ? + INTERVAL 1 DAY GROUP BY source, page_path");
     // click_events 是 UTC；區間是台北日期，換成 UTC 邊界
     $st->execute([gmdate('Y-m-d H:i:s', strtotime($data['start'] . ' 00:00:00')), gmdate('Y-m-d H:i:s', strtotime($data['end'] . ' 00:00:00'))]);
-    foreach ($st as $r) $clickByCid[(int)$r['client_id']] = (int)$r['n'];
+    foreach ($st as $r) {
+        // 店家頁存 pathname；小官網存 host+pathname → 用跟 GSC/GA4 同一套 gstatsKey() 對到每一列
+        $pp = (string)$r['page_path'];
+        if ($r['source'] === 'mini') { $sl = strpos($pp, '/'); $k = gstatsKey($sl === false ? $pp : substr($pp, 0, $sl), $sl === false ? '/' : substr($pp, $sl)); }
+        else $k = gstatsKey('www.gomag.com.tw', $pp);
+        $clickByKey[$k] = ($clickByKey[$k] ?? 0) + (int)$r['n'];
+    }
 }
 
 $typeLabels = ['store' => '店家頁', 'city' => '城市・子服務', 'guide' => '攻略', 'mini' => '小官網', 'home' => '首頁・分類', 'other' => '其他'];
@@ -47,7 +58,10 @@ foreach ($rows as $k => $r) {
     $path  = $slash === false ? '/' : substr($k, $slash);
     $isMain = in_array($host, ['www.gomag.com.tw', 'gomag.com.tw'], true);
     $label = ''; $cid = 0;
-    if (!$isMain && preg_match('/\.(gomag|wmf)\.com\.tw$/', $host)) $type = 'mini';
+    if (!$isMain && preg_match('/\.(gomag|wmf)\.com\.tw$/', $host)) {
+        $type = 'mini';
+        if ($info = $hostInfo[$host] ?? null) { $label = $info['brand_name']; $cid = (int)$info['id']; }
+    }
     elseif (preg_match('#^/store/([^/]+)#', $path, $m)) {
         $type = 'store';
         if ($info = $slugInfo[strtolower($m[1])] ?? null) { $label = $info['brand_name']; $cid = (int)$info['id']; }
@@ -64,7 +78,7 @@ foreach ($rows as $k => $r) {
         'ctr' => ($g && $g['i'] > 0) ? $g['c'] / $g['i'] : null,
         'pos' => ($g && $g['i'] > 0) ? $g['pw'] / $g['i'] : null,
         'v' => $v['v'] ?? 0, 'u' => $v['u'] ?? 0,
-        'btn' => ($type === 'store' && $cid) ? ($clickByCid[$cid] ?? 0) : null,
+        'btn' => ($cid && in_array($type, ['store', 'mini'], true)) ? ($clickByKey[$k] ?? 0) : null,
     ];
 }
 usort($list, fn($a, $b) => [$b['c'], $b['v']] <=> [$a['c'], $a['v']]);
@@ -152,7 +166,7 @@ require_once __DIR__ . '/../includes/layout_head.php';
             <th style="padding:9px; text-align:right; white-space:nowrap;" data-k="4" data-n>平均排名</th>
             <th style="padding:9px; text-align:right;" data-k="5" data-n>瀏覽數</th>
             <th style="padding:9px; text-align:right;" data-k="6" data-n>使用者</th>
-            <th style="padding:9px; text-align:right; white-space:nowrap;" data-k="7" data-n title="只有店家頁；從 2026-10-19 開始記錄">按鈕點擊</th>
+            <th style="padding:9px; text-align:right; white-space:nowrap;" data-k="7" data-n title="店家頁從 2026-10-19、小官網從 2026-10-24 開始記錄">按鈕點擊</th>
           </tr>
         </thead>
         <tbody>

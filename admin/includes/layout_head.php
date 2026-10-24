@@ -517,7 +517,7 @@ textarea.form-control { resize: vertical; min-height: 90px; }
     </a>
     <a class="nav-item <?= $currentPage === 'click_stats' ? 'active' : '' ?>"
        href="<?= BASE_URL ?>/admin/pages/click_stats.php">
-      <span class="icon">📈</span> 店家頁點擊統計
+      <span class="icon">📈</span> 按鈕點擊統計
     </a>
     <a class="nav-item <?= $currentPage === 'page_stats' ? 'active' : '' ?>"
        href="<?= BASE_URL ?>/admin/pages/page_stats.php">

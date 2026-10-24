@@ -307,3 +307,4 @@ $portfolios = $cases ?? [];
     </div>
   </div>
 </section>
+<?php require_once __DIR__ . '/_click_tracker.php'; // 這支沒走共用頁尾，點擊記錄要自己載 ?>

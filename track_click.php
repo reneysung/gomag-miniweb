@@ -10,6 +10,7 @@ $actions = ['phone', 'line', 'map', 'coupon', 'social', 'order', 'website', 'min
 $cid    = (int)($_POST['cid'] ?? 0);
 $action = (string)($_POST['a'] ?? '');
 $path   = mb_substr((string)($_POST['p'] ?? ''), 0, 255);
+$source = ($_POST['s'] ?? '') === 'mini' ? 'mini' : 'store';   // store＝店家頁、mini＝小官網
 $ua     = (string)($_SERVER['HTTP_USER_AGENT'] ?? '');
 
 if ($cid <= 0 || !in_array($action, $actions, true) || $ua === ''
@@ -25,11 +26,11 @@ $ok->execute([$cid]);
 if (!$ok->fetchColumn()) { http_response_code(204); exit; }
 
 $dup = $db->prepare("SELECT 1 FROM click_events
-                     WHERE client_id = ? AND action = ? AND ip_hash = ?
+                     WHERE client_id = ? AND action = ? AND source = ? AND ip_hash = ?
                        AND created_at > (NOW() - INTERVAL 10 SECOND) LIMIT 1");
-$dup->execute([$cid, $action, $ipHash]);
+$dup->execute([$cid, $action, $source, $ipHash]);
 if (!$dup->fetchColumn()) {
-    $db->prepare("INSERT INTO click_events (client_id, action, page_path, ip_hash) VALUES (?, ?, ?, ?)")
-       ->execute([$cid, $action, $path, $ipHash]);
+    $db->prepare("INSERT INTO click_events (client_id, action, source, page_path, ip_hash) VALUES (?, ?, ?, ?, ?)")
+       ->execute([$cid, $action, $source, $path, $ipHash]);
 }
 http_response_code(204);
