@@ -38,6 +38,7 @@ $portfolios = $cases ?? [];
   /* ═══ Editorial Design 專屬 CSS（命名空間 .ed-*）═══ */
   body { background: #0a0a0a !important; color: #e8e3d8 !important; }
   .site-header { background: rgba(10,10,10,.92) !important; border-bottom: 1px solid rgba(232,227,216,.08) !important; box-shadow: none !important; }
+  .site-footer { background: #050505 !important; }
   .site-header .site-logo, .site-header .site-nav a { color: #e8e3d8 !important; }
   .site-header .site-nav a:hover, .site-header .site-nav a.active { background: rgba(232,227,216,.08) !important; color: #fff !important; }
   .site-header .btn-contact { background: var(--g-accent, #c8a57a) !important; color: #0a0a0a !important; }
@@ -307,4 +308,4 @@ $portfolios = $cases ?? [];
     </div>
   </div>
 </section>
-<?php require_once __DIR__ . '/_click_tracker.php'; // 這支沒走共用頁尾，點擊記錄要自己載 ?>
+<?php require __DIR__ . '/layout_foot.php'; ?>

@@ -229,9 +229,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $t = trim($tag);
         if ($t) $aboutTags[] = $t;
     }
-    if ($aboutTags) {
-        $fields['about_tags'] = json_encode($aboutTags, JSON_UNESCAPED_UNICODE);
-    }
+    // 清空時要寫 null，否則全刪光後 UPDATE 略過此欄、舊值刪不掉（同 hero_stats）
+    $fields['about_tags'] = $aboutTags ? json_encode($aboutTags, JSON_UNESCAPED_UNICODE) : null;
 
     // 偵測 subdomain_provisioned 從 0 → 1 的時刻，記錄 provisioned_at
     $oldProvisioned = (int)$db->query("SELECT subdomain_provisioned FROM clients WHERE id=" . (int)$clientId)->fetchColumn();

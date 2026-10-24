@@ -1,5 +1,5 @@
 <?php
-// site/_click_tracker.php — 小官網按鈕點擊監聽器（layout_foot.php 與不走共用頁尾的 index_design.php 都 require_once 這支）
+// site/_click_tracker.php — 小官網按鈕點擊監聽器（layout_foot.php require_once；不走共用頁尾的頁面要自己載）
 ?>
 <?php if (!empty($client['id'])): ?>
 <script>
