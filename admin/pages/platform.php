@@ -20,6 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'main_og_image', 'ga_tracking_id', 'gtm_id', 'search_console_verification',
         'contact_email', 'contact_phone', 'footer_text',
         'google_maps_api_key', 'home_featured_order',
+        'ga4_property_id', 'gsc_site_url',
     ];
     foreach ($keys as $k) {
         setPlatformSetting($k, trim($_POST[$k] ?? ''));
@@ -118,6 +119,20 @@ require_once __DIR__ . '/../includes/layout_head.php';
              placeholder="G-XXXXXXXXXX"
              value="<?= h($s('ga_tracking_id')) ?>">
       <div class="hint">在 GA4 後台「資料串流」可以找到。填入後自動嵌入所有頁面</div>
+    </div>
+    <div class="form-group-admin">
+      <label>GA4 資源編號（給「網頁成效」報表讀瀏覽數用）</label>
+      <input type="text" name="ga4_property_id" class="form-control"
+             placeholder="例如 412345678（純數字）"
+             value="<?= h($s('ga4_property_id')) ?>">
+      <div class="hint">GA4 後台「管理 → 資源設定」最上面的「資源 ID」。跟上面 G- 開頭的追蹤 ID 不是同一個</div>
+    </div>
+    <div class="form-group-admin">
+      <label>Search Console 資源（給「網頁成效」報表讀搜尋點擊用）</label>
+      <input type="text" name="gsc_site_url" class="form-control"
+             placeholder="sc-domain:gomag.com.tw"
+             value="<?= h($s('gsc_site_url', 'sc-domain:gomag.com.tw')) ?>">
+      <div class="hint">網域資源寫 sc-domain:網域；一般不用改</div>
     </div>
     <div class="form-group-admin">
       <label>Google Tag Manager 容器 ID（可選）</label>

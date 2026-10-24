@@ -519,6 +519,10 @@ textarea.form-control { resize: vertical; min-height: 90px; }
        href="<?= BASE_URL ?>/admin/pages/click_stats.php">
       <span class="icon">📈</span> 店家頁點擊統計
     </a>
+    <a class="nav-item <?= $currentPage === 'page_stats' ? 'active' : '' ?>"
+       href="<?= BASE_URL ?>/admin/pages/page_stats.php">
+      <span class="icon">📊</span> 網頁成效（搜尋＋瀏覽）
+    </a>
 
     <!-- ═══════ 📦 舊系統（super only / 已停用、保留資料但建議走「區塊管理」）═══════ -->
     <details style="margin-top:14px;padding:0 12px">
