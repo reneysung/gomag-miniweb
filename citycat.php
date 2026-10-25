@@ -55,6 +55,19 @@ try {
 $geoFaqs = $geo && !empty($geo['faqs']) ? (json_decode($geo['faqs'], true) ?: []) : [];
 $hasContent = $geo && (trim((string)$geo['intro_html']) !== '' || !empty($geoFaqs));
 
+// 已併頁的子服務 → 301 到同城同分類的主頁（目標頁存在才轉）
+// 2026-10-25：「喜宴婚宴外燴」與「婚宴餐廳」搶同一批婚宴場地詞，併入婚宴餐廳
+$svc_redirects = ['wedding-banquet' => 'banquet'];
+if ($isSub && !$geo && isset($svc_redirects[$svcSlug])) {
+    $to = $svc_redirects[$svcSlug];
+    $t = $db->prepare("SELECT 1 FROM geo_category_pages WHERE city_slug = ? AND category_id = ? AND service_slug = ? AND is_active = 1 LIMIT 1");
+    $t->execute([$slug, $catId, $to]);
+    if ($t->fetchColumn()) {
+        header('Location: ' . BASE_URL . "/city/{$slug}/{$catSlug}/{$to}", true, 301);
+        exit;
+    }
+}
+
 // 子服務頁必須要有內容列才存在，否則 404
 if ($isSub && !$geo) {
     http_response_code(404);
