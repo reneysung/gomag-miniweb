@@ -21,6 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'contact_email', 'contact_phone', 'footer_text',
         'google_maps_api_key', 'home_featured_order',
         'ga4_property_id', 'gsc_site_url',
+        'home_videos',
     ];
     foreach ($keys as $k) {
         setPlatformSetting($k, trim($_POST[$k] ?? ''));
@@ -61,6 +62,18 @@ require_once __DIR__ . '/../includes/layout_head.php';
     <div class="form-group-admin">
       <label>Footer 文字（可選）</label>
       <textarea name="footer_text" class="form-control" rows="2"><?= h($s('footer_text')) ?></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- 首頁影音直擊 -->
+<div class="card" style="margin-bottom:20px; border-left:4px solid #EE5A2E;">
+  <div class="card-header"><h2>🎬 首頁影音直擊</h2></div>
+  <div class="card-body">
+    <div class="form-group-admin">
+      <label>影片清單（一行一支，最多顯示 4 支）</label>
+      <textarea name="home_videos" class="form-control" rows="5" placeholder="標題|YouTube 網址|縮圖網址（可不填，YouTube 會自動抓）&#10;例：台南辦桌實吃|https://youtu.be/xxxxx"><?= h($s('home_videos')) ?></textarea>
+      <div class="hint">格式：<code>標題|網址|縮圖網址(選填)</code>。留空＝首頁不顯示影音區塊。YouTube 連結不填縮圖會自動抓官方縮圖。</div>
     </div>
   </div>
 </div>
