@@ -484,17 +484,19 @@ if ($ogImage) $jsonLd['image'] = $ogImage;
 if (!empty($client['phone'])) $jsonLd['telephone'] = $client['phone'];
 if (!empty($client['email'])) $jsonLd['email'] = $client['email'];
 if (!empty($client['address'])) {
-    // 從地址自動抓城市（嘉義市/嘉義縣/台南市/高雄市/...），抓不到 fallback 台南市
-    $locality = '台南市';
+    // 從地址自動抓城市（嘉義市/嘉義縣/台南市/高雄市/...）；地址沒寫縣市 → 用店家設定的 city_slug 查 cities 表；都沒有就不輸出 addressLocality
+    $locality = '';
     if (preg_match('/([台臺][北中南東]市|新北市|桃園市|高雄市|嘉義[市縣]|新竹[市縣]|苗栗[市縣]|彰化縣|南投縣|雲林縣|屏東縣|宜蘭縣|花蓮縣|台東縣|澎湖縣|金門縣|連江縣|基隆市)/u', $client['address'], $m)) {
         $locality = str_replace('臺', '台', $m[1]);
+    } elseif (!empty($client['city_slug'])) {
+        $locality = getCityMap()[$client['city_slug']] ?? '';
     }
     $jsonLd['address'] = [
         '@type' => 'PostalAddress',
         'streetAddress' => $client['address'],
-        'addressLocality' => $locality,
-        'addressCountry' => 'TW',
     ];
+    if ($locality !== '') $jsonLd['address']['addressLocality'] = $locality;
+    $jsonLd['address']['addressCountry'] = 'TW';
 }
 // 不輸出 aggregateRating：行銷頁評價為站內 testimonials（店家自填），對 Google 宣稱星等屬 self-serving，故不放 schema
 
