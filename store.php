@@ -55,6 +55,15 @@ if (!$client) {
     die('店家不存在或已停用');
 }
 
+// 同一家店只留一個網址：用舊 slug 進來（另設 subdomain 的小官網客戶）→ 301 到站內連結用的網址
+// 2026-11-11：GSC 判 /store/interiordesign38 與 /store/myturn 重複、Google 自選 canonical
+$canonSub = strtolower((string)($client['subdomain'] ?: $client['slug']));
+if ($canonSub !== '' && $sub !== $canonSub) {
+    $cityQ = strtolower(trim($_GET['city'] ?? ''));
+    header('Location: ' . clientStoreUrl($client, preg_match('/^[a-z0-9_-]+$/', $cityQ) ? $cityQ : ''), true, 301);
+    exit;
+}
+
 $cid = (int)$client['id'];
 $isPlaceholder = !empty($client['is_placeholder']);
 
