@@ -637,9 +637,12 @@ textarea.form-control { resize: vertical; min-height: 90px; }
 <div class="main-wrap">
 <div class="main-content">
 
-<?php if ($flash): ?>
+<?php if ($flash):
+  // 訊息本身開頭已經有圖示（✅ ⚠️ ❌ 🗑️ 等）就不再加，避免出現兩個圖示
+  $_flashHasIcon = (bool)preg_match('/^\s*[\x{2600}-\x{27BF}\x{2B00}-\x{2BFF}\x{1F300}-\x{1FAFF}]/u', (string)$flash['message']);
+?>
 <div class="flash flash-<?= h($flash['type']) ?>">
-  <?= $flash['type'] === 'success' ? '✅' : ($flash['type'] === 'error' ? '⚠️' : '❌') ?>
+  <?php if (!$_flashHasIcon): ?><?= $flash['type'] === 'success' ? '✅' : ($flash['type'] === 'error' ? '⚠️' : '❌') ?><?php endif; ?>
   <?= h($flash['message']) ?>
 </div>
 <?php endif; ?>
