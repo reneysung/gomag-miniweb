@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sort = (int)($_POST['sort_order'] ?? 0);
         if (!isset($catById[$cid]) || $slug === '' || $name === '') {
             setFlash('error', '分類 / slug / 名稱必填');
-            redirect(BASE_URL . '/admin/pages/service_keywords.php');
+            redirect(BASE_URL . '/admin/pages/service_keywords.php' . (isset($catById[$cid]) ? '?cat=' . $cid : ''));
         }
         // 跨分類同名稱檢查：同一服務不應掛在兩個分類（避 IA 重複/SEO 競食）
         $dupChk = $db->prepare("SELECT c.name FROM service_keywords sk JOIN categories c ON c.id=sk.category_id WHERE sk.name=? AND sk.category_id<>? LIMIT 1");
@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $ins = $db->prepare("INSERT INTO service_keywords (category_id, slug, name, page_slug, sort_order) VALUES (?,?,?,?,?)");
             $ins->execute([$cid, $slug, $name, $page, $sort]);
-            setFlash('success', "✅ 已新增關鍵字「{$name}」");
+            setFlash('success', "已新增關鍵字「{$name}」");
         } catch (PDOException $e) {
             setFlash('error', '此分類底下已有相同 slug');
         }
@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $u = $db->prepare("UPDATE service_keywords SET name=?, page_slug=?, sort_order=?, is_active=? WHERE id=?");
         $u->execute([$name, $page, $sort, $act, $id]);
-        setFlash('success', '✅ 已儲存');
+        setFlash('success', '已儲存');
         redirect(BASE_URL . '/admin/pages/service_keywords.php?cat=' . (int)($_POST['category_id'] ?? 0));
     }
 
@@ -93,13 +93,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'tags'       => $tagRows,
         ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)) !== false;
         if (!$bkOk) {
-            setFlash('error', '⚠️ 備份寫不進 _backups，這次沒有刪除。請通知管理員。');
+            setFlash('error', '備份寫不進 _backups，這次沒有刪除。請通知管理員。');
             redirect(BASE_URL . '/admin/pages/service_keywords.php?cat=' . (int)($_POST['category_id'] ?? 0));
         }
         // 同時清掉店家標籤
         $db->prepare("DELETE FROM client_service_keywords WHERE service_keyword_id=?")->execute([$id]);
         $db->prepare("DELETE FROM service_keywords WHERE id=?")->execute([$id]);
-        setFlash('success', '🗑️ 已刪除「' . ($kwRow['name'] ?? '') . '」與 ' . count($tagRows) . ' 家店的標籤（已備份：_backups/service_keyword_delete/' . basename($bkFile) . '）');
+        setFlash('success', '已刪除「' . ($kwRow['name'] ?? '') . '」與 ' . count($tagRows) . ' 家店的標籤（已備份：_backups/service_keyword_delete/' . basename($bkFile) . '）');
         redirect(BASE_URL . '/admin/pages/service_keywords.php?cat=' . (int)($_POST['category_id'] ?? 0));
     }
 }
