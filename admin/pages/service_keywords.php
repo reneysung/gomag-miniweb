@@ -137,9 +137,7 @@ require_once __DIR__ . '/../includes/layout_head.php';
   </div>
 </div>
 
-<?php if ($flash): ?>
-<div class="alert alert-<?= h($flash['type']) ?>"><?= h($flash['message']) ?></div>
-<?php endif; ?>
+<!-- 提示訊息由 admin/includes/layout_head.php 統一顯示，這頁不再重複印 -->
 
 <!-- 分類切換 -->
 <div class="card" style="margin-bottom:16px;">
