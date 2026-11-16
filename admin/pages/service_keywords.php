@@ -75,10 +75,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'delete') {
         $id = (int)($_POST['id'] ?? 0);
+        // 刪除前先把關鍵字本身＋所有店家標籤備份到 _backups/（2026-11-16：木地板關鍵字被刪、標籤無備份救不回）
+        $kw = $db->prepare("SELECT * FROM service_keywords WHERE id=?");
+        $kw->execute([$id]);
+        $kwRow = $kw->fetch();
+        $tg = $db->prepare("SELECT csk.*, cl.brand_name, cl.city_slug FROM client_service_keywords csk
+                            LEFT JOIN clients cl ON cl.id = csk.client_id WHERE csk.service_keyword_id=?");
+        $tg->execute([$id]);
+        $tagRows = $tg->fetchAll();
+        $bkDir = __DIR__ . '/../../_backups/service_keyword_delete';
+        if (!is_dir($bkDir)) @mkdir($bkDir, 0755, true);
+        $bkFile = $bkDir . '/kw' . $id . '_' . date('Ymd-His') . '.json';
+        $bkOk = $kwRow && @file_put_contents($bkFile, json_encode([
+            'deleted_at' => date('c'),
+            'admin'      => currentAdmin()['username'] ?? '',
+            'keyword'    => $kwRow,
+            'tags'       => $tagRows,
+        ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)) !== false;
+        if (!$bkOk) {
+            setFlash('error', '⚠️ 備份寫不進 _backups，這次沒有刪除。請通知管理員。');
+            redirect(BASE_URL . '/admin/pages/service_keywords.php?cat=' . (int)($_POST['category_id'] ?? 0));
+        }
         // 同時清掉店家標籤
         $db->prepare("DELETE FROM client_service_keywords WHERE service_keyword_id=?")->execute([$id]);
         $db->prepare("DELETE FROM service_keywords WHERE id=?")->execute([$id]);
-        setFlash('success', '🗑️ 已刪除關鍵字與其店家標籤');
+        setFlash('success', '🗑️ 已刪除「' . ($kwRow['name'] ?? '') . '」與 ' . count($tagRows) . ' 家店的標籤（已備份：_backups/service_keyword_delete/' . basename($bkFile) . '）');
         redirect(BASE_URL . '/admin/pages/service_keywords.php?cat=' . (int)($_POST['category_id'] ?? 0));
     }
 }
@@ -223,7 +244,15 @@ require_once __DIR__ . '/../includes/layout_head.php';
           <label style="font-size:.78rem;"><input type="checkbox" name="is_active" value="1" <?= $r['is_active'] ? 'checked' : '' ?>> 啟用</label>
           <button type="submit" class="btn btn-sm btn-primary">💾 存</button>
         </form>
-        <form method="POST" style="margin:0;" onsubmit="return confirm('刪除「<?= h($r['name']) ?>」？會一併移除所有店家對它的標籤。');">
+        <?php
+          // 有店家標籤或內容頁在用時，刪除要打字確認（2026-11-16 木地板事件後加）
+          $_delMsg = $_sc > 0 || $_cc > 0
+            ? "刪除「{$r['name']}」會一併移除 {$_sc} 家店的標籤，這些店會從子服務頁消失"
+              . ($_cc > 0 ? "，{$_cc} 個城市內容頁也會變成沒有店" : '')
+              . "。\n只是暫時不用的話，請改取消勾選「啟用」。\n\n確定要刪除，請輸入關鍵字名稱「{$r['name']}」："
+            : "刪除「{$r['name']}」？目前沒有店家標它。";
+        ?>
+        <form method="POST" style="margin:0;" data-kw-name="<?= h($r['name']) ?>" data-need-type="<?= ($_sc > 0 || $_cc > 0) ? '1' : '0' ?>" data-msg="<?= h($_delMsg) ?>" onsubmit="return kwConfirmDelete(this);">
           <input type="hidden" name="_token" value="<?= h(csrfToken()) ?>">
           <input type="hidden" name="action" value="delete">
           <input type="hidden" name="id" value="<?= (int)$r['id'] ?>">
@@ -236,5 +265,17 @@ require_once __DIR__ . '/../includes/layout_head.php';
     <?php endif; ?>
   </div>
 </div>
+
+<script>
+// 刪除確認：有店家標籤／內容頁在用的，要打出關鍵字名稱才刪
+function kwConfirmDelete(f){
+  var msg = f.getAttribute('data-msg') || '確定刪除？';
+  if (f.getAttribute('data-need-type') !== '1') return confirm(msg);
+  var typed = prompt(msg, '');
+  if (typed === null) return false;
+  if (typed.trim() !== f.getAttribute('data-kw-name')) { alert('名稱不符，沒有刪除。'); return false; }
+  return true;
+}
+</script>
 
 <?php require_once __DIR__ . '/../includes/layout_foot.php'; ?>
